@@ -89,10 +89,9 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					"OK. \"%s\" has been registered on #%s for you",
 					subcommand,
 					channel))
-				fmt.Fprint(w, fmt.Sprintf(
-					"\nWould send: _@%s_ is hosting a new raid: *%s*",
+				slack.toChannel(channel, fmt.Sprintf(
+					"_@%s_ is hosting a new raid: *%s*",
 					username, subcommand))
-				// TODO announce to channel
 			}
 		case "join":
 			if err := db.join(channel, subcommand, username); err != nil {
@@ -102,11 +101,10 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					"OK. You're signed up for \"%s\" on #%s",
 					subcommand,
 					channel))
-				fmt.Fprint(w, fmt.Sprintf(
-					"\nWould send: _@%s_ has signed up for *%s*",
+				slack.toChannel(channel, fmt.Sprintf(
+					"_@%s_ has signed up for *%s*",
 					username, subcommand))
 			}
-			// TODO announce to channel
 		case "leave":
 			if err := db.leave(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
@@ -115,11 +113,10 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					"OK. You're no longer signed up for \"%s\" on #%s",
 					subcommand,
 					channel))
-				fmt.Fprint(w, fmt.Sprintf(
-					"\nWould send: _@%s_ is no longer signed up for *%s*",
+				slack.toChannel(channel, fmt.Sprintf(
+					"_@%s_ is no longer signed up for *%s*",
 					username, subcommand))
 			}
-			// TODO announce to channel
 		case "finish":
 			if err := db.finish(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
@@ -128,20 +125,18 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					"OK. \"%s\" has been removed from the raid list for #%s",
 					subcommand,
 					channel))
-				fmt.Fprint(w, fmt.Sprintf(
-					"\nWould send: _@%s_ has closed out *%s*",
+				slack.toChannel(channel, fmt.Sprintf(
+					"_@%s_ has closed out *%s*",
 					username, subcommand))
 			}
-			// TODO announce to channel
 		case "ping":
 			if list, err := db.members(channel, subcommand); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
-				fmt.Fprintf(w,
-					"would send: pinging @%s about \"%s\" for @%s",
-					strings.Join(list, ", @"), subcommand, username)
+				slack.toChannel(channel, fmt.Sprintf(
+					"pinging @%s about \"%s\" for @%s",
+					strings.Join(list, ", @"), subcommand, username))
 			}
-			// TODO announce to channel
 		default:
 			fmt.Fprint(w, "I'm afraid I don't know how to '"+command[0]+"'. ")
 			fmt.Fprint(w, "Try '/raid help' to get a list of things I can do for you")
