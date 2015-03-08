@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/apokalyptik/gopid"
 	"github.com/olebedev/config"
@@ -11,7 +12,7 @@ import (
 
 var configFile string
 var dbFile string
-var db = &raids{}
+var maxAge time.Duration
 
 func init() {
 	flag.StringVar(&configFile, "config", "./config.yaml", "Path to YAML configuration")
@@ -41,7 +42,13 @@ func main() {
 		}
 	}
 
-	db.save()
+	if dur, err := cfg.String("maxAge"); err != nil {
+		log.Fatal(err)
+	} else {
+		if maxAge, err = time.ParseDuration(dur); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	if slack.key, err = cfg.String("slack.slashKey"); err != nil {
 		log.Fatal(err)
