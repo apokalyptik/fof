@@ -20,7 +20,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if r.Form.Get("token") != slack.key {
 		HTTPStatus(w, http.StatusUnauthorized)
-		log.Printf("Unauthorized Request: %#v", http.StatusUnauthorized, r.Form)
+		log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 		return
 	}
 	command := strings.Split(r.Form.Get("text"), " ")
