@@ -63,6 +63,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	go db.mindExpiration()
+
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
 	} else {

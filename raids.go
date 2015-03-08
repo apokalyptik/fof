@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -197,6 +198,24 @@ func (r *raids) save() error {
 		return err
 	}
 	return nil
+}
+
+func (r *raids) mindExpiration() {
+	ticker := time.Tick(10 * time.Minute)
+	for {
+		<-ticker
+		r.lock.RLock()
+		for channel, raidlist := range r.data {
+			for _, raidentry := range raidlist {
+				if time.Now().Add(0 - maxAge).After(raidentry.CreatedAt) {
+					go r.finish(channel, raidentry.Name, raidentry.Members[0])
+					log.Printf("Expiring %s on #%s", raidentry.Name, channel)
+				}
+			}
+		}
+		r.lock.RUnlock()
+
+	}
 }
 
 func (r *raids) load(filename string) error {
