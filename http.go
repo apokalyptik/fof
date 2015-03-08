@@ -64,7 +64,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 						"you would like to \"/raid host\" one?",
 					channel)
 			} else {
-				fmt.Fprintf(w, "The following raids are being hosted on #%:\n", channel)
+				fmt.Fprintf(w, "The following raids are being hosted on #%s:\n", channel)
 				for _, v := range db.list(channel) {
 					fmt.Fprintf(
 						w,
