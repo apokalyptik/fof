@@ -68,7 +68,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 				for _, v := range db.list(channel) {
 					fmt.Fprintf(
 						w,
-						"• *%s* with: _%s_\n",
+						"• \"%s\" with: _%s_\n",
 						v.Name,
 						strings.Join(v.Members, "_, _"))
 				}
@@ -90,7 +90,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ is hosting a new raid: *%s*",
+					"_@%s_ is hosting a new raid: \"%s\"",
 					username, subcommand))
 			}
 		case "join":
@@ -102,7 +102,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ has signed up for *%s*",
+					"_@%s_ has signed up for \"%s\"",
 					username, subcommand))
 			}
 		case "leave":
@@ -114,7 +114,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ is no longer signed up for *%s*",
+					"_@%s_ is no longer signed up for \"%s\"",
 					username, subcommand))
 			}
 		case "finish":
@@ -126,7 +126,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ has closed out *%s*",
+					"_@%s_ has closed out \"%s\"",
 					username, subcommand))
 			}
 		case "ping":
