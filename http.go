@@ -90,8 +90,8 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ is hosting a new raid: \"%s\"",
-					username, subcommand))
+					"@%s is hosting a new raid: \"%s\".\nUse \"/raid join %s\" to sign up!",
+					username, subcommand, subcommand))
 			}
 		case "join":
 			if err := db.join(channel, subcommand, username); err != nil {
@@ -102,8 +102,8 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ has signed up for \"%s\"",
-					username, subcommand))
+					"@%s has signed up for \"%s\".\nUse \"/raid join %s\" to join them!",
+					username, subcommand, subcommand))
 			}
 		case "leave":
 			if err := db.leave(channel, subcommand, username); err != nil {
@@ -114,8 +114,8 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ is no longer signed up for \"%s\"",
-					username, subcommand))
+					"@%s is no longer signed up for \"%s\".\nUse \"/raid join %s\" to take their place!",
+					username, subcommand, subcommand))
 			}
 		case "finish":
 			if err := db.finish(channel, subcommand, username); err != nil {
@@ -126,7 +126,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"_@%s_ has closed out \"%s\"",
+					"@%s has closed out \"%s\"",
 					username, subcommand))
 			}
 		case "ping":
