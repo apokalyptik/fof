@@ -129,7 +129,18 @@ func (r *raids) finish(channel, name, user string) error {
 		if v.Name != name {
 			continue
 		}
-		if v.Members[0] != user {
+		var allowed = false
+		if v.Members[0] == user {
+			allowed = true
+		} else {
+			for _, admin := range admins {
+				if user == admin {
+					allowed = true
+					break
+				}
+			}
+		}
+		if allowed == false {
 			return errors.New(fmt.Sprintf(
 				"Only the organizer (_@%s_) can finish a raid",
 				v.Members[0]))

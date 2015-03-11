@@ -13,6 +13,7 @@ import (
 var configFile string
 var dbFile string
 var maxAge time.Duration
+var admins []string
 
 func init() {
 	flag.StringVar(&configFile, "config", "./config.yaml", "Path to YAML configuration")
@@ -61,6 +62,18 @@ func main() {
 	}
 	if slack.emoji, err = cfg.String("slack.webhooks.emoji"); err != nil {
 		log.Fatal(err)
+	}
+
+	if adminsvar, err := cfg.List("slack.admins"); err != nil {
+		log.Fatal(err)
+	} else {
+		for _, v := range adminsvar {
+			if admin, ok := v.(string); ok {
+				admins = append(admins, admin)
+			} else {
+				log.Fatalf("%#v from %#v is not a string", v, adminsvar)
+			}
+		}
 	}
 
 	go db.mindExpiration()
