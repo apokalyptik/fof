@@ -215,7 +215,7 @@ func (r *raids) save() error {
 	return nil
 }
 
-func (r *raids) mindExpiration() {
+func (r *raids) mindExpiration(maxAge time.Duration) {
 	ticker := time.Tick(10 * time.Minute)
 	for {
 		<-ticker

@@ -11,8 +11,6 @@ import (
 )
 
 var configFile string
-var raidsDbFile string
-var maxAge time.Duration
 var admins []string
 
 func init() {
@@ -35,20 +33,31 @@ func main() {
 		}
 	}
 
+	if needsDbFile, err := cfg.String("database.needs"); err != nil {
+		log.Fatal(err)
+	} else {
+		if err := needsDB.load(needsDbFile); err != nil {
+			log.Fatal(err)
+		}
+		go needsDB.mindExpiration()
+	}
+
 	if raidsDbFile, err := cfg.String("database.raids"); err != nil {
 		log.Fatal(err)
 	} else {
 		if err := raidDb.load(raidsDbFile); err != nil {
 			log.Fatal(err)
 		}
-	}
-
-	if dur, err := cfg.String("maxAge"); err != nil {
-		log.Fatal(err)
-	} else {
-		if maxAge, err = time.ParseDuration(dur); err != nil {
+		if dur, err := cfg.String("maxAge"); err != nil {
 			log.Fatal(err)
+		} else {
+			if maxAge, err := time.ParseDuration(dur); err != nil {
+				log.Fatal(err)
+			} else {
+				go raidDb.mindExpiration(maxAge)
+			}
 		}
+
 	}
 
 	if slack.key, err = cfg.String("slack.slashKey"); err != nil {
@@ -75,8 +84,6 @@ func main() {
 			}
 		}
 	}
-
-	go raidDb.mindExpiration()
 
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
