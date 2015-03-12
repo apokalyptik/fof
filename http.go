@@ -51,6 +51,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "This will only be for raids in #"+channel+". ")
 			fmt.Fprint(w, "To find and use raids in other channels you'll want to ")
 			fmt.Fprint(w, "use the /raid command from those channels")
+			fmt.Fprint(w, "\n\nFor an introduction, please watch https://www.youtube.com/watch?v=T4g_3Tv5xJU")
 			return
 		}
 
