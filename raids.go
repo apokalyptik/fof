@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var db = &raids{
+var raidDb = &raids{
 	data: map[string][]*raid{},
 }
 

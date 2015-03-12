@@ -11,7 +11,7 @@ import (
 )
 
 var configFile string
-var dbFile string
+var raidsDbFile string
 var maxAge time.Duration
 var admins []string
 
@@ -35,10 +35,10 @@ func main() {
 		}
 	}
 
-	if dbFile, err := cfg.String("database"); err != nil {
+	if raidsDbFile, err := cfg.String("database.raids"); err != nil {
 		log.Fatal(err)
 	} else {
-		if err := db.load(dbFile); err != nil {
+		if err := raidDb.load(raidsDbFile); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -76,7 +76,7 @@ func main() {
 		}
 	}
 
-	go db.mindExpiration()
+	go raidDb.mindExpiration()
 
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)

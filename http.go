@@ -57,7 +57,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 
 		switch strings.ToLower(command[0]) {
 		case "list":
-			list := db.list(channel)
+			list := raidDb.list(channel)
 			if len(list) == 0 {
 				fmt.Fprintf(
 					w,
@@ -66,7 +66,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					channel)
 			} else {
 				fmt.Fprintf(w, "The following raids are being hosted on #%s:\n", channel)
-				for _, v := range db.list(channel) {
+				for _, v := range raidDb.list(channel) {
 					fmt.Fprintf(
 						w,
 						"• \"%s\" with: _%s_\n",
@@ -83,7 +83,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if err := db.register(channel, subcommand, username); err != nil {
+			if err := raidDb.register(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
 				fmt.Fprint(w, fmt.Sprintf(
@@ -95,7 +95,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					username, subcommand, subcommand))
 			}
 		case "join":
-			if err := db.join(channel, subcommand, username); err != nil {
+			if err := raidDb.join(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
 				fmt.Fprint(w, fmt.Sprintf(
@@ -107,7 +107,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					username, subcommand, subcommand))
 			}
 		case "leave":
-			if err := db.leave(channel, subcommand, username); err != nil {
+			if err := raidDb.leave(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
 				fmt.Fprint(w, fmt.Sprintf(
@@ -119,7 +119,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					username, subcommand, subcommand))
 			}
 		case "finish":
-			if err := db.finish(channel, subcommand, username); err != nil {
+			if err := raidDb.finish(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
 				fmt.Fprint(w, fmt.Sprintf(
@@ -131,7 +131,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 					username, subcommand))
 			}
 		case "ping":
-			if list, err := db.members(channel, subcommand); err != nil {
+			if list, err := raidDb.members(channel, subcommand); err != nil {
 				fmt.Fprint(w, err.Error())
 			} else {
 				slack.toChannel(channel, fmt.Sprintf(
