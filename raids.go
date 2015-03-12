@@ -48,6 +48,8 @@ func (r *raids) join(channel, name, user string) error {
 					channel))
 			}
 		}
+		slack.toPerson(v.Members[0], fmt.Sprintf(
+			"@%s has joined your raid \"%s\" on #%s", user, name, channel))
 		v.Members = append(v.Members, user)
 		return nil
 	}
@@ -83,6 +85,8 @@ func (r *raids) leave(channel, name, user string) error {
 					name,
 					channel))
 			}
+			slack.toPerson(v.Members[0], fmt.Sprintf(
+				"@%s has left your raid \"%s\" on #%s", user, name, channel))
 			return nil
 		}
 		return errors.New(fmt.Sprintf(
