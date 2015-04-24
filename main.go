@@ -21,15 +21,14 @@ func main() {
 	flag.Parse()
 	cfg, err := config.ParseYamlFile(configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error parsing config file: %s", err.Error())
 	}
 
 	if pidFile, err := cfg.String("pidfile"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading pidfile from config: %s", err.Error())
 	} else {
 		if _, err := pid.Do(pidFile); err != nil {
 			log.Fatalf("error creating pidfile (%s): %s", pidFile, err.Error())
-			log.Fatal(err)
 		}
 	}
 
@@ -42,25 +41,25 @@ func main() {
 	}
 
 	if needsDbFile, err := cfg.String("database.needs"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading database.needs from config file: %s", err.Error())
 	} else {
 		if err := needsDB.load(needsDbFile); err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error reading %s: %s", needsDbFile, err.Error())
 		}
 		go needsDB.mindExpiration()
 	}
 
 	if raidsDbFile, err := cfg.String("database.raids"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading database.raids from config file: %s", err.Error())
 	} else {
 		if err := raidDb.load(raidsDbFile); err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error reading %s: %s", raidsDbFile, err.Error())
 		}
 		if dur, err := cfg.String("maxAge"); err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error reading maxAge from config file: %s", err.Error())
 		} else {
 			if maxAge, err := time.ParseDuration(dur); err != nil {
-				log.Fatal(err)
+				log.Fatalf("Error parsing maxAge as a time.Duration: %s", err.Error())
 			} else {
 				go raidDb.mindExpiration(maxAge)
 			}
@@ -69,26 +68,26 @@ func main() {
 	}
 
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
 	}
 	if slack.xlineKey, err = cfg.String("slack.slashKey.xline"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.slashKey.xline: %s", err.Error())
 	}
 	if slack.needKey, err = cfg.String("slack.slashKey.needs"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.slashKey.needs: %s", err.Error())
 	}
 	if slack.name, err = cfg.String("slack.webhooks.name"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.webhooks.name: %s", err.Error())
 	}
 	if slack.url, err = cfg.String("slack.webhooks.url"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.webhooks.url: %s", err.Error())
 	}
 	if slack.emoji, err = cfg.String("slack.webhooks.emoji"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.webhooks.emoji: %s", err.Error())
 	}
 
 	if adminsvar, err := cfg.List("slack.admins"); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading slack.admins: %s", err.Error())
 	} else {
 		for _, v := range adminsvar {
 			if admin, ok := v.(string); ok {
