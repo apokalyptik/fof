@@ -102,8 +102,8 @@ func main() {
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
 	} else {
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { HTTP404(w) })
-		http.HandleFunc("/api", HTTPRouter)
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { doHTTP404(w) })
+		http.HandleFunc("/api", doHTTPRouter)
 		log.Fatal(http.ListenAndServe(listen, nil))
 	}
 }
