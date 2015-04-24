@@ -33,6 +33,14 @@ func main() {
 		}
 	}
 
+	if xlineDbFile, err := cfg.String("database.xline"); err != nil {
+		log.Fatal(err)
+	} else {
+		if err := xlineDB.load(xlineDbFile); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	if needsDbFile, err := cfg.String("database.needs"); err != nil {
 		log.Fatal(err)
 	} else {
@@ -60,7 +68,13 @@ func main() {
 
 	}
 
-	if slack.key, err = cfg.String("slack.slashKey"); err != nil {
+	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
+		log.Fatal(err)
+	}
+	if slack.xlineKey, err = cfg.String("slack.slashKey.xline"); err != nil {
+		log.Fatal(err)
+	}
+	if slack.needKey, err = cfg.String("slack.slashKey.needs"); err != nil {
 		log.Fatal(err)
 	}
 	if slack.name, err = cfg.String("slack.webhooks.name"); err != nil {

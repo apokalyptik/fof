@@ -10,26 +10,37 @@ import (
 var slack = &Slack{}
 
 type Slack struct {
-	key   string
-	url   string
-	name  string
-	emoji string
+	xlineKey string
+	raidKey  string
+	needKey  string
+	url      string
+	name     string
+	emoji    string
 }
 
-func (s *Slack) toChannel(which, message string) {
-	s.sendMessage("#"+which, message)
+func (s *Slack) toChannel(which, message string, as ...string) {
+	s.sendMessage("#"+which, message, as...)
 }
 
-func (s *Slack) toPerson(who, message string) {
-	s.sendMessage("@"+who, message)
+func (s *Slack) toPerson(who, message string, as ...string) {
+	s.sendMessage("@"+who, message, as...)
 }
 
-func (s *Slack) sendMessage(where, message string) {
+func (s *Slack) sendMessage(where, message string, as ...string) {
+	var name = s.name
+	var emoji = s.emoji
+	if len(as) >= 1 {
+		switch as[0] {
+		case "stickybot":
+			name = "stickybot"
+			emoji = ":star2:"
+		}
+	}
 	data, err := json.Marshal(map[string]string{
 		"text":         message,
-		"username":     s.name,
+		"username":     name,
 		"channel":      where,
-		"icon_emoji":   s.emoji,
+		"icon_emoji":   emoji,
 		"unfurl_links": "true",
 	})
 	if err != nil {
