@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,7 +32,7 @@ func (r *raid) hmacForUser(username string) string {
 	mac := hmac.New(sha256.New, []byte(r.Secret))
 	fmt.Fprintf(mac, "@%s:%s:%s", username, r.Name, r.UUID)
 	expectedMAC := mac.Sum(nil)
-	return string(expectedMAC[8:18])
+	return hex.EncodeToString(expectedMAC[8:18])
 }
 
 func (r *raid) validateHmacForUser(username, hm string) error {
@@ -212,6 +213,7 @@ func (r *raids) list(channel string) []raid {
 				Name:      v.Name,
 				CreatedAt: v.CreatedAt,
 				Members:   make([]string, len(v.Members)),
+				UUID:      v.UUID,
 			}
 			for mk := range v.Members {
 				newraid.Members[mk] = v.Members[mk]

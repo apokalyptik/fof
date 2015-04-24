@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -134,7 +135,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 			return
 		}
-	case "/raid":
+	case "/raid", "/raidtest":
 		if r.Form.Get("token") != slack.raidKey {
 			doHTTPStatus(w, http.StatusUnauthorized)
 			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
@@ -149,7 +150,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(command) < 1 || command[0] == "help" || command[0] == "" {
-			fmt.Fprint(w, "/raid [command]\n\nWhere command is one of:\n\n")
+			fmt.Fprint(w, r.Form.Get("command")+" [command]\n\nWhere command is one of:\n\n")
 			fmt.Fprint(w, "\t• list\n")
 			fmt.Fprint(w, "\t• host [name of a raid to create]\n")
 			fmt.Fprint(w, "\t• join [name of a raid to sign up for]\n")
@@ -158,7 +159,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "\t• ping [name of a raid to ping people for]\n\n")
 			fmt.Fprint(w, "This will only be for raids in #"+channel+". ")
 			fmt.Fprint(w, "To find and use raids in other channels you'll want to ")
-			fmt.Fprint(w, "use the /raid command from those channels")
+			fmt.Fprint(w, "use the "+r.Form.Get("command")+" command from those channels")
 			fmt.Fprint(w, "\n\nFor an introduction, please watch https://www.youtube.com/watch?v=T4g_3Tv5xJU")
 			return
 		}
@@ -170,7 +171,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(
 					w,
 					"There are no raids being hosted on #%s yet. Perhaps "+
-						"you would like to \"/raid host\" one?",
+						"you would like to \""+r.Form.Get("command")+" host\" one?",
 					channel)
 			} else {
 				fmt.Fprintf(w, "The following raids are being hosted on #%s:\n", channel)
@@ -182,10 +183,10 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 						strings.Join(v.Members, "_, _"),
 						r.Host,
 						r.RequestURI,
-						username,
-						channel,
-						v.UUID,
-						v.hmacForUser(username),
+						url.QueryEscape(username),
+						url.QueryEscape(channel),
+						url.QueryEscape(v.UUID),
+						url.QueryEscape(v.hmacForUser(username)),
 					)
 				}
 			}
@@ -206,7 +207,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"@%s is hosting a new raid: \"%s\".\nUse \"/raid join %s\" to sign up!",
+					"@%s is hosting a new raid: \"%s\".\nUse \""+r.Form.Get("command")+" join %s\" to sign up!",
 					username, subcommand, subcommand))
 			}
 		case "join":
@@ -218,7 +219,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"@%s has signed up for \"%s\".\nUse \"/raid join %s\" to join them!",
+					"@%s has signed up for \"%s\".\nUse \""+r.Form.Get("command")+" join %s\" to join them!",
 					username, subcommand, subcommand))
 			}
 		case "leave":
@@ -230,7 +231,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 					subcommand,
 					channel))
 				slack.toChannel(channel, fmt.Sprintf(
-					"@%s is no longer signed up for \"%s\".\nUse \"/raid join %s\" to take their place!",
+					"@%s is no longer signed up for \"%s\".\nUse \""+r.Form.Get("command")+" join %s\" to take their place!",
 					username, subcommand, subcommand))
 			}
 		case "finish":
@@ -255,7 +256,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 			fmt.Fprint(w, "I'm afraid I don't know how to '"+command[0]+"'. ")
-			fmt.Fprint(w, "Try '/raid help' to get a list of things I can do for you")
+			fmt.Fprint(w, "Try '/"+r.Form.Get("command")+" help' to get a list of things I can do for you")
 			return
 		}
 	default:
