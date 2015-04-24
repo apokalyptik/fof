@@ -7,19 +7,19 @@ import (
 	"strings"
 )
 
-func HTTPStatus(w http.ResponseWriter, code int) {
+func doHTTPStatus(w http.ResponseWriter, code int) {
 	w.WriteHeader(code)
 	w.Write([]byte(http.StatusText(code)))
 }
 
-func HTTP404(w http.ResponseWriter) {
-	HTTPStatus(w, http.StatusNotFound)
+func doHTTP404(w http.ResponseWriter) {
+	doHTTPStatus(w, http.StatusNotFound)
 }
 
-func HTTPRouter(w http.ResponseWriter, r *http.Request) {
+func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if r.Form.Get("token") != slack.key {
-		HTTPStatus(w, http.StatusUnauthorized)
+		doHTTPStatus(w, http.StatusUnauthorized)
 		log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 		return
 	}
@@ -69,9 +69,16 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 				for _, v := range raidDb.list(channel) {
 					fmt.Fprintf(
 						w,
-						"• \"%s\" with: _%s_\n",
+						"• \"%s\" with: _%s_ <http://%s%s?a=rj&u=%s&c=%s&r=%s&h=%s|join>\n",
 						v.Name,
-						strings.Join(v.Members, "_, _"))
+						strings.Join(v.Members, "_, _"),
+						r.Host,
+						r.RequestURI,
+						username,
+						channel,
+						v.UUID,
+						v.hmacForUser(username),
+					)
 				}
 			}
 		case "host":
@@ -144,7 +151,7 @@ func HTTPRouter(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		HTTPStatus(w, http.StatusNotImplemented)
+		doHTTPStatus(w, http.StatusNotImplemented)
 		return
 	}
 }

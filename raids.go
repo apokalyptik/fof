@@ -8,6 +8,11 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"crypto/hmac"
+	"crypto/sha256"
+
+	"code.google.com/p/go-uuid/uuid"
 )
 
 var raidDb = &raids{
@@ -18,6 +23,23 @@ type raid struct {
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	Members   []string  `json:"members"`
+	UUID      string    `json:"uuid"`
+	Secret    string    `json:"secret"`
+}
+
+func (r *raid) hmacForUser(username string) string {
+	mac := hmac.New(sha256.New, []byte(r.Secret))
+	fmt.Fprintf(mac, "@%s:%s:%s", username, r.Name, r.UUID)
+	expectedMAC := mac.Sum(nil)
+	return string(expectedMAC[8:18])
+}
+
+func (r *raid) validateHmacForUser(username, hm string) error {
+	want := r.hmacForUser(username)
+	if want == hm {
+		return nil
+	}
+	return errors.New("Invalid HMAC")
 }
 
 type raids struct {
@@ -31,10 +53,10 @@ func (r *raids) join(channel, name, user string) error {
 	defer r.lock.Unlock()
 	defer r.save()
 	if _, ok := r.data[channel]; !ok {
-		return errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return fmt.Errorf("There are no raids for #%s", channel)
 	}
 	if len(r.data[channel]) == 0 {
-		return errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return fmt.Errorf("There are no raids for #%s", channel)
 	}
 	for _, v := range r.data[channel] {
 		if v.Name != name {
@@ -42,10 +64,10 @@ func (r *raids) join(channel, name, user string) error {
 		}
 		for _, n := range v.Members {
 			if n == user {
-				return errors.New(fmt.Sprintf(
+				fmt.Errorf(
 					"You have already signed up for \"%s\" on #%s",
 					name,
-					channel))
+					channel)
 			}
 		}
 		slack.toPerson(v.Members[0], fmt.Sprintf(
@@ -53,10 +75,10 @@ func (r *raids) join(channel, name, user string) error {
 		v.Members = append(v.Members, user)
 		return nil
 	}
-	return errors.New(fmt.Sprintf(
+	return fmt.Errorf(
 		"I have no \"%s\" registered for #%s. Perhaps you would like to \"/raid host\" one?",
 		name,
-		channel))
+		channel)
 }
 
 func (r *raids) leave(channel, name, user string) error {
@@ -64,10 +86,10 @@ func (r *raids) leave(channel, name, user string) error {
 	defer r.lock.Unlock()
 	defer r.save()
 	if _, ok := r.data[channel]; !ok {
-		return errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return fmt.Errorf("There are no raids for #%s", channel)
 	}
 	if len(r.data[channel]) == 0 {
-		return errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return fmt.Errorf("There are no raids for #%s", channel)
 	}
 	for vid, v := range r.data[channel] {
 		if v.Name != name {
@@ -80,34 +102,34 @@ func (r *raids) leave(channel, name, user string) error {
 			v.Members = append(v.Members[:k], v.Members[k+1:]...)
 			if len(v.Members) == 0 {
 				r.data[channel] = append(r.data[channel][:vid], r.data[channel][vid+1:]...)
-				return errors.New(fmt.Sprintf(
+				return fmt.Errorf(
 					"Since you were the last member of \"%s\" on #%s the raid has been disbanded",
 					name,
-					channel))
+					channel)
 			}
 			slack.toPerson(v.Members[0], fmt.Sprintf(
 				"@%s has left your raid \"%s\" on #%s", user, name, channel))
 			return nil
 		}
-		return errors.New(fmt.Sprintf(
+		return fmt.Errorf(
 			"You are not signed up to do \"%s\" on #%s",
 			name,
-			channel))
+			channel)
 	}
-	return errors.New(fmt.Sprintf(
+	return fmt.Errorf(
 		"I have no \"%s\" registered for #%s. Perhaps you would like to \"/raid host\" one?",
 		name,
-		channel))
+		channel)
 }
 
 func (r *raids) members(channel, name string) ([]string, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 	if _, ok := r.data[channel]; !ok {
-		return nil, errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return nil, fmt.Errorf("There are no raids for #%s", channel)
 	}
 	if len(r.data[channel]) == 0 {
-		return nil, errors.New(fmt.Sprintf("There are no raids for #%s", channel))
+		return nil, fmt.Errorf("There are no raids for #%s", channel)
 	}
 	for _, v := range r.data[channel] {
 		if v.Name != name {
@@ -119,10 +141,10 @@ func (r *raids) members(channel, name string) ([]string, error) {
 		}
 		return rval, nil
 	}
-	return nil, errors.New(fmt.Sprintf(
+	return nil, fmt.Errorf(
 		"I have no \"%s\" registered for #%s",
 		name,
-		channel))
+		channel)
 }
 
 func (r *raids) finish(channel, name, user string) error {
@@ -145,17 +167,17 @@ func (r *raids) finish(channel, name, user string) error {
 			}
 		}
 		if allowed == false {
-			return errors.New(fmt.Sprintf(
+			return fmt.Errorf(
 				"Only the organizer (_@%s_) can finish a raid",
-				v.Members[0]))
+				v.Members[0])
 		}
 		r.data[channel] = append(r.data[channel][:k], r.data[channel][k+1:]...)
 		return nil
 	}
-	return errors.New(fmt.Sprintf(
+	return fmt.Errorf(
 		"I have no \"%s\" registered for #%s. Perhaps you would like to \"/raid host\" one?",
 		name,
-		channel))
+		channel)
 }
 
 func (r *raids) register(channel, name, user string) error {
@@ -174,6 +196,8 @@ func (r *raids) register(channel, name, user string) error {
 		Name:      name,
 		CreatedAt: time.Now(),
 		Members:   []string{user},
+		UUID:      uuid.New(),
+		Secret:    uuid.New(),
 	})
 	return nil
 }
@@ -252,6 +276,14 @@ func (r *raids) load(filename string) error {
 	}
 	if r.data == nil {
 		r.data = map[string][]*raid{}
+	}
+	for c := range r.data {
+		for i := range r.data[c] {
+			if r.data[c][i].UUID == "" {
+				r.data[c][i].UUID = uuid.New()
+				r.data[c][i].Secret = uuid.New()
+			}
+		}
 	}
 	return nil
 }
