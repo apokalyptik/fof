@@ -29,7 +29,7 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 	switch r.Form.Get("command") {
 	case "/xline":
 		if r.Form.Get("token") != slack.xlineKey {
-			HTTPStatus(w, http.StatusUnauthorized)
+			doHTTPStatus(w, http.StatusUnauthorized)
 			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 			return
 		}
@@ -130,13 +130,13 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 		}
 	case "/needs":
 		if r.Form.Get("token") != slack.needKey {
-			HTTPStatus(w, http.StatusUnauthorized)
+			doHTTPStatus(w, http.StatusUnauthorized)
 			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 			return
 		}
 	case "/raid":
 		if r.Form.Get("token") != slack.raidKey {
-			HTTPStatus(w, http.StatusUnauthorized)
+			doHTTPStatus(w, http.StatusUnauthorized)
 			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
 			return
 		}
