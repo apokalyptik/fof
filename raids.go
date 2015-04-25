@@ -64,6 +64,7 @@ func (r *raids) join(channel, name, user string) error {
 		if v.Name != name {
 			continue
 		}
+		/* Disabled for member +1, +2, etc functionality
 		for _, n := range v.Members {
 			if n == user {
 				return fmt.Errorf(
@@ -72,6 +73,7 @@ func (r *raids) join(channel, name, user string) error {
 					channel)
 			}
 		}
+		*/
 		slack.toPerson(v.Members[0], fmt.Sprintf(
 			"@%s has joined your raid \"%s\" on #%s", user, name, channel))
 		v.Members = append(v.Members, user)
@@ -97,13 +99,23 @@ func (r *raids) leave(channel, name, user string) error {
 		if v.Name != name {
 			continue
 		}
-		for k, n := range v.Members {
+		var newMembers = []string{}
+		var removed = 0
+		for _, n := range v.Members {
 			if n != user {
+				newMembers = append(newMembers, n)
 				continue
+			} else {
+				removed = removed + 1
 			}
-			v.Members = append(v.Members[:k], v.Members[k+1:]...)
+		}
+		if removed > 0 {
+			v.Members = newMembers
 			if len(v.Members) == 0 {
 				r.data[channel] = append(r.data[channel][:vid], r.data[channel][vid+1:]...)
+				if len(r.data[channel]) == 0 {
+					delete(r.data, channel)
+				}
 				return fmt.Errorf(
 					"Since you were the last member of \"%s\" on #%s the raid has been disbanded",
 					name,
