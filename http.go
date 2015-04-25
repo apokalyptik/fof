@@ -19,6 +19,82 @@ func doHTTP404(w http.ResponseWriter) {
 }
 
 func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		doHTTPPost(w, r)
+	default:
+		doHTTPGet(w, r)
+	}
+}
+
+func raidLeave(w http.ResponseWriter, channel, raid, username, cmd string) {
+	if err := raidDb.leave(channel, raid, username); err != nil {
+		fmt.Fprint(w, err.Error())
+	} else {
+		fmt.Fprint(w, fmt.Sprintf(
+			"OK. You're no longer signed up for \"%s\" on #%s",
+			raid,
+			channel))
+		slack.toChannel(channel, fmt.Sprintf(
+			"@%s is no longer signed up for \"%s\".\nUse \"%s join %s\" to take their place!",
+			username, raid, cmd, raid))
+	}
+}
+
+func raidJoin(w http.ResponseWriter, user, channel, raid, cmd string) error {
+	if err := raidDb.join(channel, raid, user); err != nil {
+		fmt.Fprint(w, err.Error())
+		return err
+	}
+	fmt.Fprint(w, fmt.Sprintf("OK. You're signed up for \"%s\" on #%s", raid, channel))
+	slack.toChannel(channel, fmt.Sprintf(
+		"@%s has signed up for \"%s\".\nUse \"%s join %s\" to join them!",
+		user, raid, cmd, raid))
+	return nil
+}
+
+func doHTTPGet(w http.ResponseWriter, r *http.Request) {
+	var q = r.URL.Query()
+	switch q.Get("a") {
+	case "rj": // Raid Join
+		channel := q.Get("c")
+		uuid := q.Get("r")
+		user := q.Get("u")
+		sig := q.Get("h")
+		if channel == "" || user == "" || uuid == "" || sig == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		for _, r := range raidDb.list(channel) {
+			if r.UUID == uuid {
+				if r.validateHmacForUser(user, sig) == nil {
+					raidJoin(w, user, channel, r.Name, q.Get("cmd"))
+					return
+				}
+			}
+		}
+	case "rp": // Raid Part
+		channel := q.Get("c")
+		uuid := q.Get("r")
+		user := q.Get("u")
+		sig := q.Get("h")
+		if channel == "" || user == "" || uuid == "" || sig == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		for _, r := range raidDb.list(channel) {
+			if r.UUID == uuid {
+				if r.validateHmacForUser(user, sig) == nil {
+					raidLeave(w, channel, r.Name, user, q.Get("cmd"))
+					return
+				}
+			}
+		}
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := strings.Split(r.Form.Get("text"), " ")
 	subcommand := strings.Join(command[1:], " ")
@@ -176,17 +252,43 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 			} else {
 				fmt.Fprintf(w, "The following raids are being hosted on #%s:\n", channel)
 				for _, v := range raidDb.list(channel) {
+					var isMember = false
+					for _, m := range v.Members {
+						if m == username {
+							isMember = true
+							break
+						}
+					}
+					var link = ""
+					if isMember == false {
+						link = fmt.Sprintf(
+							"<http://%s%s?a=rj&u=%s&c=%s&r=%s&h=%s&cmd=%s|join>",
+							r.Host,
+							r.RequestURI,
+							url.QueryEscape(username),
+							url.QueryEscape(channel),
+							url.QueryEscape(v.UUID),
+							url.QueryEscape(v.hmacForUser(username)),
+							url.QueryEscape(r.Form.Get("command")),
+						)
+					} else {
+						link = fmt.Sprintf(
+							"<http://%s%s?a=rp&u=%s&c=%s&r=%s&h=%s&cmd=%s|leave>",
+							r.Host,
+							r.RequestURI,
+							url.QueryEscape(username),
+							url.QueryEscape(channel),
+							url.QueryEscape(v.UUID),
+							url.QueryEscape(v.hmacForUser(username)),
+							url.QueryEscape(r.Form.Get("command")),
+						)
+					}
 					fmt.Fprintf(
 						w,
-						"• \"%s\" with: _%s_ <http://%s%s?a=rj&u=%s&c=%s&r=%s&h=%s|join>\n",
+						"• \"%s\" with: _%s_ %s\n",
 						v.Name,
 						strings.Join(v.Members, "_, _"),
-						r.Host,
-						r.RequestURI,
-						url.QueryEscape(username),
-						url.QueryEscape(channel),
-						url.QueryEscape(v.UUID),
-						url.QueryEscape(v.hmacForUser(username)),
+						link,
 					)
 				}
 			}
@@ -211,29 +313,9 @@ func doHTTPRouter(w http.ResponseWriter, r *http.Request) {
 					username, subcommand, subcommand))
 			}
 		case "join":
-			if err := raidDb.join(channel, subcommand, username); err != nil {
-				fmt.Fprint(w, err.Error())
-			} else {
-				fmt.Fprint(w, fmt.Sprintf(
-					"OK. You're signed up for \"%s\" on #%s",
-					subcommand,
-					channel))
-				slack.toChannel(channel, fmt.Sprintf(
-					"@%s has signed up for \"%s\".\nUse \""+r.Form.Get("command")+" join %s\" to join them!",
-					username, subcommand, subcommand))
-			}
+			raidJoin(w, username, channel, subcommand, r.Form.Get("command"))
 		case "leave":
-			if err := raidDb.leave(channel, subcommand, username); err != nil {
-				fmt.Fprint(w, err.Error())
-			} else {
-				fmt.Fprint(w, fmt.Sprintf(
-					"OK. You're no longer signed up for \"%s\" on #%s",
-					subcommand,
-					channel))
-				slack.toChannel(channel, fmt.Sprintf(
-					"@%s is no longer signed up for \"%s\".\nUse \""+r.Form.Get("command")+" join %s\" to take their place!",
-					username, subcommand, subcommand))
-			}
+			raidLeave(w, channel, subcommand, username, r.Form.Get("command"))
 		case "finish":
 			if err := raidDb.finish(channel, subcommand, username); err != nil {
 				fmt.Fprint(w, err.Error())

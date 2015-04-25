@@ -40,6 +40,7 @@ func (r *raid) validateHmacForUser(username, hm string) error {
 	if want == hm {
 		return nil
 	}
+	log.Printf("'%s' != '%s'", hm, want)
 	return errors.New("Invalid HMAC")
 }
 
@@ -65,7 +66,7 @@ func (r *raids) join(channel, name, user string) error {
 		}
 		for _, n := range v.Members {
 			if n == user {
-				fmt.Errorf(
+				return fmt.Errorf(
 					"You have already signed up for \"%s\" on #%s",
 					name,
 					channel)
@@ -203,22 +204,13 @@ func (r *raids) register(channel, name, user string) error {
 	return nil
 }
 
-func (r *raids) list(channel string) []raid {
+func (r *raids) list(channel string) []*raid {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 	if c, ok := r.data[channel]; ok {
-		rval := make([]raid, len(c))
+		rval := make([]*raid, len(c))
 		for k, v := range c {
-			newraid := raid{
-				Name:      v.Name,
-				CreatedAt: v.CreatedAt,
-				Members:   make([]string, len(v.Members)),
-				UUID:      v.UUID,
-			}
-			for mk := range v.Members {
-				newraid.Members[mk] = v.Members[mk]
-			}
-			rval[k] = newraid
+			rval[k] = v
 		}
 		return rval
 	}
