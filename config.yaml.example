@@ -1,0 +1,16 @@
+database:
+    raids: "_raids.json"
+    needs: "_needs.json"
+    xline: "_xline.json"
+listen: "0.0.0.0:8878"
+pidfile: "_bot.pid"
+maxAge: "72h"
+slack:
+    admins:
+        - "sladkuser1"
+    slashKey:
+        raids: "some-integration-key"
+    webhooks:
+        url: https://hooks.slack.com/services/some/webhooks/url
+		name: raidbot
+        emoji: ":gun:"
