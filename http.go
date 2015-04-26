@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 func doHTTPStatus(w http.ResponseWriter, code int) {
@@ -285,8 +287,9 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 					}
 					fmt.Fprintf(
 						w,
-						"• \"%s\" with: _%s_ %s\n",
+						"• \"%s\" (%.1f days ago) with: _%s_ %s\n",
 						v.Name,
+						math.Floor((time.Now().Sub(v.CreatedAt).Hours()/24)*10)/10,
 						strings.Join(v.Members, "_, _"),
 						link,
 					)
