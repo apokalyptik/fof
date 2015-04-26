@@ -32,14 +32,6 @@ func main() {
 		}
 	}
 
-	if xlineDbFile, err := cfg.String("database.xline"); err != nil {
-		log.Fatal(err)
-	} else {
-		if err := xlineDB.load(xlineDbFile); err != nil {
-			log.Fatal(err)
-		}
-	}
-
 	if needsDbFile, err := cfg.String("database.needs"); err != nil {
 		log.Fatalf("Error reading database.needs from config file: %s", err.Error())
 	} else {
@@ -69,9 +61,6 @@ func main() {
 
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
-	}
-	if slack.xlineKey, err = cfg.String("slack.slashKey.xline"); err != nil {
-		log.Fatalf("Error reading slack.slashKey.xline: %s", err.Error())
 	}
 	if slack.needKey, err = cfg.String("slack.slashKey.needs"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.needs: %s", err.Error())

@@ -10,12 +10,11 @@ import (
 var slack = &Slack{}
 
 type Slack struct {
-	xlineKey string
-	raidKey  string
-	needKey  string
-	url      string
-	name     string
-	emoji    string
+	raidKey string
+	needKey string
+	url     string
+	name    string
+	emoji   string
 }
 
 func (s *Slack) toChannel(which, message string, as ...string) {
