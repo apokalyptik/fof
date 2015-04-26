@@ -105,12 +105,6 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 	log.Printf("@%s on #%s -- %s %s", username, channel, r.Form.Get("command"), r.Form.Get("text"))
 
 	switch r.Form.Get("command") {
-	case "/needs":
-		if r.Form.Get("token") != slack.needKey {
-			doHTTPStatus(w, http.StatusUnauthorized)
-			log.Printf("Unauthorized Request: %#v -- %#v", http.StatusUnauthorized, r.Form)
-			return
-		}
 	case "/raid", "/raidtest":
 		if r.Form.Get("token") != slack.raidKey {
 			doHTTPStatus(w, http.StatusUnauthorized)

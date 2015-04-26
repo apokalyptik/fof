@@ -32,15 +32,6 @@ func main() {
 		}
 	}
 
-	if needsDbFile, err := cfg.String("database.needs"); err != nil {
-		log.Fatalf("Error reading database.needs from config file: %s", err.Error())
-	} else {
-		if err := needsDB.load(needsDbFile); err != nil {
-			log.Fatalf("Error reading %s: %s", needsDbFile, err.Error())
-		}
-		go needsDB.mindExpiration()
-	}
-
 	if raidsDbFile, err := cfg.String("database.raids"); err != nil {
 		log.Fatalf("Error reading database.raids from config file: %s", err.Error())
 	} else {
@@ -61,9 +52,6 @@ func main() {
 
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
-	}
-	if slack.needKey, err = cfg.String("slack.slashKey.needs"); err != nil {
-		log.Fatalf("Error reading slack.slashKey.needs: %s", err.Error())
 	}
 	if slack.name, err = cfg.String("slack.webhooks.name"); err != nil {
 		log.Fatalf("Error reading slack.webhooks.name: %s", err.Error())
