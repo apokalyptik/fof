@@ -1,0 +1,12 @@
+body {
+  background-color: #f1f1f1; }
+
+h2 {
+  border-radius: 0.25em;
+  -moz-border-radius: 0.25em;
+  -webkit-border-radius: 0.25em;
+  -webkit-box-shadow: 0.05em 0.05em 0.05em #107c10 ;
+  -moz-box-shadow: 0.05em 0.05em 0.05em #107c10 ;
+  box-shadow: 0.05em 0.05em 0.05em #107c10 ;
+  background-color: #5dc21e;
+  padding: 0.15em; }

@@ -3,3 +3,4 @@
 *.swp
 raidbot
 *.pid
+.sass-cache

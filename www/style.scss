@@ -1,0 +1,33 @@
+// http://designpieces.com/palette/xbox-one-colour-palette-hex-rgb/
+$lg:  #c2c2c2; // Light gray
+$mg:  #6b6b6b; // Medium gray
+$dg:  #3a3a3a; // Dark Gray
+$bl:  #000000; // Black
+$gr:  #107c10; // Green
+$wh:  #f1f1f1; // White
+$lgr: #5dc21e; // Light Green
+
+$default_rounded_amount: .25em;
+
+@mixin round-corners($amount: $default_rounded_amount) {
+	border-radius: $amount;
+	-moz-border-radius: $amount;
+	-webkit-border-radius: $amount;
+}
+
+@mixin box-shadow($top, $left, $blur, $color, $inset:"") {
+	-webkit-box-shadow:$top $left $blur $color #{$inset};
+	-moz-box-shadow:$top $left $blur $color #{$inset};
+	box-shadow:$top $left $blur $color #{$inset};
+}
+
+body {
+	background-color: $wh;
+}
+
+h2 {
+	@include round-corners(.25em);
+	@include box-shadow(.05em, .05em, .05em, $gr);
+	background-color: $lgr;
+	padding: 0.15em;
+}

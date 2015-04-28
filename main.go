@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/apokalyptik/gopid"
@@ -19,6 +21,7 @@ func init() {
 
 func main() {
 	flag.Parse()
+
 	cfg, err := config.ParseYamlFile(configFile)
 	if err != nil {
 		log.Fatalf("Error parsing config file: %s", err.Error())
@@ -47,7 +50,6 @@ func main() {
 				go raidDb.mindExpiration(maxAge)
 			}
 		}
-
 	}
 
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
@@ -78,7 +80,43 @@ func main() {
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
 	} else {
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { doHTTP404(w) })
+		var devmode = false
+		if _, err := os.Stat("www/index.html"); err == nil {
+			devmode = true
+		}
+		if devmode == false {
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				switch r.RequestURI {
+				case "/":
+					if data, err := Asset("www/index.html"); err == nil {
+						w.Write(data)
+					} else {
+						w.WriteHeader(http.StatusNotFound)
+					}
+				default:
+					if data, err := Asset("www" + r.RequestURI); err == nil {
+						parts := strings.Split(r.RequestURI, ".")
+						switch strings.ToLower(parts[len(parts)-1]) {
+						case "js":
+							w.Header().Set("Content-Type", "application/javascript")
+						case "css":
+							w.Header().Set("Content-Type", "text/css")
+						case "png":
+							w.Header().Set("Content-Type", "image/png")
+						case "gif":
+							w.Header().Set("Content-Type", "image/gif")
+						case "jpg", "jpeg":
+							w.Header().Set("Content-Type", "image/jpeg")
+						}
+						w.Write(data)
+					} else {
+						w.WriteHeader(http.StatusNotFound)
+					}
+				}
+			})
+		} else {
+			http.Handle("/", http.FileServer(http.Dir("www/")))
+		}
 		http.HandleFunc("/api", doHTTPRouter)
 		log.Fatal(http.ListenAndServe(listen, nil))
 	}
