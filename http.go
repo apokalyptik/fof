@@ -69,6 +69,7 @@ func doHTTPGet(w http.ResponseWriter, r *http.Request) {
 		for _, r := range raidDb.list(channel) {
 			if r.UUID == uuid {
 				if r.validateHmacForUser(user, sig) == nil {
+					log.Printf("@%s on #%s -- http %s join %s", user, channel, q.Get("cmd"), r.Name)
 					raidJoin(w, user, channel, r.Name, q.Get("cmd"))
 					return
 				}
@@ -86,6 +87,7 @@ func doHTTPGet(w http.ResponseWriter, r *http.Request) {
 		for _, r := range raidDb.list(channel) {
 			if r.UUID == uuid {
 				if r.validateHmacForUser(user, sig) == nil {
+					log.Printf("@%s on #%s -- http %s leave %s", user, channel, q.Get("cmd"), r.Name)
 					raidLeave(w, channel, r.Name, user, q.Get("cmd"))
 					return
 				}
@@ -102,7 +104,7 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 	channel := r.Form.Get("channel_name")
 	username := r.Form.Get("user_name")
 
-	log.Printf("@%s on #%s -- %s %s", username, channel, r.Form.Get("command"), r.Form.Get("text"))
+	log.Printf("@%s on #%s -- slack %s %s", username, channel, r.Form.Get("command"), r.Form.Get("text"))
 
 	switch r.Form.Get("command") {
 	case "/raid", "/raidtest":
