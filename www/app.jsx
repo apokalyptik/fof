@@ -76,10 +76,18 @@ var MemberList = React.createClass({
 var LoginInit = React.createClass({
 	render: function() {
 		return(
-			<div className="col-md-12">
+			<div className="col-md-3 col-md-offset-4">
 				<form>
-					<strong>Please enter your slack username or email address</strong>
-					<input type="text" value="">
+					<div className="form-group">
+					<h2>Please Log In</h2>
+					</div>
+					<div className="form-group">
+						<label htmlFor="inputLogin">
+							Slack username or email address
+						</label>
+						<input id="inputLogin" type="text" value="" className="form-control"/>
+					</div>
+					<button type="submit" className="btn btn-default">Submit</button>
 				</form>
 			</div>
 		);
@@ -87,16 +95,16 @@ var LoginInit = React.createClass({
 });
 
 var Login = React.createClass({
-	getIntialState: function() {
+	getInitialState: function() {
 		return {
 			username: "",
 			authenticated: false,
 			step: 0,
-		}
+		};
 	},
 	render: function() {
-		if ( self.state.step == 0 ) {
-			return (<div><LoginInit/></div>);
+		if ( this.state.step == 0 ) {
+			return (<LoginInit/>);
 		}
 	},
 });
@@ -111,7 +119,13 @@ var App = React.createClass({
 	},
 	render: function() {
 		if ( active.authenticated == false ) {
-			return( <div><Login/></div> );
+			return( 
+				<div className="container-fluid">
+					<div className="row">
+						<Login/>
+					</div>
+				</div>
+			);
 		}
 		var data = {
 			"@active": active,
