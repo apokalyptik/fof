@@ -1,15 +1,19 @@
 database:
     raids: "_raids.json"
-    needs: "_needs.json"
-    xline: "_xline.json"
 listen: "0.0.0.0:8878"
 pidfile: "_bot.pid"
 maxAge: "72h"
+cookie:
+  auth: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  key:  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 slack:
+	apiKey: "xxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxx"
     admins:
         - "sladkuser1"
     slashKey:
         raids: "some-integration-key"
+    slashCommand:
+        raids: "/raid"
     webhooks:
         url: https://hooks.slack.com/services/some/webhooks/url
 		name: raidbot

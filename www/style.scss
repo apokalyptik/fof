@@ -5,6 +5,7 @@ $dg:  #3a3a3a; // Dark Gray
 $bl:  #000000; // Black
 $gr:  #107c10; // Green
 $wh:  #f1f1f1; // White
+$wg:  #e1e1e1; // Whitei Gray
 $lgr: #5dc21e; // Light Green
 
 $default_rounded_amount: .25em;
@@ -15,19 +16,75 @@ $default_rounded_amount: .25em;
 	-webkit-border-radius: $amount;
 }
 
+.texthalf {
+	font-size: 0.5em;
+}
+
 @mixin box-shadow($top, $left, $blur, $color, $inset:"") {
 	-webkit-box-shadow:$top $left $blur $color #{$inset};
 	-moz-box-shadow:$top $left $blur $color #{$inset};
 	box-shadow:$top $left $blur $color #{$inset};
 }
 
+.floatright {
+	float: right;
+}
+
+.nomargin {
+	margin: 0;
+}
+
+.raidChannel, .raid, .member {
+	// @include box-shadow( 1px, 1px, 1px, $mg);
+	// @include round-corners(3px);
+	// border: 0 1px 1px 1px solid $lgr;
+	padding: .15em;
+	margin-bottom: .15em;
+	background: $wg;
+}
+
+h4.alternate, .member.alternate > span {
+	opacity: 0.50;
+}
+
+.nopadding {
+	padding: 0px;
+}
+
+span.me {
+	font-weight: bold;
+}
+
+.center { text-align: center; }
+
 body {
 	background-color: $wh;
 }
 
+h2.dark {
+	background-color: $wh;
+	color: $gr;
+}
+
 h2 {
-	@include round-corners(.25em);
-	@include box-shadow(.05em, .05em, .05em, $gr);
+	font-size: 26px;
 	background-color: $lgr;
 	padding: 0.15em;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+h4 {
+	background-color: $lgr;
+	padding: 0.15em;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+.raid.active, .raidChannel.active {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+.loginout {
+	text-align: right;
+	margin: 0;
 }

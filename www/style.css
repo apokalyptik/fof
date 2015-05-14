@@ -1,12 +1,55 @@
+.texthalf {
+  font-size: 0.5em; }
+
+.floatright {
+  float: right; }
+
+.nomargin {
+  margin: 0; }
+
+.raidChannel, .raid, .member {
+  padding: .15em;
+  margin-bottom: .15em;
+  background: #e1e1e1; }
+
+h4.alternate, .member.alternate > span {
+  opacity: 0.50; }
+
+.nopadding {
+  padding: 0px; }
+
+span.me {
+  font-weight: bold; }
+
+.center {
+  text-align: center; }
+
 body {
   background-color: #f1f1f1; }
 
+h2.dark {
+  background-color: #f1f1f1;
+  color: #107c10; }
+
 h2 {
-  border-radius: 0.25em;
-  -moz-border-radius: 0.25em;
-  -webkit-border-radius: 0.25em;
-  -webkit-box-shadow: 0.05em 0.05em 0.05em #107c10 ;
-  -moz-box-shadow: 0.05em 0.05em 0.05em #107c10 ;
-  box-shadow: 0.05em 0.05em 0.05em #107c10 ;
+  font-size: 26px;
   background-color: #5dc21e;
-  padding: 0.15em; }
+  padding: 0.15em;
+  -webkit-box-shadow: 1px 1px 1px #6b6b6b ;
+  -moz-box-shadow: 1px 1px 1px #6b6b6b ;
+  box-shadow: 1px 1px 1px #6b6b6b ; }
+
+h4 {
+  background-color: #5dc21e;
+  padding: 0.15em;
+  -webkit-box-shadow: 1px 1px 1px #6b6b6b ;
+  -moz-box-shadow: 1px 1px 1px #6b6b6b ;
+  box-shadow: 1px 1px 1px #6b6b6b ; }
+
+.raid.active, .raidChannel.active {
+  font-weight: bold;
+  text-decoration: underline; }
+
+.loginout {
+  text-align: right;
+  margin: 0; }
