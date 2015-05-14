@@ -76,7 +76,7 @@ func www_app_jsx() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/app.jsx", size: 17176, mode: os.FileMode(420), modTime: time.Unix(1431627570, 0)}
+	info := bindata_file_info{name: "www/app.jsx", size: 17176, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -96,7 +96,7 @@ func www_index_html() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/index.html", size: 1049, mode: os.FileMode(420), modTime: time.Unix(1431626270, 0)}
+	info := bindata_file_info{name: "www/index.html", size: 1049, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -116,7 +116,7 @@ func www_style_css() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/style.css", size: 967, mode: os.FileMode(420), modTime: time.Unix(1431629129, 0)}
+	info := bindata_file_info{name: "www/style.css", size: 967, mode: os.FileMode(420), modTime: time.Unix(1431646902, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -136,7 +136,7 @@ func www_style_css_map() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/style.css.map", size: 322, mode: os.FileMode(420), modTime: time.Unix(1430798956, 0)}
+	info := bindata_file_info{name: "www/style.css.map", size: 322, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -156,7 +156,7 @@ func www_js_jsxtransformer_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/JSXTransformer.js", size: 496910, mode: os.FileMode(420), modTime: time.Unix(1431014637, 0)}
+	info := bindata_file_info{name: "www/js/JSXTransformer.js", size: 496910, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -176,7 +176,7 @@ func www_js_es5_sham_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/es5-sham.js", size: 17291, mode: os.FileMode(420), modTime: time.Unix(1431014635, 0)}
+	info := bindata_file_info{name: "www/js/es5-sham.js", size: 17291, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -196,7 +196,7 @@ func www_js_es5_shim_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/es5-shim.js", size: 50223, mode: os.FileMode(420), modTime: time.Unix(1431014635, 0)}
+	info := bindata_file_info{name: "www/js/es5-shim.js", size: 50223, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -216,7 +216,7 @@ func www_js_html5shiv_printshiv_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/html5shiv-printshiv.min.js", size: 4272, mode: os.FileMode(420), modTime: time.Unix(1431014635, 0)}
+	info := bindata_file_info{name: "www/js/html5shiv-printshiv.min.js", size: 4272, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -236,7 +236,7 @@ func www_js_html5shiv_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/html5shiv.min.js", size: 2636, mode: os.FileMode(420), modTime: time.Unix(1431014635, 0)}
+	info := bindata_file_info{name: "www/js/html5shiv.min.js", size: 2636, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -256,7 +256,7 @@ func www_js_jquery_1_11_3_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/jquery-1.11.3.min.js", size: 95957, mode: os.FileMode(420), modTime: time.Unix(1430238058, 0)}
+	info := bindata_file_info{name: "www/js/jquery-1.11.3.min.js", size: 95957, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -276,7 +276,7 @@ func www_js_jquery_2_1_3_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/jquery-2.1.3.min.js", size: 84320, mode: os.FileMode(420), modTime: time.Unix(1431014636, 0)}
+	info := bindata_file_info{name: "www/js/jquery-2.1.3.min.js", size: 84320, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -296,7 +296,7 @@ func www_js_notify_combined_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/notify-combined.min.js", size: 13637, mode: os.FileMode(420), modTime: time.Unix(1403967922, 0)}
+	info := bindata_file_info{name: "www/js/notify-combined.min.js", size: 13637, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -316,7 +316,7 @@ func www_js_react_with_addons_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/react-with-addons.js", size: 676846, mode: os.FileMode(420), modTime: time.Unix(1431014638, 0)}
+	info := bindata_file_info{name: "www/js/react-with-addons.js", size: 676846, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -336,7 +336,7 @@ func www_js_react_with_addons_min_js() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/js/react-with-addons.min.js", size: 133119, mode: os.FileMode(420), modTime: time.Unix(1431014637, 0)}
+	info := bindata_file_info{name: "www/js/react-with-addons.min.js", size: 133119, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -356,7 +356,7 @@ func www_css_bootstrap_min_css() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindata_file_info{name: "www/css/bootstrap.min.css", size: 117305, mode: os.FileMode(420), modTime: time.Unix(1426528095, 0)}
+	info := bindata_file_info{name: "www/css/bootstrap.min.css", size: 117305, mode: os.FileMode(420), modTime: time.Unix(1431629280, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }

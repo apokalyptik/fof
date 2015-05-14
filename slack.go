@@ -130,9 +130,7 @@ func (s *slackMsg) send(text string) error {
 	if s.From == "" {
 		s.From = slack.name
 	}
-	oldTo := s.Where
-	s.to("G04D5RMP5")
-	s.Text = fmt.Sprintf("`message would go to: %s:` %s", oldTo, text)
+	s.Text = text
 	data, err := json.Marshal(s)
 	if err != nil {
 		log.Println("error marshing slack message:", err.Error())

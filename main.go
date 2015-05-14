@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/apokalyptik/gopid"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/sessions"
 	"github.com/olebedev/config"
 )
@@ -110,37 +110,9 @@ func main() {
 			devmode = true
 		}
 		if devmode == false {
-			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				switch r.RequestURI {
-				case "/":
-					if data, err := Asset("www/index.html"); err == nil {
-						w.Write(data)
-					} else {
-						w.WriteHeader(http.StatusNotFound)
-					}
-				default:
-					if data, err := Asset("www" + r.RequestURI); err == nil {
-						parts := strings.Split(r.RequestURI, ".")
-						switch strings.ToLower(parts[len(parts)-1]) {
-						case "js":
-							w.Header().Set("Content-Type", "application/javascript")
-						case "jsx":
-							w.Header().Set("Content-Type", "text/jsx")
-						case "css":
-							w.Header().Set("Content-Type", "text/css")
-						case "png":
-							w.Header().Set("Content-Type", "image/png")
-						case "gif":
-							w.Header().Set("Content-Type", "image/gif")
-						case "jpg", "jpeg":
-							w.Header().Set("Content-Type", "image/jpeg")
-						}
-						w.Write(data)
-					} else {
-						w.WriteHeader(http.StatusNotFound)
-					}
-				}
-			})
+			http.Handle("/",
+				http.FileServer(
+					&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: "www"}))
 		} else {
 			http.Handle("/", http.FileServer(http.Dir("www/")))
 		}
