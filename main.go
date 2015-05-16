@@ -21,7 +21,7 @@ var admins []string
 func init() {
 	flag.StringVar(&configFile, "config", "./config.yaml", "Path to YAML configuration")
 	rand.Read(hmacKey)
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS((runtime.NumCPU() * 2) + 1)
 }
 
 func main() {

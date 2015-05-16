@@ -397,13 +397,13 @@ var HostForm = React.createClass({
 			<div className="col-md-6 col-md-offset-3">
 			<h4>Host an Event</h4>
 				<div className="form-group">
-					<label for="channel">Channel to Host in</label>
+					<label htmlFor="channel">Channel to Host in</label>
 					<select className="form-control" onChange={this.handleChannel}>
 						{channels}
 					</select>
 				</div>
 				<div className="form-group">
-					<label for="name">Name of your Event</label>
+					<label htmlFor="name">Name of your Event</label>
 					<input 
 						onChange={this.handleRaid}
 						type="text" className="form-control" id="name" placeholder="Event Name"/>
@@ -656,4 +656,7 @@ var App = React.createClass({
 	},
 });
 
-React.render(<App />, document.getElementById('app'));
+
+jQuery(document).ready(function() {
+	React.render(<App />, document.getElementById('app'));
+})
