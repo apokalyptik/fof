@@ -80,6 +80,7 @@ func main() {
 				log.Fatalf("%#v from %#v is not a string", v, adminsvar)
 			}
 		}
+		xhrOutput.set("admins", admins)
 	}
 
 	if apiKey, err := cfg.String("slack.apiKey"); err != nil {
@@ -100,7 +101,9 @@ func main() {
 
 	if cmd, err := cfg.String("slack.slashCommand.raids"); err == nil {
 		raidSlashCommand = cmd
+		xhrOutput.set("command", cmd)
 	}
+
 	go mindSlackMsgQueue()
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
