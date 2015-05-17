@@ -367,13 +367,15 @@ var HostForm = React.createClass({
 				this.props.cancel(e)
 			}.bind(this))
 			.fail(function(data) {
+				if ( data.status == 403 ) {
+					location.reload(true);
+				}
 				this.setState({error: data.responseText});
 			}.bind(this));
 	},
 	handleRaid: function(event) { this.setState({raid: event.target.value}); },
 	handleChannel: function(event) { this.setState({channel: event.target.value}); },
 	render: function() {
-		console.log(this.props)
 		var channels = [
 			"",
 		];
@@ -383,9 +385,9 @@ var HostForm = React.createClass({
 
 		for ( var i=0; i<channels.length; i++ ) {
 			if ( i == 0 ) {
-				channels[i] = (<option value="">-- Select a Channel --</option>);
+				channels[i] = (<option key="" value="">-- Select a Channel --</option>);
 			} else {
-				channels[i] = (<option value={channels[i]}>{channels[i]}</option>);
+				channels[i] = (<option key={channels[i]} value={channels[i]}>{channels[i]}</option>);
 			}
 		}
 
@@ -430,68 +432,45 @@ var App = React.createClass({
 			raid: "",
 			checked: false,
 			command: "",
-			since: "",
+			updated_at: "",
 			hosting: false,
 			channels: [],
 		};
 	},
+	post: function(what, data) {
+		jQuery.post("/rest/raid/" + what, data)
+		.fail( function( data ) {
+			if ( data.status == 403 ) {
+				location.reload( true );
+			}
+		} );
+	},
 	joinRaidAlt: function(channel, raid) {
-		jQuery.post(
-			"/rest/raid/join-alt",
-			{ channel: channel, raid: raid })
-		.done(function(data) {
-			// notify.success(data);
-			this.updateRaidData()
-		}.bind(this))
-		.fail(function(data) {
-		});
+		this.post( "join-alt",  { channel: channel, raid: raid });
 	},
 	leaveRaidAlt: function(channel, raid) {
-		jQuery.post(
-			"/rest/raid/leave-alt",
-			{ channel: channel, raid: raid })
-		.always(function(data) {
-			this.updateRaidData();
-		}.bind(this));
-		},
+		this.post( "leave-alt", { channel: channel, raid: raid });
+	},
 	joinRaid: function(channel, raid) {
-			jQuery.post(
-				"/rest/raid/join",
-				{ channel: channel, raid: raid })
-			.done(function(data) {
-				this.updateRaidData()
-			}.bind(this))
-			.fail(function(data) {
-			});
-		},
+		this.post( "join", { channel: channel, raid: raid });
+	},
 	leaveRaid: function(channel, raid) {
-		jQuery.post(
-			"/rest/raid/leave",
-			{ channel: channel, raid: raid })
-		.always(function(data) {
-			this.updateRaidData();
-		}.bind(this));
+		this.post( "leave", { channel: channel, raid: raid });
 	},
 	pingRaid: function(channel, raid) {
-		jQuery.post(
-			"/rest/raid/ping",
-			{ channel: channel, raid: raid });
+		this.post( "ping", { channel: channel, raid: raid });
 	},
 	finishRaid: function(channel, raid) {
-		jQuery.post(
-			"/rest/raid/finish",
-			{ channel: channel, raid: raid })
-		.always(function(data) {
-			this.setState({raid: "", channel: ""});
-			this.updateRaidData();
-		}.bind(this));
+		this.post( "finish", { channel: channel, raid: raid });
 	},
+	
 	selectRaid: function(uuid) {
 		this.setState({ raid: uuid });
 	},
 	selectChannel: function(name) {
 		this.setState({ channel: name, raid: "" });
 	},
+	
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
 			.done(function(data) {
@@ -500,71 +479,34 @@ var App = React.createClass({
 				} else {
 					this.setState({checked: true, command: data.cmd})
 				}
-				this.updateRaidData();
+				this.updateData();
 			}.bind(this));
 	},
-	updateChannelData: function() {
-		jQuery.getJSON("/rest/channels")
-			.done(function(data) {
-				data.sort();
-				if ( JSON.stringify(this.state.channels) != JSON.stringify(data) ) {
-					this.setState({channels: data});
-				}
-			}.bind(this))
-			.fail(function() {
-				window.setTimeout(this.updateChannelData, 1000);
-				return;
-			}.bind(this));
-	},
-	updateRaidData: function() {
+	
+	updateData: function() {
 		if ( this.state.authenticated == false ) {
-			window.setTimeout(this.updateRaidData, 1000);
+			window.setTimeout(this.updateData, 1000);
 			return;
 		}
-		jQuery.get("/rest/raid/wait?since="+this.state.since)
+		jQuery.getJSON("/rest/get?since="+this.state.updated_at)
 			.done(function(data) {
-				var since = data;
-				if ( since == this.state.since ) {
-					window.setTimeout(this.updateRaidData, 1000);
-					return
+				if ( this.state.raid != "" ) {
+					if ( typeof data.raids[this.state.channel] == "undefined" ||
+						 typeof data.raids[this.state.channel][this.state.raid] == "undefined" ) {
+						data.raid = "";
+						data.channel == "";
+					}
 				}
-				jQuery.getJSON("/rest/raid/list")
-					.done(function(data) {
-						var newState = {
-							since: since,
-							data: data,
-							raid: this.state.raid,
-							channel: this.state.channel,
-						}
-						if ( this.state.raid != "" ) {
-							if ( typeof data[this.state.channel] == "undefined" ||
-								 typeof data[this.state.channel][this.state.raid] == "undefined" ) {
-								newState.raid = "";
-								newState.channel == "";
-							}
-						}
-						this.setState(newState);
-						this.updateChannelData();
-					}.bind(this))
-					.fail(function(data) {
-						if ( data.status == 403 ) {
-							location.reload(true);
-						}
-					}.bind(this))
-					.always(function() {
-						window.setTimeout(this.updateRaidData, 1000);
-					}.bind(this));
+				this.setState(data)
 			}.bind(this))
-			.fail(function() {
-				window.setTimeout(this.updateRaidData, 1000);
-			}.bind(this));
-	},
-	logOut: function(e) {
-		jQuery.get("/rest/login/logout")
+			.fail(function(data) {
+				if ( data.status == 403 ) {
+					location.reload(true);
+				}
+			}.bind(this))
 			.always(function() {
-				window.location.reload(true);
-			});
-		e.preventDefault();
+				window.setTimeout(this.updateData, 250);
+			}.bind(this))
 	},
 	render: function() {
 		if ( this.state.checked == false ) {
@@ -585,7 +527,7 @@ var App = React.createClass({
 			);
 		}
 
-		if ( typeof this.state.data == "undefined" ) {
+		if ( typeof this.state.raids == "undefined" ) {
 			return (<div/>);
 		}
 		var header = (
@@ -630,11 +572,11 @@ var App = React.createClass({
 				<div className="container-fluid">
 					<div className="row">
 						<ChannelList
-							data={this.state.data}
+							data={this.state.raids}
 							select={this.selectChannel}
 							selected={this.state.channel}
 							host={hostButton}/>
-						<RaidList data={this.state.data}
+						<RaidList data={this.state.raids}
 							channel={this.state.channel}
 							selected={this.state.raid}
 							select={this.selectRaid}/>
@@ -648,7 +590,7 @@ var App = React.createClass({
 							leaveAlt={this.leaveRaidAlt}
 							finish={this.finishRaid}
 							ping={this.pingRaid}
-							data={this.state.data}/>
+							data={this.state.raids}/>
 					</div>
 				</div>
 			</div>

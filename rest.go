@@ -133,38 +133,15 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 			return
 		}
-	case "/rest/channels":
-		if err := requireMethod("GET", w, r); err != nil {
-			return
+	case "/rest/get":
+		since := v.Get("since")
+		for xhrOutput.updatedAt == since {
+			xhrOutput.cond.Wait()
 		}
-		if err := requireAPIKey(session, w); err != nil {
-			return
+		if err := xhrOutput.send(w); err != nil {
+			log.Println("Error sending /rest/raid/wait:", err.Error())
 		}
-		channelLock.RLock()
-		json.NewEncoder(w).Encode(channels)
-		channelLock.RUnlock()
-	case "/rest/raid/wait":
-		var t = time.Now().Add(300 * time.Second)
-		var since = v.Get("since")
-		for {
-			if since != raidListCacheTime {
-				break
-			}
-			if time.Now().After(t) {
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		fmt.Fprint(w, raidListCacheTime)
 		return
-	case "/rest/raid/list":
-		if err := requireMethod("GET", w, r); err != nil {
-			return
-		}
-		if err := requireAPIKey(session, w); err != nil {
-			return
-		}
-		w.Write(raidListCache)
 	case "/rest/raid/join":
 		if err := requireMethod("POST", w, r); err != nil {
 			return

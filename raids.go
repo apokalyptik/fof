@@ -38,8 +38,6 @@ func (r raidCommandResponses) stdOut() string {
 }
 
 var raidSlashCommand = "/raid"
-var raidListCache []byte
-var raidListCacheTime string
 
 var raidDb = &raids{
 	data: map[string][]*raid{},
@@ -311,7 +309,6 @@ func (r *raids) list(channel string) []*raid {
 }
 
 func (r *raids) cache() {
-	raidListCacheTime = fmt.Sprintf("%d", time.Now().Unix())
 	var data = map[string]map[string]map[string]interface{}{}
 	for channel, channelRaids := range raidDb.data {
 		data[channel] = map[string]map[string]interface{}{}
@@ -325,7 +322,7 @@ func (r *raids) cache() {
 			}
 		}
 	}
-	raidListCache, _ = json.Marshal(data)
+	xhrOutput.set("raids", data)
 }
 
 func (r *raids) save() error {

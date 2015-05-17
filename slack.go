@@ -13,19 +13,7 @@ import (
 
 var slack = &Slack{}
 
-var channels = []string{
-	"destiny-crucible",
-	"destiny-general",
-	"destiny-raid-crota",
-	"destiny-raid-vog",
-	"destiny-weeklies",
-	"gta-general",
-	"other-games",
-}
-
-var channelLock sync.RWMutex
-
-type slackChiannelResponse struct {
+type slackChannelResponse struct {
 	Ok       bool `json:"ok"`
 	Channels []struct {
 		ID       string `json:"id"`
@@ -49,7 +37,7 @@ func mindChannelList() {
 			continue
 		}
 
-		var apiResp = &slackChiannelResponse{}
+		var apiResp = &slackChannelResponse{}
 		json.NewDecoder(resp.Body).Decode(apiResp)
 		resp.Body.Close()
 		if apiResp.Ok != true {
@@ -61,10 +49,9 @@ func mindChannelList() {
 		for _, c := range apiResp.Channels {
 			newChannelList = append(newChannelList, c.Name)
 		}
-		channelLock.Lock()
-		channels = newChannelList
-		channelLock.Unlock()
-		time.Sleep(time.Minute * 10)
+		if strings.Join(newChannelList, ",") != strings.Join(xhrOutput.data["channels"].([]string), ",") {
+			xhrOutput.set("channels", newChannelList)
+		}
 	}
 }
 
@@ -136,7 +123,6 @@ func (s *slackMsg) send(text string) error {
 		log.Println("error marshing slack message:", err.Error())
 		return err
 	}
-
 	slackMsgQueue <- url.Values{"payload": {string(data)}}
 	return nil
 }
