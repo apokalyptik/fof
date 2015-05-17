@@ -5,3 +5,4 @@ raidbot
 *.pid
 **.sass-cache
 **.module-cache
+bindata.go
