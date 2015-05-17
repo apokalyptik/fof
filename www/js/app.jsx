@@ -301,8 +301,6 @@ var MemberList = React.createClass({
 				var btnP  = ( <button className="btn btn-warning" onClick={this.ping} href="#">ping</button> );
 				var btnF  = ( <button className="btn btn-danger" onClick={this.finish} href="#">finish</button> );
 
-				console.log(this.props)
-
 				var joinBlock = ( <div>{btnJ}&nbsp;{btnJA}</div> );
 
 				isAdmin = false;

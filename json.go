@@ -38,7 +38,6 @@ func (j *Json) send(w http.ResponseWriter) error {
 }
 
 func (j *Json) set(key string, value interface{}) error {
-	log.Println("set", key, value)
 	j.lock.Lock()
 	j.updatedAt = fmt.Sprintf("%d", time.Now().Unix())
 	j.data["updated_at"] = j.updatedAt
