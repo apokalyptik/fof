@@ -224,7 +224,6 @@ var MemberList = React.createClass({
 		e.preventDefault();
 	},
 	render: function() {
-		var joinBlock = (<div/>);
 		var myMemberList = (
 			<strong>
 				Please select a raid to see the member list and be able to join or part
@@ -296,36 +295,28 @@ var MemberList = React.createClass({
 						);
 					}
 				}
-				if ( !isMember ) {
-					joinBlock = (
-						<div>
-							<button className="btn btn-success" onClick={this.join}>join</button>
-							&nbsp;
-							<button className="btn btn-success" onClick={this.joinAlt}>join-alt</button>
-						</div>
-					);
-				} else {
+
+				var btnJ  = ( <button className="btn btn-success" onClick={this.join}>join</button> );
+				var btnJA = ( <button className="btn btn-success" onClick={this.joinAlt}>join-alt</button> );
+				var btnP  = ( <button className="btn btn-warning" onClick={this.ping} href="#">ping</button> );
+				var btnF  = ( <button className="btn btn-danger" onClick={this.finish} href="#">finish</button> );
+
+				console.log(this.props)
+
+				var joinBlock = ( <div>{btnJ}&nbsp;{btnJA}</div> );
+
+				isAdmin = false;
+				for ( var i=0; i<this.props.admins.length; i++ ) {
+					if ( this.props.admins[i] == this.props.username ) {
+						isAdmin = true;
+						break;
+					}
+				}
+
+				if ( isMember || isAdmin ) {
 					var leader = this.props.data[this.props.channel][this.props.raid].members[0]
-					if ( leader == this.props.username ) {
-						joinBlock = (
-							<div>
-								<button className="btn btn-success" onClick={this.join}>join</button>
-								&nbsp;
-								<button className="btn btn-success" onClick={this.joinAlt}>join-alt</button>
-								&nbsp;
-								<button className="btn btn-warning" onClick={this.ping} href="#">ping</button>
-								&nbsp;
-								<button className="btn btn-danger" onClick={this.finish} href="#">finish</button>
-							</div>
-						);
-					} else {
-						joinBlock = (
-							 <div>
-								<button className="btn btn-success" onClick={this.join}>join</button>
-								&nbsp;
-								<button className="btn btn-success" onClick={this.joinAlt}>join-alt</button>
-							</div>
-						);
+					if ( leader == this.props.username || isAdmin ) {
+						joinBlock = ( <div> {btnJ}&nbsp;{btnJA}&nbsp;{btnP}&nbsp;{btnF}</div> );
 					}
 				}
 			}
@@ -590,7 +581,8 @@ var App = React.createClass({
 							leaveAlt={this.leaveRaidAlt}
 							finish={this.finishRaid}
 							ping={this.pingRaid}
-							data={this.state.raids}/>
+							data={this.state.raids}
+							admins={this.state.admins}/>
 					</div>
 				</div>
 			</div>
