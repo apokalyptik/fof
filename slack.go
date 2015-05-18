@@ -31,8 +31,7 @@ func mindChannelList() {
 			url.QueryEscape(slack.apiKey)))
 
 		if err != nil {
-			resp.Body.Close()
-			log.Println(err.Error())
+			log.Println("error getting channel list from slack:", err.Error())
 			time.Sleep(time.Second * 5)
 			continue
 		}
