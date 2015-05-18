@@ -6,3 +6,5 @@ raidbot
 **.sass-cache
 **.module-cache
 bindata.go
+node_modules
+www/js/production.js

@@ -1,21 +1,3 @@
-var notify = {
-	success: function(text) {
-		jQuery.notify(text, {
-			autoHideDelay: 5000,
-			autoHide: true,
-			globalPosition: "bottom left",
-			className: "success",
-		});
-	},
-	fail: function(text) {
-		jQuery.notify(text, {
-			autoHideDelay: 5000,
-			autoHide: true,
-			globalPosition: "bottom left",
-		});
-	},
-};
-
 var Channel = React.createClass({
 	select: function(e) {
 		e.preventDefault();
@@ -351,7 +333,6 @@ var HostForm = React.createClass({
 		}
 		jQuery.post("/rest/raid/host", {channel: this.state.channel, raid: this.state.raid})
 			.done(function(data) {
-				// notify.success(data);
 				this.setState({error: ""});
 				this.props.cancel(e)
 			}.bind(this))
