@@ -139,7 +139,7 @@ func mindSlackMsgQueue() {
 	for {
 		payload := <-slackMsgQueue
 		resp, err := http.PostForm(slack.url, payload)
-		defer resp.Body.Close()
+		resp.Body.Close()
 		if err != nil {
 			log.Println("error sending message via slack:", err.Error())
 		}
