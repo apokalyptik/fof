@@ -63,7 +63,7 @@ func requireAPIKey(session *sessions.Session, w http.ResponseWriter) error {
 	}
 	apiKey = a.(string)
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 10; i++ {
 		if apiKey == generateAPIKeyForUserTime(username, i) {
 			return nil
 		}

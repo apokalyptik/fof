@@ -379,6 +379,11 @@ var HostForm = React.createClass({
 					<input 
 						onChange={this.handleRaid}
 						type="text" className="form-control" id="name" placeholder="Event Name"/>
+					<div className="row">
+						<div className="col-md-8 col-md-offset-2">
+							<em>Be sure to include the date, time, and tome zone for your event</em>
+						</div>
+					</div>
 				</div>
 				{errMsg}
 				<button
