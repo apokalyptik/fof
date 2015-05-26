@@ -134,12 +134,20 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "/rest/get":
-		since := v.Get("since")
-		for xhrOutput.updatedAt == since {
-			xhrOutput.cond.Wait()
-		}
-		if err := xhrOutput.send(w); err != nil {
-			log.Println("Error sending /rest/raid/wait:", err.Error())
+		closed := w.(http.CloseNotifier).CloseNotify()
+		notify := make(chan struct{})
+		go func(notify chan struct{}, since string) {
+			for xhrOutput.updatedAt == since {
+				xhrOutput.cond.Wait()
+			}
+			notify <- struct{}{}
+		}(notify, v.Get("since"))
+		select {
+		case <-notify:
+			if err := xhrOutput.send(w); err != nil {
+				log.Println("Error sending /rest/raid/wait:", err.Error())
+			}
+		case <-closed:
 		}
 		return
 	case "/rest/raid/join":
