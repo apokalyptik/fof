@@ -18,9 +18,9 @@ type slackChannelResponse struct {
 	Channels []struct {
 		ID       string `json:"id"`
 		Name     string `json:"name"`
-		General  string `json:"is_general"`
-		Archives string `json:"is_archived"`
-		Channel  string `json:"is_channel"`
+		General  bool   `json:"is_general"`
+		Archived bool   `json:"is_archived"`
+		Channel  bool   `json:"is_channel"`
 	} `json:"channels"`
 }
 

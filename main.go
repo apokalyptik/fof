@@ -124,6 +124,7 @@ func main() {
 
 		go mindChannelList()
 
+		log.Println("Starting Up!")
 		log.Fatal(http.ListenAndServe(listen, nil))
 	}
 }
