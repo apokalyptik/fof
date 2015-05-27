@@ -116,7 +116,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		session.Values["username"] = username
 		session.Values["apiKey"] = generateAPIKeyForUserTime(username, 0)
 		session.Save(r, w)
-		http.Redirect(w, r, "http://fofgaming.com/team/", http.StatusFound)
+		http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
 	case "/rest/login/logout":
 		delete(session.Values, "apiKey")
 		delete(session.Values, "username")
