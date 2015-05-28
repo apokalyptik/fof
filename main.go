@@ -57,6 +57,14 @@ func main() {
 		}
 	}
 
+	if userDbFile, err := cfg.String("database.users"); err != nil {
+		log.Fatalf("Error reading database.users from config file: %s", err.Error())
+	} else {
+		if err := udb.load(userDbFile); err != nil {
+			log.Fatalf("Error reading %s: %s", userDbFile, err.Error())
+		}
+	}
+
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
 	}
