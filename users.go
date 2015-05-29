@@ -1,21 +1,62 @@
 package main
 
 import (
+	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
+	"io"
+	"log"
 	"os"
 	"sync"
 	"time"
 )
 
+var errSlackUserIDNotFound = errors.New("User not found on slack")
+var errSlackIMNotCreated = errors.New("Could not create slack IM")
+
 var udb = &userDB{}
 
 type userDB struct {
-	filename    string
-	lock        sync.RWMutex
-	LastUpdated time.Time
-	LookupID    map[string]string `json:"LookupUserToID"`
-	IMs         map[string]string `json:"LookupUserToIM"`
+	filename     string
+	lock         sync.Mutex
+	LastUpdated  time.Time
+	APITokenHash []byte
+	LookupID     map[string]string `json:"LookupUserToID"`
+	IMs          map[string]string `json:"LookupUserToIM"`
+}
+
+func (u *userDB) getChannelForIM(username string) (string, error) {
+	u.lock.Lock()
+	channel, ok := u.IMs[username]
+	if ok {
+		return channel, nil
+	}
+
+	userid, ok := u.LookupID[username]
+	if !ok {
+		if LookupID, err := slack.getUserListToIDs(); err != nil {
+			return "", err
+		} else {
+			u.LookupID = LookupID
+			userid, ok = u.LookupID[username]
+			if !ok {
+				return "", errSlackUserIDNotFound
+			}
+		}
+	}
+
+	channel, err := slack.doOpenIM(userid)
+	if err != nil {
+		return "", err
+	}
+	u.IMs[username] = channel
+
+	if err := u.save(); err != nil {
+		log.Println("Error saving users db:", err.Error())
+	}
+
+	return channel, nil
 }
 
 func (u *userDB) save() error {
@@ -57,5 +98,14 @@ func (u *userDB) load(filename string) error {
 			IMs:      map[string]string{},
 		}
 	}
+	h := md5.New()
+	io.WriteString(h, slack.apiKey)
+	hash := h.Sum(nil)
+	if bytes.Equal(hash, u.APITokenHash) {
+		return nil
+	}
+	u.APITokenHash = hash
+	u.LookupID = map[string]string{}
+	u.IMs = map[string]string{}
 	return nil
 }
