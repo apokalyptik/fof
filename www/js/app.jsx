@@ -1,5 +1,4 @@
-var flux = fluxify || require('./Flux.js');
-console.log(flux)
+var Dispatcher = null;
 
 var Channel = React.createClass({
 	select: function(e) {
