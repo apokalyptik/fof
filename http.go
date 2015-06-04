@@ -26,13 +26,15 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 	mac := hmac.New(sha256.New, hmacKey)
 	t := time.Now().Unix()
 	fmt.Fprintln(mac, username, t)
-	slack.msg().to("@" + username).send(fmt.Sprintf(
-		"<http://%s/rest/login?username=%s&t=%d&signature=%s|Click here> to log into and use the team tool",
-		r.Host,
-		url.QueryEscape(username),
-		t,
-		fmt.Sprintf("%x", mac.Sum(nil)),
-	))
+	go func() {
+		slack.msg().to("@" + username).send(fmt.Sprintf(
+			"<http://%s/rest/login?username=%s&t=%d&signature=%s|Click here> to log into and use the team tool",
+			r.Host,
+			url.QueryEscape(username),
+			t,
+			fmt.Sprintf("%x", mac.Sum(nil)),
+		))
+	}()
 	fmt.Fprint(w, "You have requested access to the FoF Team site. You will receive a direct message from SLACKBOT with a link to the site.")
 	log.Printf(
 		"@%s on %s -- %s %s",

@@ -114,8 +114,12 @@ func (s *Slack) doOpenIM(username string) (string, error) {
 			ID string `json:"id"`
 		} `json:"channel"`
 	}{}
-	resp, err := http.Get(
-		fmt.Sprintf("https://slack.com/api/im.open?token=%s", s.apiKey))
+	reqURL := fmt.Sprintf("https://slack.com/api/im.open?token=%s&user=%s",
+		url.QueryEscape(s.apiKey),
+		url.QueryEscape(username),
+	)
+	resp, err := http.Get(reqURL)
+
 	defer resp.Body.Close()
 	if err != nil {
 		return "", err
@@ -128,38 +132,11 @@ func (s *Slack) doOpenIM(username string) (string, error) {
 }
 
 type slackMsg struct {
-	Where string `json:"channel"`
-	From  string `json:"username,omitempty"`
-	Icon  string `json:"icon_url,omitempty"`
-	Emoji string `json:"icon_emoji,omitempty"`
-	Text  string `json:"text"`
+	Where string
 }
 
 func (s *slackMsg) to(where string) *slackMsg {
 	s.Where = where
-	return s
-}
-
-func (s *slackMsg) from(who string) *slackMsg {
-	s.From = who
-	return s
-}
-
-func (s *slackMsg) icon(which string) *slackMsg {
-	if len(which) < 7 {
-		s.Emoji = which
-		return s
-	}
-	var bit = strings.ToLower(which[:8])
-	if bit[0:0] != "h" {
-		s.Emoji = which
-		return s
-	}
-	if bit[:4] != "http:" || bit[:5] != "https:" {
-		s.Emoji = which
-		return s
-	}
-	s.Icon = which
 	return s
 }
 
@@ -170,38 +147,36 @@ func (s *slackMsg) send(text string) error {
 		} else {
 			s.Where = channel
 		}
+	} else {
+		s.Where = "#slack-tools-testing"
 	}
 
-	log.Printf("%#v", s)
-
-	return nil
-
-	if s.Icon == "" && s.Emoji == "" {
-		s.Emoji = slack.emoji
+	slackMsgQueue <- url.Values{
+		"channel": []string{s.Where},
+		"text":    []string{text},
 	}
-	if s.From == "" {
-		s.From = slack.name
-	}
-	s.Text = text
-	data, err := json.Marshal(s)
-	if err != nil {
-		log.Println("error marshing slack message:", err.Error())
-		return err
-	}
-	slackMsgQueue <- url.Values{"payload": {string(data)}}
 	return nil
 }
 
 var slackMsgQueue = make(chan url.Values, 1024)
 
 func mindSlackMsgQueue() {
+	var reqURL = "https://slack.com/api/chat.postMessage"
 	for {
+		log.Println("neg1")
 		payload := <-slackMsgQueue
-		resp, err := http.PostForm(slack.url, payload)
+		log.Println("zero")
+		log.Println(payload)
+		payload.Set("token", slack.apiKey)
+		log.Println("one")
+		resp, err := http.PostForm(reqURL, payload)
+		log.Println("two")
 		resp.Body.Close()
+		log.Println("three")
 		if err != nil {
 			log.Println("error sending message via slack:", err.Error())
 		}
 		time.Sleep(time.Millisecond * 750)
+		log.Println("four")
 	}
 }

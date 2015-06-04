@@ -29,7 +29,7 @@ type userDB struct {
 func (u *userDB) getChannelForIM(username string) (string, error) {
 	u.lock.Lock()
 	channel, ok := u.IMs[username]
-	if ok {
+	if ok && channel != "" {
 		return channel, nil
 	}
 
@@ -48,6 +48,7 @@ func (u *userDB) getChannelForIM(username string) (string, error) {
 
 	channel, err := slack.doOpenIM(userid)
 	if err != nil {
+		log.Println("Got error opening IM to", username, err.Error())
 		return "", err
 	}
 	u.IMs[username] = channel
