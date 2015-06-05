@@ -50,6 +50,7 @@ type raid struct {
 	Alts      []string  `json:"alts"`
 	UUID      string    `json:"uuid"`
 	Secret    string    `json:"secret"`
+	Type      string    `json:"type"`
 }
 
 func (r *raid) hmacForUser(username string) string {
@@ -349,9 +350,12 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 		r.lock.RLock()
 		for channel, raidlist := range r.data {
 			for _, raidentry := range raidlist {
-				if time.Now().Add(0 - maxAge).After(raidentry.CreatedAt) {
-					go r.finish(channel, raidentry.Name, raidentry.Members[0])
-					log.Printf("Expiring %s on #%s", raidentry.Name, channel)
+				switch raidentry.Type {
+				case "event":
+					if time.Now().Add(0 - maxAge).After(raidentry.CreatedAt) {
+						go r.finish(channel, raidentry.Name, raidentry.Members[0])
+						log.Printf("Expiring %s on #%s", raidentry.Name, channel)
+					}
 				}
 			}
 		}
@@ -385,6 +389,9 @@ func (r *raids) load(filename string) error {
 			if r.data[c][i].UUID == "" {
 				r.data[c][i].UUID = uuid.New()
 				r.data[c][i].Secret = uuid.New()
+			}
+			if r.data[c][i].Type == "" {
+				r.data[c][i].Type = "event"
 			}
 		}
 	}
