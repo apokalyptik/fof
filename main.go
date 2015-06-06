@@ -57,17 +57,16 @@ func main() {
 		}
 	}
 
+	if userDbFile, err := cfg.String("database.users"); err != nil {
+		log.Fatalf("Error reading database.users from config file: %s", err.Error())
+	} else {
+		if err := udb.load(userDbFile); err != nil {
+			log.Fatalf("Error reading %s: %s", userDbFile, err.Error())
+		}
+	}
+
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
-	}
-	if slack.name, err = cfg.String("slack.webhooks.name"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.name: %s", err.Error())
-	}
-	if slack.url, err = cfg.String("slack.webhooks.url"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.url: %s", err.Error())
-	}
-	if slack.emoji, err = cfg.String("slack.webhooks.emoji"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.emoji: %s", err.Error())
 	}
 
 	if adminsvar, err := cfg.List("slack.admins"); err != nil {
