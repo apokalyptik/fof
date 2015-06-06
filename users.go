@@ -28,6 +28,7 @@ type userDB struct {
 
 func (u *userDB) getChannelForIM(username string) (string, error) {
 	u.lock.Lock()
+	defer u.lock.Unlock()
 	channel, ok := u.IMs[username]
 	if ok && channel != "" {
 		return channel, nil
