@@ -12,7 +12,6 @@ var slack = &Slack{}
 type Slack struct {
 	apiKey  string
 	raidKey string
-	url     string
 	name    string
 	emoji   string
 }

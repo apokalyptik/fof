@@ -68,15 +68,6 @@ func main() {
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
 	}
-	if slack.name, err = cfg.String("slack.webhooks.name"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.name: %s", err.Error())
-	}
-	if slack.url, err = cfg.String("slack.webhooks.url"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.url: %s", err.Error())
-	}
-	if slack.emoji, err = cfg.String("slack.webhooks.emoji"); err != nil {
-		log.Fatalf("Error reading slack.webhooks.emoji: %s", err.Error())
-	}
 
 	if adminsvar, err := cfg.List("slack.admins"); err != nil {
 		log.Fatalf("Error reading slack.admins: %s", err.Error())
