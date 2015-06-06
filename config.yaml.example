@@ -15,7 +15,3 @@ slack:
         raids: "some-integration-key"
     slashCommand:
         raids: "/raid"
-    webhooks:
-        url: https://hooks.slack.com/services/some/webhooks/url
-		name: raidbot
-        emoji: ":gun:"
