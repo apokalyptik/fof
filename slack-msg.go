@@ -18,8 +18,6 @@ func (s *slackMsg) send(text string) error {
 		} else {
 			s.Where = channel
 		}
-	} else {
-		s.Where = "#slack-tools-testing"
 	}
 
 	slackMsgQueue <- url.Values{
