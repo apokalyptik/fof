@@ -134,9 +134,6 @@ var RaidList = React.createClass({
 });
 
 var AltMember = React.createClass({
-	leave: function(e) {
-		this.props.leave(e);
-	},
 	render: function() {
 		if ( this.props.username != this.props.name ) {
 			return (<div className="member alternate">@{this.props.name}</div>)
@@ -160,9 +157,6 @@ var AltMember = React.createClass({
 });
 
 var Member = React.createClass({
-	leave: function(e) {
-		this.props.leave(e);
-	},
 	render: function() {
 		if ( this.props.username != this.props.name ) {
 			return (<div className="member">@{this.props.name}</div>)
@@ -183,30 +177,6 @@ var Member = React.createClass({
 });
 
 var MemberList = React.createClass({
-	join: function(e) {
-		this.props.join(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	leave: function(e) {
-		this.props.leave(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	joinAlt: function(e) {
-		this.props.joinAlt(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	leaveAlt: function(e) {
-		this.props.leaveAlt(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	finish: function(e) {
-		this.props.finish(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	ping: function(e) {
-		this.props.ping(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
 	render: function() {
 		var myMemberList = (
 			<strong>
@@ -244,7 +214,6 @@ var MemberList = React.createClass({
 								name={memberList[i]}
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
-								leave={this.leave}
 								doLeaveButton={doLeaveButton}
 								finish={this.props.finish}/>
 						);
@@ -273,7 +242,6 @@ var MemberList = React.createClass({
 								name={altList[i]}
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
-								leave={this.leaveAlt}
 								doLeaveButton={doLeaveButton}
 								finish={this.props.finish}/>
 						);
@@ -325,6 +293,7 @@ var HostForm = React.createClass({
 		}
 	},
 	submit: function(e) {
+		console.log(this.state)
 		if ( this.state.channel == "" ) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
 			return;
@@ -346,10 +315,10 @@ var HostForm = React.createClass({
 			}.bind(this));
 	},
 	handleRaid: function(event) { 
-		Dispatcher.dispatch({actionType: "set", key: "raid", value: event.target.value});
+		this.setState({ "raid": event.target.value })
 	},
 	handleChannel: function(event) {
-		Dispatcher.dispatch({actionType: "set", key: "channel", value: event.target.value});
+		this.setState({ "channel": event.target.value })
 	},
 	render: function() {
 		var channels = [
@@ -415,24 +384,6 @@ var App = React.createClass({
 			}
 		} );
 	},
-	joinRaidAlt: function(channel, raid) {
-		this.post( "join-alt",  { channel: channel, raid: raid });
-	},
-	leaveRaidAlt: function(channel, raid) {
-		this.post( "leave-alt", { channel: channel, raid: raid });
-	},
-	joinRaid: function(channel, raid) {
-		this.post( "join", { channel: channel, raid: raid });
-	},
-	leaveRaid: function(channel, raid) {
-		this.post( "leave", { channel: channel, raid: raid });
-	},
-	pingRaid: function(channel, raid) {
-		this.post( "ping", { channel: channel, raid: raid });
-	},
-	finishRaid: function(channel, raid) {
-		this.post( "finish", { channel: channel, raid: raid });
-	},
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
 			.done(function(data) {
@@ -493,6 +444,7 @@ var App = React.createClass({
 		if ( typeof this.state.raids == "undefined" ) {
 			return (<div/>);
 		}
+
 		var header = (
 			<div className="container-fluid nopadding">
 				<div className="row nomargin">
@@ -536,23 +488,15 @@ var App = React.createClass({
 					<div className="row">
 						<ChannelList
 							data={this.state.raids}
-							select={this.selectChannel}
 							selected={this.state.channel}
 							host={hostButton}/>
 						<RaidList data={this.state.raids}
 							channel={this.state.channel}
-							selected={this.state.raid}
-							select={this.selectRaid}/>
+							selected={this.state.raid}/>
 						<MemberList
 							username={this.state.username}
 							channel={this.state.channel}
 							raid={this.state.raid}
-							join={this.joinRaid}
-							leave={this.leaveRaid}
-							joinAlt={this.joinRaidAlt}
-							leaveAlt={this.leaveRaidAlt}
-							finish={this.finishRaid}
-							ping={this.pingRaid}
 							data={this.state.raids}
 							admins={this.state.admins}/>
 					</div>
