@@ -1,5 +1,14 @@
 var Dispatcher = null;
 
+
+function postRaid(what, data) {
+	return jQuery.post("/rest/raid/" + what, data).fail(function( data ) {
+		if ( data.status == 403 ) {
+			location.reload( true );
+		}
+	});
+}
+
 var Channel = React.createClass({
 	select: function(e) {
 		e.preventDefault();
@@ -143,7 +152,7 @@ var AltMember = React.createClass({
 			leaveButton = (
 				<button 
 					className="floatright btn btn-warning btn-xs" 
-					onClick={this.leave} 
+					onClick={this.props.leave} 
 					href="#">leave</button>
 			);
 		}
@@ -164,7 +173,7 @@ var Member = React.createClass({
 		var leaveButton = (<span/>);
 		if ( this.props.doLeaveButton ) {
 			leaveButton = (
-				<button className="floatright btn btn-warning btn-xs" onClick={this.leave} href="#">leave</button>
+				<button className="floatright btn btn-warning btn-xs" onClick={this.props.leave} href="#">leave</button>
 			);
 		}
 		return (
@@ -177,6 +186,18 @@ var Member = React.createClass({
 });
 
 var MemberList = React.createClass({
+	raidName: function() {
+		return this.props.data[this.props.channel][this.props.raid].name;
+	},
+	raidPostData: function() {
+			return { channel: this.props.channel, raid: this.raidName() };
+	},
+	join:     function() { postRaid( "join", this.raidPostData() )      },
+	joinAlt:  function() { postRaid( "join-alt", this.raidPostData() )  },
+	leave:    function() { postRaid( "leave", this.raidPostData() )     },
+	leaveAlt: function() { postRaid( "leave-alt", this.raidPostData() ) },
+	ping:     function() { postRaid( "ping", this.raidPostData() )      },
+	finish:   function() { postRaid( "finish",this.raidPostData() )     },
 	render: function() {
 		var myMemberList = (
 			<strong>
@@ -185,8 +206,8 @@ var MemberList = React.createClass({
 		);
 		var myAltList = (<div/>);
 		var isMember = false;
-		if ( this.props.channel != "" ) {
-			if ( this.props.raid != "" ) {
+		if ( this.props.channel != "" && typeof this.props.data[this.props.channel] != "undefined" ) {
+			if ( this.props.raid != "" && typeof this.props.data[this.props.channel][this.props.raid] != "undefined" ) {
 				memberList = this.props.data[this.props.channel][this.props.raid].members;
 				if ( memberList.length < 1 ) {
 					myMemberList = (<span>This raid has no members</span>);
@@ -215,6 +236,7 @@ var MemberList = React.createClass({
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
 								doLeaveButton={doLeaveButton}
+								leave={this.leave}
 								finish={this.props.finish}/>
 						);
 					}
@@ -243,6 +265,7 @@ var MemberList = React.createClass({
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
 								doLeaveButton={doLeaveButton}
+								leave={this.leaveAlt}
 								finish={this.props.finish}/>
 						);
 					}
@@ -374,14 +397,6 @@ var HostForm = React.createClass({
 var App = React.createClass({
 	getInitialState: function() {
 		return Datastore.data
-	},
-	post: function(what, data) {
-		jQuery.post("/rest/raid/" + what, data)
-		.fail( function( data ) {
-			if ( data.status == 403 ) {
-				location.reload( true );
-			}
-		} );
 	},
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
@@ -545,6 +560,20 @@ Dispatcher.register(function(payload) {
 		case "serverStateUpdate":
 			for ( var i in payload.data ) {
 				Datastore.data[i] = payload.data[i];
+			}
+			if ( Datastore.data.channel != "" ) {
+				if ( typeof Datastore.data.raids[channel] == "undefined" ) {
+					Datastore.data.channel = "";
+					Datastore.data.raid = "";
+				} else {
+					if ( Datastore.data.raid != "" ) {
+						var channel = Datastore.data.channel;
+						var raid = Datastore.data.raid;
+						if ( typeof Datastore.data.raids[channel] == "undefined" || Datastore.data.raids[channel][raid] == "undefined" ) {
+							Datastore.data.raid = "";
+						}
+					}
+				}
 			}
 			Datastore.emitChange();
 		case "set":
