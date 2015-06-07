@@ -1,7 +1,19 @@
+var Dispatcher = null;
+
+
+function postRaid(what, data) {
+	return jQuery.post("/rest/raid/" + what, data).fail(function( data ) {
+		if ( data.status == 403 ) {
+			location.reload( true );
+		}
+	});
+}
+
 var Channel = React.createClass({
 	select: function(e) {
 		e.preventDefault();
-		this.props.select(this.props.name)
+		Dispatcher.dispatch({actionType: "set", key: "raid", value: ""});
+		Dispatcher.dispatch({actionType: "set", key: "channel", value:this.props.name});
 	},
 	render: function() {
 		var classes = [ "raidChannel" ];
@@ -40,7 +52,6 @@ var ChannelList = React.createClass({
 					key={channels[i]}
 					number={channelRaids[i]}
 					name={channels[i]}
-					select={this.props.select}
 					selected={this.props.selected}/> );
 			}
 			channelList = channels
@@ -57,7 +68,7 @@ var ChannelList = React.createClass({
 
 var Raid = React.createClass({
 	click: function(e) {
-		this.props.select(this.props.data.uuid);
+		Dispatcher.dispatch({actionType: "set", key: "raid", value: this.props.data.uuid});
 		e.preventDefault();
 	},
 	render: function() {
@@ -132,9 +143,6 @@ var RaidList = React.createClass({
 });
 
 var AltMember = React.createClass({
-	leave: function(e) {
-		this.props.leave(e);
-	},
 	render: function() {
 		if ( this.props.username != this.props.name ) {
 			return (<div className="member alternate">@{this.props.name}</div>)
@@ -144,7 +152,7 @@ var AltMember = React.createClass({
 			leaveButton = (
 				<button 
 					className="floatright btn btn-warning btn-xs" 
-					onClick={this.leave} 
+					onClick={this.props.leave} 
 					href="#">leave</button>
 			);
 		}
@@ -158,9 +166,6 @@ var AltMember = React.createClass({
 });
 
 var Member = React.createClass({
-	leave: function(e) {
-		this.props.leave(e);
-	},
 	render: function() {
 		if ( this.props.username != this.props.name ) {
 			return (<div className="member">@{this.props.name}</div>)
@@ -168,7 +173,7 @@ var Member = React.createClass({
 		var leaveButton = (<span/>);
 		if ( this.props.doLeaveButton ) {
 			leaveButton = (
-				<button className="floatright btn btn-warning btn-xs" onClick={this.leave} href="#">leave</button>
+				<button className="floatright btn btn-warning btn-xs" onClick={this.props.leave} href="#">leave</button>
 			);
 		}
 		return (
@@ -181,30 +186,18 @@ var Member = React.createClass({
 });
 
 var MemberList = React.createClass({
-	join: function(e) {
-		this.props.join(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
+	raidName: function() {
+		return this.props.data[this.props.channel][this.props.raid].name;
 	},
-	leave: function(e) {
-		this.props.leave(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
+	raidPostData: function() {
+			return { channel: this.props.channel, raid: this.raidName() };
 	},
-	joinAlt: function(e) {
-		this.props.joinAlt(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	leaveAlt: function(e) {
-		this.props.leaveAlt(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	finish: function(e) {
-		this.props.finish(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
-	ping: function(e) {
-		this.props.ping(this.props.channel, this.props.data[this.props.channel][this.props.raid].name);
-		e.preventDefault();
-	},
+	join:     function() { postRaid( "join", this.raidPostData() )      },
+	joinAlt:  function() { postRaid( "join-alt", this.raidPostData() )  },
+	leave:    function() { postRaid( "leave", this.raidPostData() )     },
+	leaveAlt: function() { postRaid( "leave-alt", this.raidPostData() ) },
+	ping:     function() { postRaid( "ping", this.raidPostData() )      },
+	finish:   function() { postRaid( "finish",this.raidPostData() )     },
 	render: function() {
 		var myMemberList = (
 			<strong>
@@ -213,8 +206,8 @@ var MemberList = React.createClass({
 		);
 		var myAltList = (<div/>);
 		var isMember = false;
-		if ( this.props.channel != "" ) {
-			if ( this.props.raid != "" ) {
+		if ( this.props.channel != "" && typeof this.props.data[this.props.channel] != "undefined" ) {
+			if ( this.props.raid != "" && typeof this.props.data[this.props.channel][this.props.raid] != "undefined" ) {
 				memberList = this.props.data[this.props.channel][this.props.raid].members;
 				if ( memberList.length < 1 ) {
 					myMemberList = (<span>This raid has no members</span>);
@@ -242,8 +235,8 @@ var MemberList = React.createClass({
 								name={memberList[i]}
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
-								leave={this.leave}
 								doLeaveButton={doLeaveButton}
+								leave={this.leave}
 								finish={this.props.finish}/>
 						);
 					}
@@ -271,8 +264,8 @@ var MemberList = React.createClass({
 								name={altList[i]}
 								username={this.props.username}
 								leader={this.props.data[this.props.channel][this.props.raid].members[0]}
-								leave={this.leaveAlt}
 								doLeaveButton={doLeaveButton}
+								leave={this.leaveAlt}
 								finish={this.props.finish}/>
 						);
 					}
@@ -324,27 +317,31 @@ var HostForm = React.createClass({
 	},
 	submit: function(e) {
 		if ( this.state.channel == "" ) {
-			this.setState({error: "please select a channel"});
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
 			return;
 		}
 		if ( this.state.raid == "" ) {
-			this.setState({error: "please enter an event name"});
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "please enter an event name"});
 			return;
 		}
 		jQuery.post("/rest/raid/host", {channel: this.state.channel, raid: this.state.raid})
 			.done(function(data) {
-				this.setState({error: ""});
+				Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 				this.props.cancel(e)
 			}.bind(this))
 			.fail(function(data) {
 				if ( data.status == 403 ) {
 					location.reload(true);
 				}
-				this.setState({error: data.responseText});
+				Dispatcher.dispatch({actionType: "set", key: "error", value: responseText});
 			}.bind(this));
 	},
-	handleRaid: function(event) { this.setState({raid: event.target.value}); },
-	handleChannel: function(event) { this.setState({channel: event.target.value}); },
+	handleRaid: function(event) { 
+		this.setState({ "raid": event.target.value })
+	},
+	handleChannel: function(event) {
+		this.setState({ "channel": event.target.value })
+	},
 	render: function() {
 		var channels = [
 			"",
@@ -399,65 +396,24 @@ var HostForm = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
-		return {
-			authenticated: false,
-			checkedUsername: false,
-			username: "",
-			channel: "",
-			raid: "",
-			checked: false,
-			command: "",
-			updated_at: "",
-			hosting: false,
-			channels: [],
-		};
+		return Datastore.data
 	},
-	post: function(what, data) {
-		jQuery.post("/rest/raid/" + what, data)
-		.fail( function( data ) {
-			if ( data.status == 403 ) {
-				location.reload( true );
-			}
-		} );
-	},
-	joinRaidAlt: function(channel, raid) {
-		this.post( "join-alt",  { channel: channel, raid: raid });
-	},
-	leaveRaidAlt: function(channel, raid) {
-		this.post( "leave-alt", { channel: channel, raid: raid });
-	},
-	joinRaid: function(channel, raid) {
-		this.post( "join", { channel: channel, raid: raid });
-	},
-	leaveRaid: function(channel, raid) {
-		this.post( "leave", { channel: channel, raid: raid });
-	},
-	pingRaid: function(channel, raid) {
-		this.post( "ping", { channel: channel, raid: raid });
-	},
-	finishRaid: function(channel, raid) {
-		this.post( "finish", { channel: channel, raid: raid });
-	},
-	
-	selectRaid: function(uuid) {
-		this.setState({ raid: uuid });
-	},
-	selectChannel: function(name) {
-		this.setState({ channel: name, raid: "" });
-	},
-	
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
 			.done(function(data) {
 				if ( typeof data.username == "string" && data.username != "" ) {
-					this.setState({authenticated: true, username: data.username, checked: true, command: data.cmd});
+					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
+					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
+					Dispatcher.dispatch({actionType: "set", key: "username", value: data.username});
+					Dispatcher.dispatch({actionType: "set", key: "authenticated", value: true});
 				} else {
-					this.setState({checked: true, command: data.cmd})
+					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
+					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 				}
+				Datastore.subscribe(this.acceptData.bind(this))
 				this.updateData();
 			}.bind(this));
 	},
-	
 	updateData: function() {
 		if ( this.state.authenticated == false ) {
 			window.setTimeout(this.updateData, 1000);
@@ -465,14 +421,7 @@ var App = React.createClass({
 		}
 		jQuery.getJSON("/rest/get?since="+this.state.updated_at)
 			.done(function(data) {
-				if ( this.state.raid != "" ) {
-					if ( typeof data.raids[this.state.channel] == "undefined" ||
-						 typeof data.raids[this.state.channel][this.state.raid] == "undefined" ) {
-						data.raid = "";
-						data.channel == "";
-					}
-				}
-				this.setState(data)
+				Dispatcher.dispatch({actionType: "serverStateUpdate", data: data});
 			}.bind(this))
 			.fail(function(data) {
 				if ( data.status == 403 ) {
@@ -482,6 +431,9 @@ var App = React.createClass({
 			.always(function() {
 				window.setTimeout(this.updateData, 250);
 			}.bind(this))
+	},
+	acceptData: function(newData) {
+		this.setState(newData);
 	},
 	render: function() {
 		if ( this.state.checked == false ) {
@@ -505,6 +457,7 @@ var App = React.createClass({
 		if ( typeof this.state.raids == "undefined" ) {
 			return (<div/>);
 		}
+
 		var header = (
 			<div className="container-fluid nopadding">
 				<div className="row nomargin">
@@ -524,7 +477,7 @@ var App = React.createClass({
 					<div className="container-fluid">
 						<div className="row">
 							<HostForm channels={this.state.channels} cancel={function() {
-								this.setState({hosting: false});
+								Dispatcher.dispatch({actionType: "set", key: "hosting", value: false});
 							}.bind(this)}/>
 						</div>
 					</div>
@@ -536,7 +489,7 @@ var App = React.createClass({
 					<button
 						onClick={function(e) {
 							e.preventDefault();
-							this.setState({hosting: true});
+							Dispatcher.dispatch({actionType: "set", key: "hosting", value: true});	
 						}.bind(this)}
 						className="btn btn-default btn-block btn-success">Host an Event</button>
 		);
@@ -548,23 +501,15 @@ var App = React.createClass({
 					<div className="row">
 						<ChannelList
 							data={this.state.raids}
-							select={this.selectChannel}
 							selected={this.state.channel}
 							host={hostButton}/>
 						<RaidList data={this.state.raids}
 							channel={this.state.channel}
-							selected={this.state.raid}
-							select={this.selectRaid}/>
+							selected={this.state.raid}/>
 						<MemberList
 							username={this.state.username}
 							channel={this.state.channel}
 							raid={this.state.raid}
-							join={this.joinRaid}
-							leave={this.leaveRaid}
-							joinAlt={this.joinRaidAlt}
-							leaveAlt={this.leaveRaidAlt}
-							finish={this.finishRaid}
-							ping={this.pingRaid}
 							data={this.state.raids}
 							admins={this.state.admins}/>
 					</div>
@@ -574,6 +519,67 @@ var App = React.createClass({
 	},
 });
 
+var Datastore = {
+	callbacks: [],
+	data: {
+		raid: "", // Selected Raid UUID
+		channel: "", // Selected Raid Channel
+		authenticated: false,
+		checkedUsername: false,
+		username: "",
+		checked: false,
+		command: "",
+		updated_at: "",
+		hosting: false,
+		channels: [],
+	},
+	subscribe: function(callback) {
+		this.callbacks.push(callback);
+	},
+	setThing: function(thing, value) {
+		this.data[thing] = value;
+		this.emitChange();
+	},
+	emitChange: function() {
+		for( var i = 0; i < this.callbacks.length; i++ ) {
+			this.callbacks[i]( this.data );
+		}
+	}
+}
+
+if ( typeof fluxify == "undefined" ) {
+	var Flux = require('./Flux.js');
+	Dispatcher =  new Flux.Dispatcher();
+} else {
+	Dispatcher = fluxify.dispatcher;
+}
+
+Dispatcher.register(function(payload) {
+	var doReRender = false;
+	switch ( payload.actionType ) {
+		case "serverStateUpdate":
+			for ( var i in payload.data ) {
+				Datastore.data[i] = payload.data[i];
+			}
+			if ( Datastore.data.channel != "" ) {
+				if ( typeof Datastore.data.raids[channel] == "undefined" ) {
+					Datastore.data.channel = "";
+					Datastore.data.raid = "";
+				} else {
+					if ( Datastore.data.raid != "" ) {
+						var channel = Datastore.data.channel;
+						var raid = Datastore.data.raid;
+						if ( typeof Datastore.data.raids[channel] == "undefined" || Datastore.data.raids[channel][raid] == "undefined" ) {
+							Datastore.data.raid = "";
+						}
+					}
+				}
+			}
+			Datastore.emitChange();
+		case "set":
+			Datastore.setThing(payload.key, payload.value);
+	}
+});
 
 jQuery(document).ready(function() {
 	React.render(<App />, document.getElementById('app'));
