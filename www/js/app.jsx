@@ -293,7 +293,6 @@ var HostForm = React.createClass({
 		}
 	},
 	submit: function(e) {
-		console.log(this.state)
 		if ( this.state.channel == "" ) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
 			return;
@@ -422,7 +421,6 @@ var App = React.createClass({
 		this.setState(newData);
 	},
 	render: function() {
-		console.log(this)
 		if ( this.state.checked == false ) {
 			return (<div/>);
 		}
