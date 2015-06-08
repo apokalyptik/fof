@@ -20,7 +20,6 @@ var admins []string
 
 func init() {
 	flag.StringVar(&configFile, "config", "./config.yaml", "Path to YAML configuration")
-	rand.Read(hmacKey)
 	runtime.GOMAXPROCS((runtime.NumCPU() * 2) + 1)
 }
 
@@ -88,14 +87,20 @@ func main() {
 		slack.apiKey = apiKey
 	}
 
-	if auth, err := cfg.String("cookie.auth"); err == nil {
-		if key, err := cfg.String("cookie.key"); err == nil {
+	if hmac, err := cfg.String("security.hmac_key"); err != nil {
+		rand.Read(hmacKey)
+	} else {
+		hmacKey = []byte(hmac)
+	}
+
+	if auth, err := cfg.String("security.cookie.auth"); err == nil {
+		if key, err := cfg.String("security.cookie.key"); err == nil {
 			store = sessions.NewCookieStore([]byte(auth), []byte(key))
 		} else {
-			log.Fatalf("error reading cookie.key from config: %s", err.Error())
+			log.Fatalf("error reading security.cookie.key from config: %s", err.Error())
 		}
 	} else {
-		log.Fatalf("error reading cookie.auth from config: %s", err.Error())
+		log.Fatalf("error reading security.cookie.auth from config: %s", err.Error())
 	}
 
 	if cmd, err := cfg.String("slack.slashCommand.raids"); err == nil {
