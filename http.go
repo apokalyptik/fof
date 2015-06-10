@@ -35,7 +35,7 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("%x", mac.Sum(nil)),
 		))
 	}()
-	fmt.Fprint(w, "You have requested access to the FoF Team site. You will receive a direct message from SLACKBOT with a link to the site.")
+	fmt.Fprint(w, "You have requested access to the FoF Team site. You will receive a direct message from FOFBOT with a link to the site.")
 	log.Printf(
 		"@%s on %s -- %s %s",
 		username,
