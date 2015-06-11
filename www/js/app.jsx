@@ -1,6 +1,5 @@
 var Dispatcher = null;
 
-
 function postRaid(what, data) {
 	return jQuery.post("/rest/raid/" + what, data).fail(function( data ) {
 		if ( data.status == 403 ) {
@@ -394,10 +393,256 @@ var HostForm = React.createClass({
 	}
 });
 
+
+var TeamApp = React.createClass({
+	render: function() {
+
+		if ( typeof this.props.state.raids == "undefined" ) {
+			return (<div/>);
+		}
+
+		if ( this.props.state.hosting ) {
+			return (
+				<div className="container-fluid">
+					<div className="row">
+						<HostForm channels={this.props.state.channels} cancel={function() {
+							Dispatcher.dispatch({actionType: "set", key: "hosting", value: false});
+						}.bind(this)}/>
+					</div>
+				</div>
+			);
+		}
+		
+		var hostButton = (
+			<button
+				onClick={function(e) {
+					e.preventDefault();
+					Dispatcher.dispatch({actionType: "set", key: "hosting", value: true});	
+				}.bind(this)}
+				className="btn btn-default btn-block btn-success">Host an Event</button>
+		);
+
+		return (
+			<div className="container-fluid">
+				<div className="row">
+					<ChannelList
+						data={this.props.state.raids}
+						selected={this.props.state.channel}
+						host={hostButton}/>
+					<RaidList data={this.props.state.raids}
+						channel={this.props.state.channel}
+						selected={this.props.state.raid}/>
+					<MemberList
+						username={this.props.state.username}
+						channel={this.props.state.channel}
+						raid={this.props.state.raid}
+						data={this.props.state.raids}
+						admins={this.props.state.admins}/>
+				</div>
+			</div>
+		);
+	}
+});
+
+var LFGSelectGame = React.createClass({
+	render: function() {
+		return(<div>Destiny</div>);
+	}
+});
+
+var LFGApp = React.createClass({
+	getInitialState: function() {
+		return LFGStore.data;
+	},
+	componentDidMount: function() {
+		LFGStore.subscribe(function(data) {
+			this.setState(data);
+		}.bind(this));
+	},
+	isChecked: function(option) {
+		if ( typeof this.state.my[option] == "undefined" ) {
+			return false;
+		}
+		if ( this.state.my[option] == true ) {
+			return true;
+		}
+		return false;
+	},
+	check: function(event) {
+		Dispatcher.dispatch({
+			actionType: "lfg",
+			what: event.target.value,
+			value: event.target.checked
+		});
+	},
+	clear: function() {
+		Dispatcher.dispatch({ actionType: "lfg-flush" });
+	},
+	submit: function() {
+		jQuery.post("/rest/lfg" + what, data)
+			.fail(function( data ) {
+				if ( data.status == 403 ) {
+					location.reload( true );
+				}
+			})
+			.done(function() {
+				Dispatcher.dispatch({ actionType: "lfg-submit-success" });
+			});
+	},
+	render: function() {
+		var activities = [
+			{
+				name: "Prison of Elders",
+				options: [
+					{ name: "Level 28" },
+					{ name: "Level 32" },
+					{ name: "Level 34" },
+					{ name: "Level 35" }
+				]
+			},
+			{
+				name: "Crota's End",
+				options: [
+					{ name: "Normal Mode" },
+					{ name: "Hard Mode" }
+				]
+			},
+			{
+				name: "Vault of Glass",
+				options: [
+					{ name: "Normal Mode" },
+					{ name: "Hard Mode" }
+				]
+			},
+			{
+				name: "Strikes",
+				options: [
+					{ name: "Weekly Nightfall" },
+					{ name: "Weekly Heroic" },
+					{ name: "Playlist"}
+				],
+			},
+			{
+				name: "Crucible",
+				options: [
+					{ name: "Trials of Osiris" },
+					{ name: "Iron Banner" },
+					{ name: "Daily PvP" },
+					{ name: "Control" },
+					{ name: "Skirmish" },
+					{ name: "Clash" },
+					{ name: "Ramble" },
+					{ name: "Salvage" }
+				],
+			},
+			{
+				name: "Bounties",
+				options: [
+					{ name: "Queen" },
+					{ name: "Eris" },
+					{ name: "Daily Bounties" },
+					{ name: "PvP Bounties" },
+					{ name: "Exotic Bounty" }
+				],
+			},
+			{
+				name: "Story",
+				options: [
+				{ name: "Daily Mission" },
+				{ name: "House of Wolves" },
+				{ name: "The Dark Below" },
+				{ name: "Earth" },
+				{ name: "Moon" },
+				{ name: "Venus" },
+				{ name: "Mars" },
+				],
+			},
+			{
+				name: "Patrol",
+				options: [
+					{ name: "Public Events" },
+					{ name: "Earth" },
+					{ name: "Moon" },
+					{ name: "Venus" },
+					{ name: "Mars" }
+				],
+			},
+			{
+				name: "Farming",
+				options: [
+					{ name: "Glimmer" },
+					{ name: "Patrol Missions" },
+					{ name: "Ether Chest" }
+				],
+			},
+
+		];
+		var activityBlock = [];
+		for ( var i = 0; i<activities.length; i++ ) {
+			var act = activities[i];
+			var aname = encodeURIComponent(act.name);
+			var opt = [];
+			for ( var io = 0; io<act.options.length; io++ ) {
+				var cname = aname + ":" + encodeURIComponent(act.options[io].name);
+				opt.push( (<li key={"activity-"+i+"-"+io}><input
+							value={cname}
+							onChange={this.check}
+							checked={this.isChecked(cname)}
+							type="checkbox"/> {act.options[io].name}</li> ) );
+			}
+			activityBlock.push( ( <li key={"activity-"+i}><h4>{act.name}</h4><ul>{opt}</ul></li> ) );
+		}
+		return (
+			<div className="container-fluid">
+				<div className="row">
+					<div className="col-md-2 center">
+						<span className="greentext bold">
+							Once you have selected all the things 
+							you're interested in doing right now click:
+						</span>
+						<br/>
+						<button>Set LFG Status</button>
+						<br/>
+						<br/>
+						<span className="greentext">... or ...</span>
+						<br/>
+						<button onClick={this.clear}>Clear LFG Status</button>
+					</div>
+					<div className="col-md-10">
+						<ul className="lfgselect">
+							{activityBlock}
+						</ul>
+					</div>
+				</div>
+			</div>
+		);
+	}
+});
+
+var SelectAnApp = React.createClass({
+	render: function() {
+		var viewing = this.props.viewing;
+		return (
+			<select id="select-an-app" onChange={
+				function(event) {
+					Dispatcher.dispatch({
+						actionType: "set",
+						key: "viewing",
+						value: event.target.value
+					});
+				}}>
+				<option value="events">Events</option>
+				<option value="lfg">LFG</option>
+			</select>
+		);
+	}
+});
+
 var App = React.createClass({
 	getInitialState: function() {
 		return Datastore.data
 	},
+
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
 			.done(function(data) {
@@ -414,6 +659,7 @@ var App = React.createClass({
 				this.updateData();
 			}.bind(this));
 	},
+
 	updateData: function() {
 		if ( this.state.authenticated == false ) {
 			window.setTimeout(this.updateData, 1000);
@@ -432,14 +678,12 @@ var App = React.createClass({
 				window.setTimeout(this.updateData, 250);
 			}.bind(this))
 	},
+
 	acceptData: function(newData) {
 		this.setState(newData);
 	},
-	render: function() {
-		if ( this.state.checked == false ) {
-			return (<div/>);
-		}
 
+	render: function() {
 		if ( this.state.authenticated == false ) {
 			return(
 				<div className="container-fluid">
@@ -453,70 +697,87 @@ var App = React.createClass({
 				</div>
 			);
 		}
-
-		if ( typeof this.state.raids == "undefined" ) {
+		
+		if ( this.state.checked == false ) {
 			return (<div/>);
 		}
 
-		var header = (
-			<div className="container-fluid nopadding">
-				<div className="row nomargin">
-					<div className="col-md-12 nomargin">
-						<h2 className="nomargin">
-							FoF @{this.state.username}
-						</h2>
-					</div>
-				</div>
-			</div>
-		);
+		var crumbs = [
+			( <li key="appselect" className="box">
+				  <SelectAnApp key="selectanapp" viewing={this.state.viewing}/>
+			  </li> )
+		];
 
-		if ( this.state.hosting ) {
-			return (
-				<div>
-					{header}
-					<div className="container-fluid">
-						<div className="row">
-							<HostForm channels={this.state.channels} cancel={function() {
-								Dispatcher.dispatch({actionType: "set", key: "hosting", value: false});
-							}.bind(this)}/>
-						</div>
-					</div>
-				</div>
-			);
+		var WorkSpace;
+		switch ( this.state.viewing ) {
+			case "events":
+				WorkSpace = ( <TeamApp state={this.state}/> );
+				break;
+			case "lfg":
+				WorkSpace = ( <LFGApp state={this.state}/> );
+				crumbs.push( ( <li key="crumb-lfg" className="box"><LFGSelectGame/></li> ) );
+				break;
 		}
-		
-		var hostButton = (
-					<button
-						onClick={function(e) {
-							e.preventDefault();
-							Dispatcher.dispatch({actionType: "set", key: "hosting", value: true});	
-						}.bind(this)}
-						className="btn btn-default btn-block btn-success">Host an Event</button>
-		);
 
 		return(
 			<div>
-				{header}
-				<div className="container-fluid">
-					<div className="row">
-						<ChannelList
-							data={this.state.raids}
-							selected={this.state.channel}
-							host={hostButton}/>
-						<RaidList data={this.state.raids}
-							channel={this.state.channel}
-							selected={this.state.raid}/>
-						<MemberList
-							username={this.state.username}
-							channel={this.state.channel}
-							raid={this.state.raid}
-							data={this.state.raids}
-							admins={this.state.admins}/>
+				<div className="container-fluid nopadding">
+					<div className="row nomargin">
+						<div className="col-md-12 nomargin">
+							<h2 className="nomargin">
+								FoF @{this.state.username}
+							</h2>
+							<div id="crumb-bar">
+								<ul className="breadcrumbs-lgr">
+									{crumbs}
+									<li className="rt"/>
+								</ul>
+							</div>
+						</div>
 					</div>
 				</div>
+				{WorkSpace}
 			</div>
 		);
 	},
+});
+
+if ( typeof fluxify == "undefined" ) {
+	var Flux = require('./Flux.js');
+	Dispatcher =  new Flux.Dispatcher();
+} else {
+	Dispatcher = fluxify.dispatcher;
+}
+
+var LFGStore = {
+	callbacks: [],
+	data: {
+		my: {}
+	},
+	set: function(what, value) {
+		this.data.my[what] = value;
+		this.emitChange();
+	},
+	subscribe: function(callback) {
+		this.callbacks.push(callback);
+	},
+	emitChange: function() {
+		for( var i = 0; i < this.callbacks.length; i++ ) {
+			this.callbacks[i]( this.data );
+		}
+	}
+};
+
+Dispatcher.register(function(payload) {
+	switch( payload.actionType ) {
+		case "lfg-flush":
+			LFGStore.data = { my: {} };
+			LFGStore.emitChange();
+			break;
+		case "lfg":
+			LFGStore.set(payload.what, payload.value);
+			break;
+	}
 });
 
 var Datastore = {
@@ -532,26 +793,20 @@ var Datastore = {
 		updated_at: "",
 		hosting: false,
 		channels: [],
-	},
-	subscribe: function(callback) {
-		this.callbacks.push(callback);
+		viewing: "events",
 	},
 	setThing: function(thing, value) {
 		this.data[thing] = value;
 		this.emitChange();
+	},
+	subscribe: function(callback) {
+		this.callbacks.push(callback);
 	},
 	emitChange: function() {
 		for( var i = 0; i < this.callbacks.length; i++ ) {
 			this.callbacks[i]( this.data );
 		}
 	}
-}
-
-if ( typeof fluxify == "undefined" ) {
-	var Flux = require('./Flux.js');
-	Dispatcher =  new Flux.Dispatcher();
-} else {
-	Dispatcher = fluxify.dispatcher;
 }
 
 Dispatcher.register(function(payload) {
@@ -561,15 +816,15 @@ Dispatcher.register(function(payload) {
 			for ( var i in payload.data ) {
 				Datastore.data[i] = payload.data[i];
 			}
-			if ( Datastore.data.channel != "" ) {
-				if ( typeof Datastore.data.raids[channel] == "undefined" ) {
+			var channel = Datastore.data.channel;
+			var raid = Datastore.data.raid;
+			if ( channel != "" ) {
+				if ( typeof payload.data.raids[channel] == "undefined" ) {
 					Datastore.data.channel = "";
 					Datastore.data.raid = "";
 				} else {
-					if ( Datastore.data.raid != "" ) {
-						var channel = Datastore.data.channel;
-						var raid = Datastore.data.raid;
-						if ( typeof Datastore.data.raids[channel] == "undefined" || Datastore.data.raids[channel][raid] == "undefined" ) {
+					if ( raid != "" ) {
+						if ( typeof Datastore.data.raids[channel][raid] == "undefined" ) {
 							Datastore.data.raid = "";
 						}
 					}

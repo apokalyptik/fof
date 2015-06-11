@@ -5,7 +5,7 @@ $dg:  #3a3a3a; // Dark Gray
 $bl:  #000000; // Black
 $gr:  #107c10; // Green
 $wh:  #f1f1f1; // White
-$wg:  #e1e1e1; // Whitei Gray
+$wg:  #e1e1e1; // White Gray
 $lgr: #5dc21e; // Light Green
 
 $default_rounded_amount: .25em;
@@ -16,14 +16,44 @@ $default_rounded_amount: .25em;
 	-webkit-border-radius: $amount;
 }
 
-.texthalf {
-	font-size: 0.5em;
-}
-
 @mixin box-shadow($top, $left, $blur, $color, $inset:"") {
 	-webkit-box-shadow:$top $left $blur $color #{$inset};
 	-moz-box-shadow:$top $left $blur $color #{$inset};
 	box-shadow:$top $left $blur $color #{$inset};
+}
+
+@mixin breadcrumbs($color) {
+	padding-left: 0.2em;
+	display: block;
+	.box {
+		position: relative;
+		display: inline-block;
+		height: 2em;
+		line-height: 1.6em;
+		border: 0.15em solid $lgr;
+		background-color: $lgr;
+		* {
+			position: relative;
+			display: inline-block;
+			height: 1.6em;
+			line-height: 1.6em;
+		}
+	}
+	.rt {
+		position: relative;
+		display: inline-block;
+		padding: 0;
+		width: 0;
+		height: 0;
+		top: .75em;
+		border-top: 1em solid transparent;
+		border-left: 1em solid $lgr;
+		border-bottom: 1em solid transparent;
+	}
+}
+
+.texthalf {
+	font-size: 0.5em;
 }
 
 .floatright {
@@ -52,6 +82,10 @@ h4.alternate, .member.alternate > span {
 }
 
 span.me {
+	font-weight: bold;
+}
+
+.bold {
 	font-weight: bold;
 }
 
@@ -87,4 +121,34 @@ h4 {
 .loginout {
 	text-align: right;
 	margin: 0;
+}
+
+.greentext {
+	color: $gr;
+}
+
+#crumb-bar {
+	// stackoverflow.com/questions/6483425/prevent-iphone-from-zooming-in-on-select-in-web-app
+	font-size: 16px;
+	line-height: 3.5em;
+	background-color: $gr;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+ul.lfgselect {
+	list-style-type: none;
+	padding-left: 0;
+	li {
+		font-weight: bold;
+		ul {
+			list-style-type: none;
+			li {
+				font-weight: normal;
+			}
+		}
+	}
+}
+
+ul.breadcrumbs-lgr {
+	@include breadcrumbs($lgr);
 }
