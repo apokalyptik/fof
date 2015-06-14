@@ -24,6 +24,9 @@ span.me {
 .bold {
   font-weight: bold; }
 
+.textright {
+  text-align: right; }
+
 .center {
   text-align: center; }
 
@@ -42,7 +45,7 @@ h2 {
   -moz-box-shadow: 1px 1px 1px #6b6b6b ;
   box-shadow: 1px 1px 1px #6b6b6b ; }
 
-h4 {
+h4, h5 {
   background-color: #5dc21e;
   padding: 0.15em;
   -webkit-box-shadow: 1px 1px 1px #6b6b6b ;
@@ -78,6 +81,12 @@ ul.lfgselect {
       ul.lfgselect li ul li {
         font-weight: normal; }
 
+.lfg.peers {
+  padding-left: 0;
+  list-style-type: none; }
+  .lfg.peers li {
+    margin-bottom: 0.75em; }
+
 ul.breadcrumbs-lgr {
   padding-left: 0.2em;
   display: block; }
@@ -103,3 +112,6 @@ ul.breadcrumbs-lgr {
     border-top: 1em solid transparent;
     border-left: 1em solid #5dc21e;
     border-bottom: 1em solid transparent; }
+
+.lfg.count {
+  float: right; }

@@ -11,7 +11,8 @@ import (
 )
 
 type slackChannelResponse struct {
-	Ok       bool `json:"ok"`
+	Ok       bool   `json:"ok"`
+	Error    string `json:"error"`
 	Channels []struct {
 		ID       string `json:"id"`
 		Name     string `json:"name"`
@@ -36,7 +37,7 @@ func updateChannelList() error {
 	if err := json.NewDecoder(resp.Body).Decode(apiResp); err != nil {
 		return err
 	}
-	if apiResp.Ok != true {
+	if apiResp.Ok != true || apiResp.Error != "" {
 		return fmt.Errorf("Error decoding channel list: %#v", apiResp)
 	}
 	var newChannelList = []string{}

@@ -14,6 +14,7 @@ import (
 
 var errSlackUserIDNotFound = errors.New("User not found on slack")
 var errSlackIMNotCreated = errors.New("Could not create slack IM")
+var errSlackGTNotFound = errors.New("GT not found on slack")
 
 var udb = &userDB{}
 
@@ -24,6 +25,28 @@ type userDB struct {
 	APITokenHash []byte
 	LookupID     map[string]string `json:"LookupUserToID"`
 	IMs          map[string]string `json:"LookupUserToIM"`
+	LookupGT     map[string]string `json:"LookupGT"`
+}
+
+func (u *userDB) getGamertagForUser(username string) (string, error) {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	if gt, ok := u.LookupGT[username]; ok {
+		return gt, nil
+	}
+
+	if LookupID, LookupGT, err := slack.getUserDataMap(); err != nil {
+		return "", err
+	} else {
+		u.LookupID = LookupID
+		u.LookupGT = LookupGT
+	}
+
+	if gt, ok := u.LookupGT[username]; ok {
+		return gt, nil
+	}
+
+	return "", errSlackGTNotFound
 }
 
 func (u *userDB) getChannelForIM(username string) (string, error) {
@@ -36,10 +59,11 @@ func (u *userDB) getChannelForIM(username string) (string, error) {
 
 	userid, ok := u.LookupID[username]
 	if !ok {
-		if LookupID, err := slack.getUserListToIDs(); err != nil {
+		if LookupID, LookupGT, err := slack.getUserDataMap(); err != nil {
 			return "", err
 		} else {
 			u.LookupID = LookupID
+			u.LookupGT = LookupGT
 			userid, ok = u.LookupID[username]
 			if !ok {
 				return "", errSlackUserIDNotFound
@@ -108,6 +132,7 @@ func (u *userDB) load(filename string) error {
 	}
 	u.APITokenHash = hash
 	u.LookupID = map[string]string{}
+	u.LookupGT = map[string]string{}
 	u.IMs = map[string]string{}
 	return nil
 }

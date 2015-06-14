@@ -10,6 +10,7 @@ import (
 )
 
 var xhrOutput *Json
+var lfgOutput *Json
 
 func init() {
 	xhrOutput = &Json{
@@ -20,6 +21,15 @@ func init() {
 	}
 	xhrOutput.cond.Add(1)
 	xhrOutput.set("updated_at", time.Now().Unix())
+
+	lfgOutput = &Json{
+		data: map[string]interface{}{
+			"lfg": []string{},
+		},
+		cond: &sync.WaitGroup{},
+	}
+	lfgOutput.cond.Add(1)
+	lfgOutput.set("updated_at", time.Now().Unix())
 }
 
 type Json struct {

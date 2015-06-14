@@ -450,7 +450,166 @@ var LFGSelectGame = React.createClass({
 	}
 });
 
+var LFGAppLooking = React.createClass({
+	cancel: function() {
+		Dispatcher.dispatch({
+			actionType: "lfg-looking",
+			value: false
+		});
+	},
+	renderSection: function(name) {
+		var clearName = name.split(":").map(function(part) {
+			return decodeURIComponent(part)
+		}).join(" ");
+		var peers = [];
+		if ( typeof this.props.peers[name] != "undefined" ) {
+			for ( var user in this.props.peers[name] ) {
+				if ( user == this.props.username ) {
+					continue;
+				}
+				var gt = this.props.peers[name][user].gamertag;
+				var msg = "https://account.xbox.com/en-US/Messages?gamerTag=" + encodeURIComponent(gt)
+				var pro = "https://account.xbox.com/en-us/profile?gamerTag=" + encodeURIComponent(gt)
+				peers.push((
+					<li>
+						<a href={pro} target="_blank">{gt}</a><br/>
+						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>
+						<a className="btn btn-default btn-xs" target="_blank" href="#">Slack Ping</a>
+					</li> ));
+			}
+		}
+		return (
+			<div key={"activity-"+name} className="col-md-3">
+				<h5>{clearName}</h5>
+				<ul className="lfg peers">{peers}</ul>
+			</div>
+		)
+	},
+	render: function() {
+		var list = [];
+		for ( var i in this.props.forWhat ) {
+			if ( this.props.forWhat[i] == false ) {
+				continue;
+			}
+			list.push(( this.renderSection(i) ) );
+		}
+	
+		var gotRows = [];
+		var wantRows = list.length / 4;
+		for ( var i=0; i<wantRows; i++ ) {
+			var thisRow = list.slice(i*4, (i+1)*4);
+			if ( thisRow.length > 0 ) {
+				gotRows.push(<div className="row">{thisRow}</div>);
+			}
+		}
+		
+		return (
+			<div className="container-fluid">
+				<div className="row">
+					<div className="col-md-1">
+						<button onClick={this.cancel}>Reset</button>
+					</div>
+					<div className="col-md-11">
+						<div className="container-fluid">
+								{gotRows}
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+});
+
 var LFGApp = React.createClass({
+	activities: [
+		{
+			name: "Prison of Elders",
+			options: [
+				{ name: "Level 28" },
+				{ name: "Level 32" },
+				{ name: "Level 34" },
+				{ name: "Level 35" }
+			]
+		},
+		{
+			name: "Crota's End",
+			options: [
+				{ name: "Normal Mode" },
+				{ name: "Hard Mode" }
+			]
+		},
+		{
+			name: "Vault of Glass",
+			options: [
+				{ name: "Normal Mode" },
+				{ name: "Hard Mode" }
+			]
+		},
+		{
+			name: "Strikes",
+			options: [
+				{ name: "Weekly Nightfall" },
+				{ name: "Weekly Heroic" },
+				{ name: "Playlist"}
+			],
+		},
+		{
+			name: "Crucible",
+			options: [
+				{ name: "Trials of Osiris" },
+				{ name: "Iron Banner" },
+				{ name: "Daily PvP" },
+				{ name: "Control" },
+				{ name: "Skirmish" },
+				{ name: "Clash" },
+				{ name: "Ramble" },
+				{ name: "Salvage" }
+			],
+		},
+		{
+			name: "Bounties",
+			options: [
+				{ name: "Queen" },
+				{ name: "Eris" },
+				{ name: "Daily Bounties" },
+				{ name: "PvP Bounties" },
+				{ name: "Exotic Bounty" }
+			],
+		},
+		{
+			name: "Story",
+			options: [
+			{ name: "Daily Mission" },
+			{ name: "House of Wolves" },
+			{ name: "The Dark Below" },
+			{ name: "Earth" },
+			{ name: "Moon" },
+			{ name: "Venus" },
+			{ name: "Mars" },
+			],
+		},
+		{
+			name: "Patrol",
+			options: [
+				{ name: "Public Events" },
+				{ name: "Earth" },
+				{ name: "Moon" },
+				{ name: "Venus" },
+				{ name: "Mars" }
+			],
+		},
+		{
+			name: "Farming",
+			options: [
+				{ name: "Glimmer" },
+				{ name: "Patrol Missions" },
+				{ name: "Ether Chest" }
+			],
+		},
+	],
+	componentDidUpdate: function() {
+		// $('span.lfg.count.updated').fadeOut(400).fadeIn(400);
+	},
 	getInitialState: function() {
 		return LFGStore.data;
 	},
@@ -475,145 +634,153 @@ var LFGApp = React.createClass({
 			value: event.target.checked
 		});
 	},
+	time: function(event) {
+		Dispatcher.dispatch({
+			actionType: "lfg-time",
+			value: event.target.value
+		});
+	},
 	clear: function() {
 		Dispatcher.dispatch({ actionType: "lfg-flush" });
 	},
 	submit: function() {
-		jQuery.post("/rest/lfg" + what, data)
-			.fail(function( data ) {
-				if ( data.status == 403 ) {
-					location.reload( true );
-				}
-			})
+		var events = [];
+		for ( var eventName in this.state.my ) {
+			if ( this.state.my[eventName] ) {
+				events.push( eventName );
+			}
+		}
+		if ( events.length < 1 ) {
+			retuen
+		}
+		jQuery.post("/rest/lfg", { events: events, time: this.state.time })
 			.done(function() {
-				Dispatcher.dispatch({ actionType: "lfg-submit-success" });
+				Dispatcher.dispatch({
+					actionType: "lfg-looking",
+					value: true
+				});
+			})
+			.fail(function() {
+				window.setTimeout(this.submit.bind(this), 500)
 			});
 	},
+	getLookers: function(name, dataset) {
+		var lookers = ".";
+		if ( typeof dataset[name] != "undefined" ) {
+			lookers = 0;
+			for ( var looker in dataset[name] ) {
+				if ( looker == this.state.username ) {
+					continue;
+				}
+				lookers = lookers + 1
+			}
+			if ( lookers == 0 ) {
+				lookers = ".";
+			}
+		}
+		return lookers;
+	},
 	render: function() {
-		var activities = [
-			{
-				name: "Prison of Elders",
-				options: [
-					{ name: "Level 28" },
-					{ name: "Level 32" },
-					{ name: "Level 34" },
-					{ name: "Level 35" }
-				]
-			},
-			{
-				name: "Crota's End",
-				options: [
-					{ name: "Normal Mode" },
-					{ name: "Hard Mode" }
-				]
-			},
-			{
-				name: "Vault of Glass",
-				options: [
-					{ name: "Normal Mode" },
-					{ name: "Hard Mode" }
-				]
-			},
-			{
-				name: "Strikes",
-				options: [
-					{ name: "Weekly Nightfall" },
-					{ name: "Weekly Heroic" },
-					{ name: "Playlist"}
-				],
-			},
-			{
-				name: "Crucible",
-				options: [
-					{ name: "Trials of Osiris" },
-					{ name: "Iron Banner" },
-					{ name: "Daily PvP" },
-					{ name: "Control" },
-					{ name: "Skirmish" },
-					{ name: "Clash" },
-					{ name: "Ramble" },
-					{ name: "Salvage" }
-				],
-			},
-			{
-				name: "Bounties",
-				options: [
-					{ name: "Queen" },
-					{ name: "Eris" },
-					{ name: "Daily Bounties" },
-					{ name: "PvP Bounties" },
-					{ name: "Exotic Bounty" }
-				],
-			},
-			{
-				name: "Story",
-				options: [
-				{ name: "Daily Mission" },
-				{ name: "House of Wolves" },
-				{ name: "The Dark Below" },
-				{ name: "Earth" },
-				{ name: "Moon" },
-				{ name: "Venus" },
-				{ name: "Mars" },
-				],
-			},
-			{
-				name: "Patrol",
-				options: [
-					{ name: "Public Events" },
-					{ name: "Earth" },
-					{ name: "Moon" },
-					{ name: "Venus" },
-					{ name: "Mars" }
-				],
-			},
-			{
-				name: "Farming",
-				options: [
-					{ name: "Glimmer" },
-					{ name: "Patrol Missions" },
-					{ name: "Ether Chest" }
-				],
-			},
-
-		];
+		if ( this.state.looking == true ) {
+			return (<LFGAppLooking
+					activities={this.activities}
+					prev={this.state.prevlfg}
+					peers={this.state.lfg}
+					username={this.state.username}
+					forWhat={this.state.my} />);
+		}
+		var activities = this.activities;
 		var activityBlock = [];
+		var numChecked = 0;
+		for ( var i in this.state.my ) {
+			if ( this.state.my[i] ) {
+				numChecked = numChecked + 1;
+			}
+		}
 		for ( var i = 0; i<activities.length; i++ ) {
 			var act = activities[i];
 			var aname = encodeURIComponent(act.name);
 			var opt = [];
 			for ( var io = 0; io<act.options.length; io++ ) {
 				var cname = aname + ":" + encodeURIComponent(act.options[io].name);
+				var lookers = this.getLookers(cname, this.state.lfg);
+				var oldlookers = this.getLookers(cname, this.state.prevlfg);
+				var localClassName = "lfg count";
+				var disabled = false;
+				if ( numChecked >= 4 ) {
+					if ( typeof this.state.my[cname] == "undefined" || !this.state.my[cname] ) {
+						disabled = true;
+					}
+				}
+				if ( lookers != oldlookers ) {
+					localClassName = "lfg count updated";
+				}
 				opt.push( (<li key={"activity-"+i+"-"+io}><input
 							value={cname}
 							onChange={this.check}
 							checked={this.isChecked(cname)}
-							type="checkbox"/> {act.options[io].name}</li> ) );
+							disabled={disabled}
+							type="checkbox"/> {act.options[io].name}
+							<span 
+							className={localClassName}>{lookers}</span></li> ) );
 			}
-			activityBlock.push( ( <li key={"activity-"+i}><h4>{act.name}</h4><ul>{opt}</ul></li> ) );
+			activityBlock.push( (
+				<div key={"activity-"+i} className="col-md-3">
+					<ul className="lfgselect">
+						<li><h4>{act.name}</h4><ul>{opt}</ul></li>
+					</ul>
+				</div>
+			) );
 		}
+		var activityRows = [];
+		var wantRows = activityBlock.length/4;
+		for ( var i=0; i<wantRows; i++ ) {
+			var thisRow = activityBlock.slice(i*4, (i+1)*4);
+			if ( thisRow.length > 0 ) {
+				activityRows.push(<div className="row">{thisRow}</div>);
+			}
+		}
+		var actionWidgets = (
+			<div>
+				<br/>
+				<select value={this.state.time} defaultValue="120" onChange={this.time}>
+					<option value="30">30 minutes</option>
+					<option value="60">1 hour</option>
+					<option value="90">1 hour 30 minutes</option>
+					<option value="120">2 hours</option>
+				</select>
+				<br/>
+				<br/>
+				<button onClick={this.submit}>Submit</button>
+				&nbsp;
+				<span className="greentext">or</span>
+				&nbsp;
+				<button onClick={this.clear}>Clear</button>
+			</div>
+		);
 		return (
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-md-2 center">
 						<span className="greentext bold">
-							Once you have selected all the things 
-							you're interested in doing right now click:
+							Select any  short term objectives that you want to do now
 						</span>
 						<br/>
-						<button>Set LFG Status</button>
-						<br/>
-						<br/>
-						<span className="greentext">... or ...</span>
-						<br/>
-						<button onClick={this.clear}>Clear LFG Status</button>
+						{actionWidgets}
 					</div>
 					<div className="col-md-10">
-						<ul className="lfgselect">
-							{activityBlock}
-						</ul>
+						<div className="container-fluid">
+							{activityRows}
+						</div>
 					</div>
 				</div>
+				<div className="row">
+					<div className="col-md-3 col-md-offset-5 center">
+						<br/>
+						{actionWidgets}
+					</div>
+				</div>
+				<div className="row"><div className="col-md-1">&nbsp;</div></div>
 			</div>
 		);
 	}
@@ -623,7 +790,7 @@ var SelectAnApp = React.createClass({
 	render: function() {
 		var viewing = this.props.viewing;
 		return (
-			<select id="select-an-app" onChange={
+			<select id="select-an-app" defaultValue={viewing} onChange={
 				function(event) {
 					Dispatcher.dispatch({
 						actionType: "set",
@@ -631,8 +798,8 @@ var SelectAnApp = React.createClass({
 						value: event.target.value
 					});
 				}}>
-				<option value="events">Events</option>
-				<option value="lfg">LFG</option>
+				<option value="events">LFG Later</option>
+				<option value="lfg">LFG Now</option>
 			</select>
 		);
 	}
@@ -650,6 +817,7 @@ var App = React.createClass({
 					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
 					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 					Dispatcher.dispatch({actionType: "set", key: "username", value: data.username});
+					Dispatcher.dispatch({actionType: "username", value: data.username});
 					Dispatcher.dispatch({actionType: "set", key: "authenticated", value: true});
 				} else {
 					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
@@ -714,7 +882,7 @@ var App = React.createClass({
 				WorkSpace = ( <TeamApp state={this.state}/> );
 				break;
 			case "lfg":
-				WorkSpace = ( <LFGApp state={this.state}/> );
+				WorkSpace = ( <LFGApp/> );
 				crumbs.push( ( <li key="crumb-lfg" className="box"><LFGSelectGame/></li> ) );
 				break;
 		}
@@ -752,8 +920,14 @@ if ( typeof fluxify == "undefined" ) {
 var LFGStore = {
 	callbacks: [],
 	data: {
-		my: {}
+		looking: false,
+		my: {},
+		lfg: {},
+		prevlfg: {},
+		time: "120",
+		username: "",
 	},
+	since: "0",
 	set: function(what, value) {
 		this.data.my[what] = value;
 		this.emitChange();
@@ -770,6 +944,10 @@ var LFGStore = {
 
 Dispatcher.register(function(payload) {
 	switch( payload.actionType ) {
+		case "username":
+			LFGStore.data.username = payload.value;
+			LFGStore.emitChange();
+			break;
 		case "lfg-flush":
 			LFGStore.data = { my: {} };
 			LFGStore.emitChange();
@@ -777,8 +955,37 @@ Dispatcher.register(function(payload) {
 		case "lfg":
 			LFGStore.set(payload.what, payload.value);
 			break;
+		case "lfg-time":
+			LFGStore.data.time = payload.value;
+			LFGStore.emitChange();
+			break;
+		case "lfg-looking":
+			LFGStore.data.looking = payload.value;
+			LFGStore.emitChange();
+			break;
+		case "lfg-lp-results":
+			LFGStore.data.prevlfg = LFGStore.data.lfg;
+			LFGStore.data.lfg = payload.value;
+			LFGStore.emitChange();
+			break;
+		case "lfg-since":
+			LFGStore.since = payload.value;
+			break;
 	}
 });
+
+function lfgLongPoll() {
+	$.getJSON("/rest/lfg?since=" + LFGStore.since)
+		.success(function(data) {
+			Dispatcher.dispatch({actionType: "lfg-since", value: data.updated_at});
+			Dispatcher.dispatch({actionType: "lfg-lp-results", value: data.lfg});
+			window.setTimeout(lfgLongPoll, 250)
+		})
+		.fail(function() {
+			window.setTimeout(lfgLongPoll, 2000)
+		})
+}
+lfgLongPoll();
 
 var Datastore = {
 	callbacks: [],
@@ -836,6 +1043,44 @@ Dispatcher.register(function(payload) {
 	}
 });
 
+var hash = {
+	parts: {},
+	parse: function() {
+		var pieces = location.hash.substring(1).split("&");
+		for ( var i=0; i<pieces.length; i++ ) {
+			var part = pieces[i];
+			var parts = part.split("=").map(function(bit) {
+				return decodeURIComponent(bit)
+			});
+			if ( parts.length == 1 ) {
+				parts.push("");
+			}
+			this.parts[parts[0]] = parts[1];
+		}
+	},
+	get: function(bit) {
+		if ( typeof this.parts[bit] == undefined ) {
+			return null;
+		}
+		return this.parts[bit];
+	},
+	isset: function(bit) {
+		if ( typeof this.parts[bit] == undefined ) {
+			return false;
+		}
+		return true;
+	}
+}
+
 jQuery(document).ready(function() {
+	hash.parse()
+	switch ( hash.get("app") ) {
+		case "lfgnow":
+			Datastore.data.viewing = "lfg";
+			break;
+		case "lfglater":
+			Datastore.data.viewing = "events";
+			break;
+	}
 	React.render(<App />, document.getElementById('app'));
 })

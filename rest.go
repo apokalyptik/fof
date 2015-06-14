@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -133,6 +134,56 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 			return
 		}
+	case "/rest/lfg":
+		if err := requireAPIKey(session, w); err != nil {
+			return
+		}
+		username, _ := session.Values["username"].(string)
+		if r.Method == "POST" {
+			if err := r.ParseForm(); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			expiry, err := strconv.Atoi(r.Form.Get("time"))
+			if err != nil {
+				expiry = 120
+			} else {
+				if expiry < 30 {
+					expiry = 30
+				} else {
+					if expiry > 120 {
+						expiry = 120
+					}
+				}
+			}
+
+			if events, ok := r.Form["events[]"]; ok {
+				eventList, _ := url.QueryUnescape(strings.Join(events, "', '"))
+				lfg.add(username, time.Duration(expiry)*time.Minute, events...)
+				log.Printf("@%s -- lfg: %s / '%s'", username, r.Form.Get("time"), eventList)
+			}
+			return
+		}
+
+		log.Printf("@%s -- lfg", username)
+
+		closed := w.(http.CloseNotifier).CloseNotify()
+		notify := make(chan struct{})
+		go func(notify chan struct{}, since string) {
+			for lfgOutput.updatedAt == since {
+				lfgOutput.cond.Wait()
+			}
+			notify <- struct{}{}
+		}(notify, v.Get("since"))
+		select {
+		case <-notify:
+			if err := lfgOutput.send(w); err != nil {
+				log.Println("Error sending /rest/lfg:", err.Error())
+			}
+		case <-closed:
+		}
+		return
+
 	case "/rest/get":
 		closed := w.(http.CloseNotifier).CloseNotify()
 		notify := make(chan struct{})
@@ -145,7 +196,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-notify:
 			if err := xhrOutput.send(w); err != nil {
-				log.Println("Error sending /rest/raid/wait:", err.Error())
+				log.Println("Error sending /rest/get:", err.Error())
 			}
 		case <-closed:
 		}

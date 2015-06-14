@@ -89,6 +89,7 @@ span.me {
 	font-weight: bold;
 }
 
+.textright { text-align: right; }
 .center { text-align: center; }
 
 body {
@@ -107,7 +108,7 @@ h2 {
 	@include box-shadow( 1px, 1px, 1px, $mg);
 }
 
-h4 {
+h4, h5 {
 	background-color: $lgr;
 	padding: 0.15em;
 	@include box-shadow( 1px, 1px, 1px, $mg);
@@ -149,6 +150,18 @@ ul.lfgselect {
 	}
 }
 
+.lfg.peers {
+	padding-left: 0;
+	list-style-type: none;
+	li {
+		margin-bottom: 0.75em;
+	}
+}
+
 ul.breadcrumbs-lgr {
 	@include breadcrumbs($lgr);
+}
+
+.lfg.count {
+	float: right;
 }
