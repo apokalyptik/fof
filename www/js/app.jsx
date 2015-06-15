@@ -34,7 +34,9 @@ var CountdownTimer = React.createClass({
 	},
 	render: function() {
 		var niceDisplay = "";
-		var minutes = Math.ceil( this.state.secondsRemaining / 60 );
+		var seconds = this.state.secondsRemaining;
+		var minutes = Math.floor( seconds / 60 );
+		seconds = seconds - ( 60 * minutes ); 
 		if ( this.state.secondsRemaining >= 3600 ) {
 			var hours = Math.floor(this.state.secondsRemaining/3600)
 			minutes = minutes - ( hours * 60 );
@@ -44,7 +46,7 @@ var CountdownTimer = React.createClass({
 			}
 			niceDisplay = hours + "h";
 		}
-		niceDisplay = niceDisplay + minutes + "m"
+		niceDisplay = niceDisplay + minutes + "m" + seconds + "s"
 		var pct = 0;
 		if ( this.state.ticked ) {
 			if ( this.state.secondsRemaining == this.state.secondsInitial ) {
@@ -58,11 +60,11 @@ var CountdownTimer = React.createClass({
 			}
 		}
 		return (
-			<div className="progress-bar" style={{textAlign:"left"}}>
-				<span className="center" style={{width: pct+"%"}}></span>
-				<span style={{background: "none", position: "absolute", left: "2.5em"}}>
-					{niceDisplay}
-				</span>
+			<div className="center">
+				<div style={{textShadow: "0 0 1px #fff"}}>{niceDisplay}</div>
+				<div className="progress-bar" style={{textAlign:"left", marginTop:"-1.7em"}}>
+					<span className="center" style={{width: pct+"%"}}></span>
+				</div>
 			</div>
 		);
 	}
@@ -550,8 +552,9 @@ var LFGAppLooking = React.createClass({
 				var pro = "https://account.xbox.com/en-us/profile?gamerTag=" + encodeURIComponent(gt)
 				peers.push((
 					<li key={name}>
-						<a href={pro} target="_blank">{gt}</a><br/>
+						{gt}<br/>
 						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>&nbsp;
+						<a className="btn btn-default btn-xs" target="_blank" href={pro}>XBL Profile</a>&nbsp;
 						<a
 							data-about={clearName}
 							data-user={user}
@@ -861,7 +864,7 @@ var LFGApp = React.createClass({
 				<div className="row">
 					<div className="col-md-2 center">
 						<span className="greentext bold">
-							Select any  short term objectives that you want to do now
+							Select up to 4 activities and set your play duration	
 						</span>
 						<br/>
 						{actionWidgets}
@@ -1034,10 +1037,10 @@ var Hello = React.createClass({
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
 						<button value="lfg" onClick={this.dispatch}
-							className="btn btn-block btn-default">Looking to do something now</button>
+							className="btn btn-block btn-default">Looking For Game Now</button>
 						or
 						<button value="events" onClick={this.dispatch}
-							className="btn btn-block btn-default">Looking to do something later</button>
+							className="btn btn-block btn-default">Looking for Game Later</button>
 					</div>
 				</div>
 				
@@ -1045,7 +1048,7 @@ var Hello = React.createClass({
 				
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
-						[the damned logo goes here]
+						<img style={{width:"100%"}} src="/logo.png"/>
 					</div>
 				</div>
 				

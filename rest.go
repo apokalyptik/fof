@@ -349,7 +349,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		about := r.Form.Get("about")
 		username, _ := session.Values["username"].(string)
 		slack.msg().to("@" + to).send(fmt.Sprintf(
-			"@%s would like to talk to you about *%s*", username, about,
+			"@%s is also looking to play *%s*", username, about,
 		))
 	}
 }
