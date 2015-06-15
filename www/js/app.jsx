@@ -439,7 +439,7 @@ var HostForm = React.createClass({
 						type="text" className="form-control" id="name" placeholder="Event Name"/>
 					<div className="row">
 						<div className="col-md-8 col-md-offset-2">
-							<em>Be sure to include the date, time, and tome zone for your event</em>
+							<em>Be sure to include the date, time, and time zone for your event</em>
 						</div>
 					</div>
 				</div>
@@ -551,7 +551,7 @@ var LFGAppLooking = React.createClass({
 				var msg = "https://account.xbox.com/en-US/Messages?gamerTag=" + encodeURIComponent(gt)
 				var pro = "https://account.xbox.com/en-us/profile?gamerTag=" + encodeURIComponent(gt)
 				peers.push((
-					<li key={name}>
+					<li key={name + "-" + user}>
 						{gt}<br/>
 						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>&nbsp;
 						<a className="btn btn-default btn-xs" target="_blank" href={pro}>XBL Profile</a>&nbsp;
@@ -650,7 +650,7 @@ var LFGApp = React.createClass({
 				{ name: "Control" },
 				{ name: "Skirmish" },
 				{ name: "Clash" },
-				{ name: "Ramble" },
+				{ name: "Rumble" },
 				{ name: "Salvage" }
 			],
 		},
@@ -709,12 +709,14 @@ var LFGApp = React.createClass({
 			return false;
 		}
 		if ( typeof this.props.state.lfg[option][this.props.state.username] != "undefined" ) {
-			Dispatcher.dispatch({
-				actionType: "lfg",
-				what: option,
-				value: true
-			});
-			return true;
+			if ( typeof this.props.state.my[option] == "undefined" ) {
+				Dispatcher.dispatch({
+					actionType: "lfg",
+					what: option,
+					value: true
+				});
+				return true;
+			}
 		}
 		return false;
 	},
@@ -808,7 +810,7 @@ var LFGApp = React.createClass({
 				var oldlookers = this.getLookers(cname, this.props.state.prevlfg);
 				var localClassName = "lfg count";
 				var disabled = false;
-				if ( numChecked >= 4 ) {
+				if ( !this.isChecked(cname) && numChecked >= 4 ) {
 					if ( typeof this.props.state.my[cname] == "undefined" || !this.props.state.my[cname] ) {
 						disabled = true;
 					}
@@ -1058,13 +1060,7 @@ var Hello = React.createClass({
 	}
 });
 
-
-if ( typeof fluxify == "undefined" ) {
-	var Flux = require('./Flux.js');
-	Dispatcher =  new Flux.Dispatcher();
-} else {
-	Dispatcher = fluxify.dispatcher;
-}
+Dispatcher = fluxify.dispatcher;
 
 var LFGStore = {
 	callbacks: [],
@@ -1227,7 +1223,7 @@ var hash = {
 
 LFGStore.subscribe(function(data) {
 	data.username = Datastore.data.username;
-	Dispatcher.dispatch({actionType: "set", key: "lfg", value: data})
+	Datastore.setThing("lfg", data);
 });
 
 jQuery(document).ready(function() {
