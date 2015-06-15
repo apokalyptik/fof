@@ -338,5 +338,18 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		}
 		msgs.sendToSlack()
 		fmt.Fprint(w, msgs.stdOut())
+	case "/rest/ping":
+		if err := requireMethod("POST", w, r); err != nil {
+			return
+		}
+		if err := requireAPIKey(session, w); err != nil {
+			return
+		}
+		to := r.Form.Get("username")
+		about := r.Form.Get("about")
+		username, _ := session.Values["username"].(string)
+		slack.msg().to("@" + to).send(fmt.Sprintf(
+			"@%s would like to talk to you about *%s*", username, about,
+		))
 	}
 }

@@ -523,6 +523,18 @@ var LFGAppLooking = React.createClass({
 				window.setTimeout(this.clear.bind(this), 500)
 			});
 	},
+	ping: function(event) {
+		event.preventDefault()
+		var un = event.target.getAttribute('data-user');
+		var ab = event.target.getAttribute('data-about');
+		$.post('/rest/ping', { username: un, about: ab  })
+			.done(function() {
+				alert("Ping to " +un+ " successful")
+			})
+			.fail(function() {
+				alert("Ping to " +un+ " failed" )
+			})
+	},
 	renderSection: function(name) {
 		var clearName = name.split(":").map(function(part) {
 			return decodeURIComponent(part)
@@ -540,7 +552,13 @@ var LFGAppLooking = React.createClass({
 					<li key={name}>
 						<a href={pro} target="_blank">{gt}</a><br/>
 						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>
-						<a className="btn btn-default btn-xs" target="_blank" href="#">Slack Ping</a>
+						<a
+							data-about={clearName}
+							data-user={user}
+							onClick={this.ping}
+							className="btn btn-default btn-xs" 
+							target="_blank" 
+							href="#">Slack Ping</a>
 					</li> ));
 			}
 		}
