@@ -551,7 +551,7 @@ var LFGAppLooking = React.createClass({
 				peers.push((
 					<li key={name}>
 						<a href={pro} target="_blank">{gt}</a><br/>
-						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>
+						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>&nbsp;
 						<a
 							data-about={clearName}
 							data-user={user}
@@ -590,7 +590,7 @@ var LFGAppLooking = React.createClass({
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-md-1">
-						<button style={{width: "100%"}} className="btn-block" onClick={this.cancel}>Reset</button>
+						<button className="btn btn-default btn-block" onClick={this.cancel}>Reset</button>
 						<br/>
 						<CountdownTimer secondsRemaining={this.props.time * 60}/>
 					</div>
@@ -1034,10 +1034,10 @@ var Hello = React.createClass({
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
 						<button value="lfg" onClick={this.dispatch}
-							className="btn-lg btn-block">Looking to do something now</button>
+							className="btn btn-block btn-default">Looking to do something now</button>
 						or
 						<button value="events" onClick={this.dispatch}
-							className="btn-lg btn-block">Looking to do something later</button>
+							className="btn btn-block btn-default">Looking to do something later</button>
 					</div>
 				</div>
 				
