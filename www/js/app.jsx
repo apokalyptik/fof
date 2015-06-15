@@ -8,6 +8,37 @@ function postRaid(what, data) {
 	});
 }
 
+var DisplayFor = React.createClass({
+	getInitialState: function() {
+		return {
+			secondsRemaining: 0,
+			message: "",
+		};
+	},
+	tick: function() {
+		this.setState({secondsRemaining: this.state.secondsRemaining - 1, ticked: true});
+		if (this.state.secondsRemaining <= 0) {
+			clearInterval(this.interval);
+		}
+	},
+	componentDidMount: function() {
+		this.setState({
+			message: this.props.message,
+			secondsRemaining: this.props.seconds
+		});
+		this.interval = setInterval(this.tick, 1000);
+	},
+	componentWillUnmount: function() {
+		clearInterval(this.interval);
+	},
+	render: function() {
+		if ( this.state.secondsRemaining < 1 ) {
+			return (<span/>);
+		}
+		return (this.state.message);
+	}
+});
+
 var CountdownTimer = React.createClass({
 	getInitialState: function() {
 		return {
@@ -19,6 +50,10 @@ var CountdownTimer = React.createClass({
 	tick: function() {
 		this.setState({secondsRemaining: this.state.secondsRemaining - 1, ticked: true});
 		if (this.state.secondsRemaining <= 0) {
+			Dispatcher.dispatch({
+				actionType: "lfg-looking",
+				value: false
+			});
 			clearInterval(this.interval);
 		}
 	},
@@ -69,6 +104,7 @@ var CountdownTimer = React.createClass({
 		);
 	}
 });
+
 
 var Channel = React.createClass({
 	select: function(e) {
@@ -531,10 +567,34 @@ var LFGAppLooking = React.createClass({
 		var ab = event.target.getAttribute('data-about');
 		$.post('/rest/ping', { username: un, about: ab  })
 			.done(function() {
-				alert("Ping to " +un+ " successful")
+				alert("Pinged " +un);
+				/*
+				Dispatcher.dispatch({
+					actionType: "set",
+					key: "success",
+					value: "Ping to " +un+ " successful"
+				});
+				Dispatcher.dispatch({
+					actionType: "set",
+					key: "failure",
+					value: null
+				});
+				*/
 			})
 			.fail(function() {
-				alert("Ping to " +un+ " failed" )
+				alert("Ping to " +un+ " unsuccessful");
+				/*
+				Dispatcher.dispatch({
+					actionType: "set",
+					key: "success",
+					value: null,
+				});
+				Dispatcher.dispatch({
+					actionType: "set",
+					key: "failure",
+					value: "Ping to " +un+ " unsuccessful"
+				});
+				*/
 			})
 	},
 	renderSection: function(name) {
@@ -847,6 +907,7 @@ var LFGApp = React.createClass({
 			<div>
 				<br/>
 				<select value={this.props.state.time} defaultValue="120" onChange={this.time}>
+					<option value="1">1 minute</option>
 					<option value="30">30 minutes</option>
 					<option value="60">1 hour</option>
 					<option value="90">1 hour 30 minutes</option>
@@ -955,22 +1016,22 @@ var App = React.createClass({
 	},
 
 	render: function() {
+		if ( this.state.checked == false ) {
+			return (<div/>);
+		}
+
 		if ( this.state.authenticated == false ) {
 			return(
 				<div className="container-fluid">
 					<div className="row">
 						<div className="col-md-6 col-md-offset-3 center">
 							<h2 className="dark">
-							please use the slack command &ldquo;<strong>{this.state.command}</strong>&rdquo; to log in
+							please use the slack command &ldquo;<strong>/team</strong>&rdquo; to log in
 							</h2>
 						</div>
 					</div>
 				</div>
 			);
-		}
-
-		if ( this.state.checked == false ) {
-			return (<div/>);
 		}
 
 		if ( this.state.viewing == "hello" ) {
@@ -994,8 +1055,26 @@ var App = React.createClass({
 				break;
 		}
 
+		var Error;
+		if ( this.state.error ) {
+			Error = (
+				<DisplayFor seconds={30} message={(<div className="error">{this.state.error}</div>)}/>
+			);
+		}
+
+		var Success;
+		if ( this.state.success ) {
+			Success = (
+				<DisplayFor seconds={10} message={(<div className="success">{this.state.success}</div>)}/>
+			);
+		}
+
 		return(
 			<div>
+				<div className="notices">
+					{Error}
+					{Success}
+				</div>
 				<div className="container-fluid nopadding">
 					<div className="row nomargin">
 						<div className="col-md-12 nomargin">
@@ -1146,7 +1225,9 @@ var Datastore = {
 		hosting: false,
 		channels: [],
 		viewing: "hello",
-		lfg: {}
+		lfg: {},
+		error: null,
+		success: null,
 	},
 	setThing: function(thing, value) {
 		this.data[thing] = value;

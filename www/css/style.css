@@ -126,3 +126,13 @@ ul.breadcrumbs-lgr {
     display: inline-block;
     height: 100%;
     transition: width .4s ease-in-out; }
+
+.notices {
+  position: absolute;
+  top: 1em;
+  width: 90%;
+  text-align: center; }
+  .notices .error {
+    background-color: #c2c2c2; }
+  .notices .success {
+    background-color: #5dc21e; }
