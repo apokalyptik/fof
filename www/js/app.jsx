@@ -8,6 +8,66 @@ function postRaid(what, data) {
 	});
 }
 
+var CountdownTimer = React.createClass({
+	getInitialState: function() {
+		return {
+			secondsInitial: 0,
+			secondsRemaining: 0,
+			ticked: false,
+		};
+	},
+	tick: function() {
+		this.setState({secondsRemaining: this.state.secondsRemaining - 1, ticked: true});
+		if (this.state.secondsRemaining <= 0) {
+			clearInterval(this.interval);
+		}
+	},
+	componentDidMount: function() {
+		this.setState({
+			secondsInitial: this.props.secondsRemaining,
+			secondsRemaining: this.props.secondsRemaining
+		});
+		this.interval = setInterval(this.tick, 1000);
+	},
+	componentWillUnmount: function() {
+		clearInterval(this.interval);
+	},
+	render: function() {
+		var niceDisplay = "";
+		var minutes = Math.ceil( this.state.secondsRemaining / 60 );
+		if ( this.state.secondsRemaining >= 3600 ) {
+			var hours = Math.floor(this.state.secondsRemaining/3600)
+			minutes = minutes - ( hours * 60 );
+			if ( minutes == 60 ) {
+				minutes = 0;
+				hours = hours + 1;
+			}
+			niceDisplay = hours + "h";
+		}
+		niceDisplay = niceDisplay + minutes + "m"
+		var pct = 0;
+		if ( this.state.ticked ) {
+			if ( this.state.secondsRemaining == this.state.secondsInitial ) {
+				pct = 100;
+			} else {
+				if ( this.state.secondsInitial != 0 ) {
+					pct = 100 - Math.ceil(
+						100 * ( this.state.secondsRemaining / this.state.secondsInitial )
+					);
+				}
+			}
+		}
+		return (
+			<div className="progress-bar" style={{textAlign:"left"}}>
+				<span className="center" style={{width: pct+"%"}}></span>
+				<span style={{background: "none", position: "absolute", left: "2.5em"}}>
+					{niceDisplay}
+				</span>
+			</div>
+		);
+	}
+});
+
 var Channel = React.createClass({
 	select: function(e) {
 		e.preventDefault();
@@ -452,10 +512,16 @@ var LFGSelectGame = React.createClass({
 
 var LFGAppLooking = React.createClass({
 	cancel: function() {
-		Dispatcher.dispatch({
-			actionType: "lfg-looking",
-			value: false
-		});
+		jQuery.post("/rest/lfg", { events: [], time: "0" })
+			.done(function() {
+				Dispatcher.dispatch({
+					actionType: "lfg-looking",
+					value: false
+				});
+			})
+			.fail(function() {
+				window.setTimeout(this.clear.bind(this), 500)
+			});
 	},
 	renderSection: function(name) {
 		var clearName = name.split(":").map(function(part) {
@@ -471,7 +537,7 @@ var LFGAppLooking = React.createClass({
 				var msg = "https://account.xbox.com/en-US/Messages?gamerTag=" + encodeURIComponent(gt)
 				var pro = "https://account.xbox.com/en-us/profile?gamerTag=" + encodeURIComponent(gt)
 				peers.push((
-					<li>
+					<li key={name}>
 						<a href={pro} target="_blank">{gt}</a><br/>
 						<a className="btn btn-default btn-xs" target="_blank" href={msg}>XBL Msg</a>
 						<a className="btn btn-default btn-xs" target="_blank" href="#">Slack Ping</a>
@@ -499,15 +565,16 @@ var LFGAppLooking = React.createClass({
 		for ( var i=0; i<wantRows; i++ ) {
 			var thisRow = list.slice(i*4, (i+1)*4);
 			if ( thisRow.length > 0 ) {
-				gotRows.push(<div className="row">{thisRow}</div>);
+				gotRows.push(<div key={i} className="row">{thisRow}</div>);
 			}
 		}
-		
 		return (
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-md-1">
-						<button onClick={this.cancel}>Reset</button>
+						<button style={{width: "100%"}} className="btn-block" onClick={this.cancel}>Reset</button>
+						<br/>
+						<CountdownTimer secondsRemaining={this.props.time * 60}/>
 					</div>
 					<div className="col-md-11">
 						<div className="container-fluid">
@@ -607,22 +674,34 @@ var LFGApp = React.createClass({
 			],
 		},
 	],
-	componentDidUpdate: function() {
-		// $('span.lfg.count.updated').fadeOut(400).fadeIn(400);
-	},
-	getInitialState: function() {
-		return LFGStore.data;
-	},
-	componentDidMount: function() {
-		LFGStore.subscribe(function(data) {
-			this.setState(data);
-		}.bind(this));
-	},
-	isChecked: function(option) {
-		if ( typeof this.state.my[option] == "undefined" ) {
+	isInMyOptions: function(option) {
+		if ( typeof this.props.state.my[option] == "undefined" ) {
 			return false;
 		}
-		if ( this.state.my[option] == true ) {
+		if ( this.props.state.my[option] == true ) {
+			return true;
+		}
+		return false;
+	},
+	isPersistedOption: function(option) {
+		if ( typeof this.props.state.lfg[option] == "undefined" ) {
+			return false;
+		}
+		if ( typeof this.props.state.lfg[option][this.props.state.username] != "undefined" ) {
+			Dispatcher.dispatch({
+				actionType: "lfg",
+				what: option,
+				value: true
+			});
+			return true;
+		}
+		return false;
+	},
+	isChecked: function(option) {
+		if ( this.isInMyOptions(option) ) {
+			return true;
+		}
+		if ( this.isPersistedOption(option) ) {
 			return true;
 		}
 		return false;
@@ -645,15 +724,15 @@ var LFGApp = React.createClass({
 	},
 	submit: function() {
 		var events = [];
-		for ( var eventName in this.state.my ) {
-			if ( this.state.my[eventName] ) {
+		for ( var eventName in this.props.state.my ) {
+			if ( this.props.state.my[eventName] ) {
 				events.push( eventName );
 			}
 		}
 		if ( events.length < 1 ) {
 			retuen
 		}
-		jQuery.post("/rest/lfg", { events: events, time: this.state.time })
+		jQuery.post("/rest/lfg", { events: events, time: this.props.state.time })
 			.done(function() {
 				Dispatcher.dispatch({
 					actionType: "lfg-looking",
@@ -669,7 +748,7 @@ var LFGApp = React.createClass({
 		if ( typeof dataset[name] != "undefined" ) {
 			lookers = 0;
 			for ( var looker in dataset[name] ) {
-				if ( looker == this.state.username ) {
+				if ( looker == this.props.state.username ) {
 					continue;
 				}
 				lookers = lookers + 1
@@ -681,19 +760,20 @@ var LFGApp = React.createClass({
 		return lookers;
 	},
 	render: function() {
-		if ( this.state.looking == true ) {
+		if ( this.props.state.looking == true ) {
 			return (<LFGAppLooking
 					activities={this.activities}
-					prev={this.state.prevlfg}
-					peers={this.state.lfg}
-					username={this.state.username}
-					forWhat={this.state.my} />);
+					prev={this.props.state.prevlfg}
+					peers={this.props.state.lfg}
+					username={this.props.state.username}
+					time={this.props.state.time}
+					forWhat={this.props.state.my} />);
 		}
 		var activities = this.activities;
 		var activityBlock = [];
 		var numChecked = 0;
-		for ( var i in this.state.my ) {
-			if ( this.state.my[i] ) {
+		for ( var i in this.props.state.my ) {
+			if ( this.props.state.my[i] ) {
 				numChecked = numChecked + 1;
 			}
 		}
@@ -703,12 +783,12 @@ var LFGApp = React.createClass({
 			var opt = [];
 			for ( var io = 0; io<act.options.length; io++ ) {
 				var cname = aname + ":" + encodeURIComponent(act.options[io].name);
-				var lookers = this.getLookers(cname, this.state.lfg);
-				var oldlookers = this.getLookers(cname, this.state.prevlfg);
+				var lookers = this.getLookers(cname, this.props.state.lfg);
+				var oldlookers = this.getLookers(cname, this.props.state.prevlfg);
 				var localClassName = "lfg count";
 				var disabled = false;
 				if ( numChecked >= 4 ) {
-					if ( typeof this.state.my[cname] == "undefined" || !this.state.my[cname] ) {
+					if ( typeof this.props.state.my[cname] == "undefined" || !this.props.state.my[cname] ) {
 						disabled = true;
 					}
 				}
@@ -725,7 +805,7 @@ var LFGApp = React.createClass({
 							className={localClassName}>{lookers}</span></li> ) );
 			}
 			activityBlock.push( (
-				<div key={"activity-"+i} className="col-md-3">
+				<div key={"activity-"+i+"-"+activityBlock.length} className="col-md-3">
 					<ul className="lfgselect">
 						<li><h4>{act.name}</h4><ul>{opt}</ul></li>
 					</ul>
@@ -737,13 +817,13 @@ var LFGApp = React.createClass({
 		for ( var i=0; i<wantRows; i++ ) {
 			var thisRow = activityBlock.slice(i*4, (i+1)*4);
 			if ( thisRow.length > 0 ) {
-				activityRows.push(<div className="row">{thisRow}</div>);
+				activityRows.push(<div key={i} className="row">{thisRow}</div>);
 			}
 		}
 		var actionWidgets = (
 			<div>
 				<br/>
-				<select value={this.state.time} defaultValue="120" onChange={this.time}>
+				<select value={this.props.state.time} defaultValue="120" onChange={this.time}>
 					<option value="30">30 minutes</option>
 					<option value="60">1 hour</option>
 					<option value="90">1 hour 30 minutes</option>
@@ -823,7 +903,7 @@ var App = React.createClass({
 					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
 					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 				}
-				Datastore.subscribe(this.acceptData.bind(this))
+				Datastore.subscribe(this.acceptData)
 				this.updateData();
 			}.bind(this));
 	},
@@ -836,12 +916,12 @@ var App = React.createClass({
 		jQuery.getJSON("/rest/get?since="+this.state.updated_at)
 			.done(function(data) {
 				Dispatcher.dispatch({actionType: "serverStateUpdate", data: data});
-			}.bind(this))
+			})
 			.fail(function(data) {
 				if ( data.status == 403 ) {
 					location.reload(true);
 				}
-			}.bind(this))
+			})
 			.always(function() {
 				window.setTimeout(this.updateData, 250);
 			}.bind(this))
@@ -865,9 +945,13 @@ var App = React.createClass({
 				</div>
 			);
 		}
-		
+
 		if ( this.state.checked == false ) {
 			return (<div/>);
+		}
+
+		if ( this.state.viewing == "hello" ) {
+			return ( <Hello/> );
 		}
 
 		var crumbs = [
@@ -882,7 +966,7 @@ var App = React.createClass({
 				WorkSpace = ( <TeamApp state={this.state}/> );
 				break;
 			case "lfg":
-				WorkSpace = ( <LFGApp/> );
+				WorkSpace = ( <LFGApp state={this.state.lfg}/> );
 				crumbs.push( ( <li key="crumb-lfg" className="box"><LFGSelectGame/></li> ) );
 				break;
 		}
@@ -909,6 +993,50 @@ var App = React.createClass({
 		);
 	},
 });
+
+var Hello = React.createClass({
+	dispatch: function(event) {
+		Dispatcher.dispatch({
+			actionType: "hello-choose",
+			value: event.target.value}
+		);
+	},
+	render: function() {
+		return(
+			<div className="container fluid">
+				
+				<div className="row">
+					<div className="col-md-4 col-md-offset-4 center">
+						<h2>Federation of Fathers</h2>
+					</div>
+				</div>
+
+				<div className="row"><div className="col-md-1">&nbsp;</div></div>
+
+				<div className="row">
+					<div className="col-md-4 col-md-offset-4 center">
+						<button value="lfg" onClick={this.dispatch}
+							className="btn-lg btn-block">Looking to do something now</button>
+						or
+						<button value="events" onClick={this.dispatch}
+							className="btn-lg btn-block">Looking to do something later</button>
+					</div>
+				</div>
+				
+				<div className="row"><div className="col-md-1">&nbsp;</div></div>
+				
+				<div className="row">
+					<div className="col-md-4 col-md-offset-4 center">
+						[the damned logo goes here]
+					</div>
+				</div>
+				
+				<div className="row"><div className="col-md-1">&nbsp;</div></div>
+			</div>
+		);
+	}
+});
+
 
 if ( typeof fluxify == "undefined" ) {
 	var Flux = require('./Flux.js');
@@ -1000,7 +1128,8 @@ var Datastore = {
 		updated_at: "",
 		hosting: false,
 		channels: [],
-		viewing: "events",
+		viewing: "hello",
+		lfg: {}
 	},
 	setThing: function(thing, value) {
 		this.data[thing] = value;
@@ -1019,6 +1148,9 @@ var Datastore = {
 Dispatcher.register(function(payload) {
 	var doReRender = false;
 	switch ( payload.actionType ) {
+		case "hello-choose":
+			Datastore.setThing( "viewing", payload.value );
+			break;
 		case "serverStateUpdate":
 			for ( var i in payload.data ) {
 				Datastore.data[i] = payload.data[i];
@@ -1071,6 +1203,11 @@ var hash = {
 		return true;
 	}
 }
+
+LFGStore.subscribe(function(data) {
+	data.username = Datastore.data.username;
+	Dispatcher.dispatch({actionType: "set", key: "lfg", value: data})
+});
 
 jQuery(document).ready(function() {
 	hash.parse()

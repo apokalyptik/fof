@@ -1,6 +1,7 @@
 database:
     raids: "_raids.json"
     users: "_users.json"
+    lfg: "_lfg.json"
 listen: "0.0.0.0:8878"
 pidfile: "_bot.pid"
 maxAge: "72h"

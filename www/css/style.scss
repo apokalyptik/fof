@@ -165,3 +165,17 @@ ul.breadcrumbs-lgr {
 .lfg.count {
 	float: right;
 }
+
+.progress-bar {
+	background-color: $lgr;
+	height: 1.8em;
+	width: 100%;
+	border: 1px solid $gr;
+	span {
+		background-color: $gr;
+		display: inline-block;
+		height: 100%;
+		transition: width .4s ease-in-out;    
+	}
+}
+

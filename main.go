@@ -64,6 +64,15 @@ func main() {
 		}
 	}
 
+	if lfgDbFile, err := cfg.String("database.lfg"); err != nil {
+		log.Fatalf("Error reading database.lfg from config file: %s", err.Error())
+	} else {
+		if err := lfg.load(lfgDbFile); err != nil {
+			log.Fatalf("Error reading %s: %s", lfgDbFile, err.Error())
+		}
+		go lfg.mindExpiration()
+	}
+
 	if slack.raidKey, err = cfg.String("slack.slashKey.raids"); err != nil {
 		log.Fatalf("Error reading slack.slashKey.raids: %s", err.Error())
 	}

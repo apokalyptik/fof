@@ -115,3 +115,14 @@ ul.breadcrumbs-lgr {
 
 .lfg.count {
   float: right; }
+
+.progress-bar {
+  background-color: #5dc21e;
+  height: 1.8em;
+  width: 100%;
+  border: 1px solid #107c10; }
+  .progress-bar span {
+    background-color: #107c10;
+    display: inline-block;
+    height: 100%;
+    transition: width .4s ease-in-out; }

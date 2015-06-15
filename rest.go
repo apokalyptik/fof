@@ -157,10 +157,14 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			log.Printf("%#v", r.Form)
 			if events, ok := r.Form["events[]"]; ok {
 				eventList, _ := url.QueryUnescape(strings.Join(events, "', '"))
 				lfg.add(username, time.Duration(expiry)*time.Minute, events...)
 				log.Printf("@%s -- lfg: %s / '%s'", username, r.Form.Get("time"), eventList)
+			} else {
+				lfg.add(username, 0)
+				log.Printf("@%s -- lfg: -/-", username)
 			}
 			return
 		}

@@ -27,7 +27,9 @@ func updateChannelList() error {
 		"https://slack.com/api/channels.list?token=%s&exclude_archived=1",
 		url.QueryEscape(slack.apiKey)))
 
-	defer resp.Body.Close()
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 
 	if err != nil {
 		return err
