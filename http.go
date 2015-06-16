@@ -28,7 +28,7 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(mac, username, t)
 	go func() {
 		slack.msg().to("@" + username).send(fmt.Sprintf(
-			"<http://%s/rest/login?username=%s&t=%d&signature=%s|Click here> to log into and use the team tool",
+			"<http://%s/rest/login?username=%s&t=%d&signature=%s|Click here> to log into and use the team tool. The link is only valid for the next 5 or so minutes. You can request a new one at any time with /team. You will be logged out of the team tool after about a week, and will need to log in again when that happens.",
 			r.Host,
 			url.QueryEscape(username),
 			t,

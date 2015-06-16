@@ -129,9 +129,11 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 			session.Save(r, w)
 			data, _ := json.Marshal(map[string]string{"cmd": raidSlashCommand, "username": name.(string)})
 			w.Write(data)
+			log.Printf("@%s -- /rest/login/check", name.(string))
 		} else {
 			data, _ := json.Marshal(map[string]string{"cmd": raidSlashCommand})
 			w.Write(data)
+			log.Println("- -- /rest/login/check")
 			return
 		}
 	case "/rest/lfg":
@@ -160,15 +162,21 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 			if events, ok := r.Form["events[]"]; ok {
 				eventList, _ := url.QueryUnescape(strings.Join(events, "', '"))
 				lfg.add(username, time.Duration(expiry)*time.Minute, events...)
-				log.Printf("@%s -- lfg: %s / '%s'", username, r.Form.Get("time"), eventList)
+				log.Printf("@%s -- lfg: %s: '%s'", username, r.Form.Get("time"), eventList)
 			} else {
 				lfg.add(username, 0)
-				log.Printf("@%s -- lfg: -/-", username)
+				log.Printf("@%s -- lfg: -", username)
 			}
 			return
 		}
 
-		log.Printf("@%s -- lfg", username)
+		var since = v.Get("since")
+		if since == "0" || since == "" {
+			if err := lfgOutput.send(w); err != nil {
+				log.Println("Error sending /rest/lfg:", err.Error())
+			}
+			return
+		}
 
 		closed := w.(http.CloseNotifier).CloseNotify()
 		notify := make(chan struct{})
@@ -177,7 +185,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 				lfgOutput.cond.Wait()
 			}
 			notify <- struct{}{}
-		}(notify, v.Get("since"))
+		}(notify, since)
 		select {
 		case <-notify:
 			if err := lfgOutput.send(w); err != nil {
@@ -188,6 +196,18 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case "/rest/get":
+		if err := requireAPIKey(session, w); err != nil {
+			return
+		}
+
+		var since = v.Get("since")
+		if since == "0" || since == "" {
+			if err := xhrOutput.send(w); err != nil {
+				log.Println("Error sending /rest/lfg:", err.Error())
+			}
+			return
+		}
+
 		closed := w.(http.CloseNotifier).CloseNotify()
 		notify := make(chan struct{})
 		go func(notify chan struct{}, since string) {
@@ -195,7 +215,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 				xhrOutput.cond.Wait()
 			}
 			notify <- struct{}{}
-		}(notify, v.Get("since"))
+		}(notify, since)
 		select {
 		case <-notify:
 			if err := xhrOutput.send(w); err != nil {
@@ -347,6 +367,7 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		to := r.Form.Get("username")
 		about := r.Form.Get("about")
 		username, _ := session.Values["username"].(string)
+		log.Printf("@%s -- ping @%s -- %s", username, to, about)
 		slack.msg().to("@" + to).send(fmt.Sprintf(
 			"@%s is also looking to play *%s*", username, about,
 		))
