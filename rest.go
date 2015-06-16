@@ -94,23 +94,23 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		username := v.Get("username")
 		t, err := strconv.ParseInt(v.Get("t"), 10, 64)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
 			return
 		}
 		s := v.Get("signature")
 		now := time.Now().Unix()
 		if t > now {
-			w.WriteHeader(http.StatusForbidden)
+			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
 			return
 		}
 		if (now - t) > 300 {
-			w.WriteHeader(http.StatusForbidden)
+			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
 			return
 		}
 		mac := hmac.New(sha256.New, hmacKey)
 		fmt.Fprintln(mac, username, t)
 		if s != fmt.Sprintf("%x", mac.Sum(nil)) {
-			w.WriteHeader(http.StatusForbidden)
+			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
 			return
 		}
 		log.Printf("@%s -- %s", username, "/rest/login")
