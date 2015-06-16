@@ -1118,7 +1118,7 @@ var Hello = React.createClass({
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
 						<button value="lfg" onClick={this.dispatch}
-							className="btn btn-block btn-default">Looking For Game Now</button>
+							className="btn btn-block btn-default">Looking for Game Now</button>
 						or
 						<button value="events" onClick={this.dispatch}
 							className="btn btn-block btn-default">Looking for Game Later</button>

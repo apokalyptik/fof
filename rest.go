@@ -157,7 +157,6 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			log.Printf("%#v", r.Form)
 			if events, ok := r.Form["events[]"]; ok {
 				eventList, _ := url.QueryUnescape(strings.Join(events, "', '"))
 				lfg.add(username, time.Duration(expiry)*time.Minute, events...)
