@@ -1,4 +1,6 @@
-var Dispatcher = null;
+var React = require('react/addons');
+var Flux = require('flux');
+var Dispatcher = new Flux.Dispatcher();
 
 function postRaid(what, data) {
 	return jQuery.post("/rest/raid/" + what, data).fail(function( data ) {
@@ -1139,78 +1141,6 @@ var Hello = React.createClass({
 	}
 });
 
-Dispatcher = fluxify.dispatcher;
-
-var LFGStore = {
-	callbacks: [],
-	data: {
-		looking: false,
-		my: {},
-		lfg: {},
-		prevlfg: {},
-		time: "120",
-		username: "",
-	},
-	since: "0",
-	set: function(what, value) {
-		this.data.my[what] = value;
-		this.emitChange();
-	},
-	subscribe: function(callback) {
-		this.callbacks.push(callback);
-	},
-	emitChange: function() {
-		for( var i = 0; i < this.callbacks.length; i++ ) {
-			this.callbacks[i]( this.data );
-		}
-	}
-};
-
-Dispatcher.register(function(payload) {
-	switch( payload.actionType ) {
-		case "username":
-			LFGStore.data.username = payload.value;
-			LFGStore.emitChange();
-			break;
-		case "lfg-flush":
-			LFGStore.data = { my: {} };
-			LFGStore.emitChange();
-			break;
-		case "lfg":
-			LFGStore.set(payload.what, payload.value);
-			break;
-		case "lfg-time":
-			LFGStore.data.time = payload.value;
-			LFGStore.emitChange();
-			break;
-		case "lfg-looking":
-			LFGStore.data.looking = payload.value;
-			LFGStore.emitChange();
-			break;
-		case "lfg-lp-results":
-			LFGStore.data.prevlfg = LFGStore.data.lfg;
-			LFGStore.data.lfg = payload.value;
-			LFGStore.emitChange();
-			break;
-		case "lfg-since":
-			LFGStore.since = payload.value;
-			break;
-	}
-});
-
-function lfgLongPoll() {
-	$.getJSON("/rest/lfg?since=" + LFGStore.since)
-		.success(function(data) {
-			Dispatcher.dispatch({actionType: "lfg-since", value: data.updated_at});
-			Dispatcher.dispatch({actionType: "lfg-lp-results", value: data.lfg});
-			window.setTimeout(lfgLongPoll, 250)
-		})
-		.fail(function() {
-			window.setTimeout(lfgLongPoll, 2000)
-		})
-}
-lfgLongPoll();
-
 var Datastore = {
 	callbacks: [],
 	data: {
@@ -1225,7 +1155,14 @@ var Datastore = {
 		hosting: false,
 		channels: [],
 		viewing: "hello",
-		lfg: {},
+		lfg: {
+			username: "",
+			my: {},
+			prevlfg: {},
+			lfg: {},
+			time: 120,
+			looking: false,
+		},
 		error: null,
 		success: null,
 	},
@@ -1251,7 +1188,16 @@ Dispatcher.register(function(payload) {
 			break;
 		case "serverStateUpdate":
 			for ( var i in payload.data ) {
-				Datastore.data[i] = payload.data[i];
+				switch( i ) {
+					case "lfg":
+						Datastore.data.lfg.username = Datastore.data.username;
+						Datastore.data.lfg.prevlfg = Datastore.data.lfg.lfg;
+						Datastore.data.lfg.lfg = payload.data[i];
+						break
+					default:
+						Datastore.data[i] = payload.data[i];
+						break;
+				}
 			}
 			var channel = Datastore.data.channel;
 			var raid = Datastore.data.raid;
@@ -1268,54 +1214,29 @@ Dispatcher.register(function(payload) {
 				}
 			}
 			Datastore.emitChange();
+			break
 		case "set":
 			Datastore.setThing(payload.key, payload.value);
+			break;
+		case "lfg-flush":
+			Datastore.data.lfg.my = {};
+			Datastore.emitChange();
+			break;
+		case "lfg":
+			Datastore.data.lfg.my[payload.what] = payload.value;
+			Datastore.emitChange();
+			break;
+		case "lfg-time":
+			Datastore.data.lfg.time = payload.value;
+			Datastore.emitChange();
+			break;
+		case "lfg-looking":
+			Datastore.data.lfg.looking = payload.value;
+			Datastore.emitChange();
+			break;
 	}
-});
-
-var hash = {
-	parts: {},
-	parse: function() {
-		var pieces = location.hash.substring(1).split("&");
-		for ( var i=0; i<pieces.length; i++ ) {
-			var part = pieces[i];
-			var parts = part.split("=").map(function(bit) {
-				return decodeURIComponent(bit)
-			});
-			if ( parts.length == 1 ) {
-				parts.push("");
-			}
-			this.parts[parts[0]] = parts[1];
-		}
-	},
-	get: function(bit) {
-		if ( typeof this.parts[bit] == undefined ) {
-			return null;
-		}
-		return this.parts[bit];
-	},
-	isset: function(bit) {
-		if ( typeof this.parts[bit] == undefined ) {
-			return false;
-		}
-		return true;
-	}
-}
-
-LFGStore.subscribe(function(data) {
-	data.username = Datastore.data.username;
-	Datastore.setThing("lfg", data);
 });
 
 jQuery(document).ready(function() {
-	hash.parse()
-	switch ( hash.get("app") ) {
-		case "lfgnow":
-			Datastore.data.viewing = "lfg";
-			break;
-		case "lfglater":
-			Datastore.data.viewing = "events";
-			break;
-	}
 	React.render(<App />, document.getElementById('app'));
 })
