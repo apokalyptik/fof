@@ -68,6 +68,7 @@ func (l *lfgStore) prune() {
 
 func (l *lfgStore) emit() {
 	lfgOutput.set("lfg", lfg.Data)
+	xhrOutput.set("lfg", lfg.Data)
 }
 
 func (l *lfgStore) add(username string, expiry time.Duration, events ...string) error {
