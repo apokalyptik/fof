@@ -8,3 +8,4 @@ raidbot
 bindata.go
 node_modules
 www/js/production.js
+www/js/development.js
