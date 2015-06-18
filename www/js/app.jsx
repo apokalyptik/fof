@@ -637,10 +637,11 @@ var LFGAppLooking = React.createClass({
 	render: function() {
 		var list = [];
 		for ( var i in this.props.forWhat ) {
-			if ( this.props.forWhat[i] == false ) {
+			var name = this.props.forWhat[i];
+			if ( this.props.forWhat[name] == false ) {
 				continue;
 			}
-			list.push(( this.renderSection(i) ) );
+			list.push(( this.renderSection(name) ) );
 		}
 	
 		var gotRows = [];
@@ -772,11 +773,6 @@ var LFGApp = React.createClass({
 		}
 		if ( typeof this.props.state.lfg[option][this.props.state.username] != "undefined" ) {
 			if ( typeof this.props.state.my[option] == "undefined" ) {
-				Dispatcher.dispatch({
-					actionType: "lfg",
-					what: option,
-					value: true
-				});
 				return true;
 			}
 		}
@@ -807,15 +803,27 @@ var LFGApp = React.createClass({
 	clear: function() {
 		Dispatcher.dispatch({ actionType: "lfg-flush" });
 	},
-	submit: function() {
+	getMyEvents: function() {
+		var username = this.props.state.username;
 		var events = [];
 		for ( var eventName in this.props.state.my ) {
 			if ( this.props.state.my[eventName] ) {
 				events.push( eventName );
 			}
 		}
+		for ( var eventName in this.props.state.lfg ) {
+			if ( typeof this.props.state.lfg[eventName][username] != "undefined" ) {
+				if ( typeof this.props.state.my[eventName] == "undefined" ) {
+					events.push( eventName );
+				}
+			}
+		}
+		return events;
+	},
+	submit: function() {
+		var events = this.getMyEvents();
 		if ( events.length < 1 ) {
-			retuen
+			return
 		}
 		jQuery.post("/rest/lfg", { events: events, time: this.props.state.time })
 			.done(function() {
@@ -845,6 +853,7 @@ var LFGApp = React.createClass({
 		return lookers;
 	},
 	render: function() {
+		var myEvents = this.getMyEvents();
 		if ( this.props.state.looking == true ) {
 			return (<LFGAppLooking
 					activities={this.activities}
@@ -852,16 +861,11 @@ var LFGApp = React.createClass({
 					peers={this.props.state.lfg}
 					username={this.props.state.username}
 					time={this.props.state.time}
-					forWhat={this.props.state.my} />);
+					forWhat={myEvents} />);
 		}
 		var activities = this.activities;
 		var activityBlock = [];
-		var numChecked = 0;
-		for ( var i in this.props.state.my ) {
-			if ( this.props.state.my[i] ) {
-				numChecked = numChecked + 1;
-			}
-		}
+		var numChecked = myEvents.length;
 		for ( var i = 0; i<activities.length; i++ ) {
 			var act = activities[i];
 			var aname = encodeURIComponent(act.name);
@@ -873,9 +877,7 @@ var LFGApp = React.createClass({
 				var localClassName = "lfg count";
 				var disabled = false;
 				if ( !this.isChecked(cname) && numChecked >= 4 ) {
-					if ( typeof this.props.state.my[cname] == "undefined" || !this.props.state.my[cname] ) {
-						disabled = true;
-					}
+					disabled = true;
 				}
 				if ( lookers != oldlookers ) {
 					localClassName = "lfg count updated";
@@ -1219,7 +1221,14 @@ Dispatcher.register(function(payload) {
 			Datastore.setThing(payload.key, payload.value);
 			break;
 		case "lfg-flush":
-			Datastore.data.lfg.my = {};
+			for ( var i in Datastore.data.lfg.my ) {
+				Datastore.data.lfg.my[i] = false;
+			}
+			for ( var e in Datastore.data.lfg.lfg ) {
+				if ( typeof Datastore.data.lfg.lfg[e][Datastore.data.lfg.username] != "undefined" ) {
+					Datastore.data.lfg.my[e] = false;
+				}
+			}
 			Datastore.emitChange();
 			break;
 		case "lfg":
