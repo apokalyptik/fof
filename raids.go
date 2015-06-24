@@ -469,7 +469,7 @@ func raidLeave(username, channel, raid string) (raidCommandResponses, error) {
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
 			"*@%s* has removed themselves from *%s*. Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to take their place",
-			username, channel),
+			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"@%s has removed themselves from *%s* on #%s",
 			username, raid, channel),
