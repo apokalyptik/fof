@@ -6,6 +6,7 @@ var SelectAnApp = require('./hello/select-an-app.jsx');
 var LFGSelectGame = require('./now/select-game.jsx');
 var LFGApp = require('./now/now-main.jsx');
 var TeamApp = require('./later/later-main.jsx');
+var MyLater = require('./later/my-raids.jsx');
 
 var App = React.createClass({
 	getInitialState: function() {
@@ -82,6 +83,8 @@ var App = React.createClass({
 			  </li> )
 		];
 
+		crumbs.push((<MyLater key="mylater" state={this.state}/>));
+
 		var WorkSpace;
 		switch ( this.state.viewing ) {
 			case "events":
@@ -144,7 +147,7 @@ Dispatcher.register(function(payload) {
 						Datastore.data.lfg.username = Datastore.data.username;
 						Datastore.data.lfg.prevlfg = Datastore.data.lfg.lfg;
 						Datastore.data.lfg.lfg = payload.data[i];
-						break
+						break;
 					default:
 						Datastore.data[i] = payload.data[i];
 						break;
@@ -165,7 +168,10 @@ Dispatcher.register(function(payload) {
 				}
 			}
 			Datastore.emitChange();
-			break
+			break;
+		case "mset":
+			Datastore.setThings(payload.what);
+			break;
 		case "set":
 			Datastore.setThing(payload.key, payload.value);
 			break;

@@ -23,6 +23,12 @@ module.exports = {
 		error: null,
 		success: null,
 	},
+	setThings: function(what) {
+		for( var i=0; i<what.length; i++ ) {
+			this.data[what[i].key] = what[i].value;
+		}
+		this.emitChange();
+	},
 	setThing: function(thing, value) {
 		this.data[thing] = value;
 		this.emitChange();
