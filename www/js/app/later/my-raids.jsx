@@ -34,13 +34,24 @@ module.exports = React.createClass({
 		return myRaids;
 	},
 	select: function(e) {
-		var option = $(e.target).find('[value="'+e.target.value+'"]')[0];
-		var action = {
-			actionType: "mset", 
-			what: [
-				{ key: "raid", value: option.dataset.uuid },
-				{ key: "channel", value: option.dataset.channel }
-			]
+		var action;
+		if ( e.target.value == "My Events" ) {
+			action = {
+				actionType: "mset", 
+				what: [
+					{ key: "raid", value: "" },
+					{ key: "channel", value: "" }
+				]
+			}
+		} else {
+			var option = $(e.target).find('[value="'+e.target.value+'"]')[0];
+			action = {
+				actionType: "mset", 
+				what: [
+					{ key: "raid", value: option.dataset.uuid },
+					{ key: "channel", value: option.dataset.channel }
+				]
+			}
 		}
 		Dispatcher.dispatch(action);
 	},
@@ -49,7 +60,7 @@ module.exports = React.createClass({
 		if ( raids.length < 1 ) {
 			return(<span/>);
 		}
-		var raidlist = [<option key="none">My raids</option>];
+		var raidlist = [<option key="none">My Events</option>];
 		raids.forEach(function(entry) {
 			raidlist.push(
 				(<option
