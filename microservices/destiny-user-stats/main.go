@@ -9,6 +9,8 @@ import (
 
 var bungieApiKey string
 
+var userListAddress = "http://127.0.0.1:8879/users.json"
+
 var client = &destinyClient{}
 
 var users = struct {
@@ -38,7 +40,9 @@ func mindUsers() {
 		users.lock.RLock()
 		for username, user := range users.list {
 			log.Printf("Freshening %s", username)
-			log.Printf("%#v", user)
+			if err := user.pull(); err != nil {
+				log.Printf(err.Error())
+			}
 		}
 		users.lock.RUnlock()
 		if !time.Now().After(nextRun) {

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -56,7 +57,9 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 }
 
 func platformURL(suffix string) string {
-	return fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
+	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s", suffix) // ?definitions=true", suffix)
+	log.Println(url)
+	return url
 }
 
 func playerURL(platform int, username string) string {
@@ -69,10 +72,6 @@ func grimoireURL(platform int, memberID string) string {
 
 func accountStatsURL(platform int, memberID string) string {
 	return platformURL(fmt.Sprintf("Stats/Account/%d/%s/", platform, memberID))
-}
-
-func accountCarnageURL(platform int, memberID string) string {
-	return platformURL(fmt.Sprintf("Stats/PostGameCarnageReport", platform, memberID))
 }
 
 func triumphsURL(platform int, memberID string) string {
