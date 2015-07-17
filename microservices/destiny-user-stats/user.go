@@ -6,12 +6,76 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var errUserNotFound = errors.New("User Not Found")
+
+type userDB struct {
+	list map[string]*user
+	lock sync.RWMutex
+}
+
+func (u *userDB) update() {
+	log.Println("Refreshing User List")
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	resp, err := http.Get(userListAddress)
+	if err != nil {
+		log.Printf("Error fetching userlist from %s: %s", userListAddress, err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	var data struct {
+		Members []struct {
+			Deleted bool `json:"deleted"`
+			Bot     bool `json:"is_bot"`
+			Profile struct {
+				Gamertag string `json:"first_name"`
+			} `json:"profile"`
+		} `json:"members"`
+	}
+	dec := json.NewDecoder(resp.Body)
+	if dec.Decode(&data); err != nil {
+		log.Printf("Error decoding userlist: %s", err.Error())
+		return
+	}
+	found := map[string]bool{}
+	re := regexp.MustCompile("[^0-9a-z-]")
+	for _, m := range data.Members {
+		if m.Deleted {
+			continue
+		}
+		if m.Bot {
+			continue
+		}
+		name := strings.TrimSpace(m.Profile.Gamertag)
+		key := re.ReplaceAllString(strings.ToLower(name), "_")
+		found[key] = true
+		if _, ok := u.list[key]; !ok {
+			u.list[key] = &user{
+				name: name,
+				data: map[string]*userBit{},
+			}
+			log.Printf("+ %s", key)
+		}
+	}
+	for name, _ := range u.list {
+		if _, ok := found[name]; !ok {
+			log.Printf("- %s", name)
+			delete(u.list, name)
+		}
+	}
+
+}
 
 type userBit struct {
 	when time.Time
@@ -23,7 +87,6 @@ type user struct {
 	platform int
 	account  string
 	data     map[string]*userBit
-	document []byte
 }
 
 func (u *user) set(what string, info interface{}, err error) {
@@ -43,12 +106,26 @@ func (u *user) pull() error {
 		var doc = map[string]interface{}{}
 		for k, v := range u.data {
 			doc[k] = v.data
+			delete(u.data, k)
 		}
-		if document, err := json.Marshal(doc); err != nil {
-			log.Printf("Error marshalling user data for %s: %s", u.name, err.Error())
+		if bytes, err := json.Marshal(doc); err != nil {
+			log.Printf("Error marshalling data for %s: %s", u.name, err.Error())
 		} else {
-			u.document = document
-			ioutil.WriteFile(fmt.Sprintf("data/%d.%s.json", u.platform, u.account), u.document, 0644)
+			err = ioutil.WriteFile(fmt.Sprintf("data/%d.%s.json", u.platform, u.account), bytes, 0644)
+			if err != nil {
+				log.Printf("Error writing datafile for user data/%d.%s.json: %s", u.platform, u.account, err.Error())
+			}
+		}
+		c := mgoDB.DB("fof").C("memberDestinyStats")
+		_, err := c.Upsert(bson.M{"member": u.name}, &struct {
+			Member string
+			Data   map[string]interface{}
+		}{
+			Member: u.name,
+			Data:   doc,
+		})
+		if err != nil {
+			log.Printf("Error inserting document into MongoDB: %s", err.Error())
 		}
 	}()
 
@@ -88,6 +165,21 @@ func (u *user) pull() error {
 		}
 	}
 
+	if bytes, err := ioutil.ReadFile(fmt.Sprintf("data/%d.%s.json", u.platform, u.account)); err != nil {
+		if !os.IsNotExist(err) {
+			log.Printf("Error reading %s: %s", fmt.Sprintf("data/%d.%s.json", u.platform, u.account), err.Error())
+		}
+	} else {
+		var doc = map[string]interface{}{}
+		if err := json.Unmarshal(bytes, &doc); err != nil {
+			log.Printf("Error unmarshalling data for %d/%s (%s): %s", u.platform, u.account, u.name, err.Error())
+		} else {
+			for k, v := range doc {
+				u.set(k, v, nil)
+			}
+		}
+	}
+
 	grim, err := client.get(grimoireURL(u.platform, u.account))
 	u.set("grimoire", grim, err)
 
@@ -124,7 +216,8 @@ func (u *user) pull() error {
 			data: map[string]map[string]interface{}{},
 		}
 	}
-	characterDoc := u.data["characters"].data.(map[string]map[string]interface{})
+	var characterDoc map[string]map[string]interface{}
+	mapstructure.Decode(u.data["characters"].data, &characterDoc)
 	for _, c := range acctResponse.Data.Characters {
 		if _, ok := characterDoc[c.CharacterBase.CharacterId]; !ok {
 			characterDoc[c.CharacterBase.CharacterId] = map[string]interface{}{}
@@ -157,7 +250,6 @@ func (u *user) pull() error {
 		characterDoc[c.CharacterBase.CharacterId] = cdoc
 	}
 	u.set("characters", characterDoc, nil)
-
 	// Merge into single document
 	return nil
 }

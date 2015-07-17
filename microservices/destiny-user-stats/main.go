@@ -3,39 +3,32 @@ package main
 import (
 	"flag"
 	"log"
-	"sync"
 	"time"
+
+	"gopkg.in/mgo.v2"
 )
 
-var bungieApiKey string
-
+var bungieApiKey = "..."
+var mgoServer = "127.0.0.1"
 var userListAddress = "http://127.0.0.1:8879/users.json"
 
+var mgoDB *mgo.Session
 var client = &destinyClient{}
 
-var users = struct {
-	list map[string]*user
-	lock sync.RWMutex
-}{
-	list: map[string]*user{
-		"demitriousk": &user{
-			name: "demitriousk",
-			data: map[string]*userBit{},
-		},
-	},
+var users = &userDB{
+	list: map[string]*user{},
 }
 
 func init() {
-	flag.StringVar(&bungieApiKey, "apikey", "...", "Bungie Platform API Key ( https://www.bungie.net/en/User/API )")
+	flag.StringVar(&bungieApiKey, "apikey", bungieApiKey, "Bungie Platform API Key ( https://www.bungie.net/en/User/API )")
+	flag.StringVar(&mgoServer, "mgo", mgoServer, "MongoDB addresses")
 }
 
 func mindUsers() {
 	for {
 		var nextRun = time.Now().Add(4 * time.Hour)
 
-		users.lock.Lock()
-		// TODO: Freshen user map, add new users... from slack, remove removed users...
-		users.lock.Unlock()
+		users.update()
 
 		users.lock.RLock()
 		for username, user := range users.list {
@@ -58,5 +51,10 @@ func main() {
 		log.Fatal("API Key required")
 	}
 	client.apiKey = bungieApiKey
+	if session, err := mgo.Dial(mgoServer); err != nil {
+		log.Fatal(err)
+	} else {
+		mgoDB = session
+	}
 	mindUsers()
 }
