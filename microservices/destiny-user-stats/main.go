@@ -26,7 +26,7 @@ func init() {
 
 func mindUsers() {
 	for {
-		var nextRun = time.Now().Add(4 * time.Hour)
+		var nextRun = time.Now().Add(12 * time.Hour)
 
 		users.update()
 

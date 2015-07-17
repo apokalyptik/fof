@@ -18,6 +18,44 @@ var listenOn = "0.0.0.0:8880"
 
 var mdb *mgo.Session
 
+func userList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	resp, err := http.Get("http://127.0.0.1:8879/users.json")
+	if err != nil {
+		log.Printf("Error fetching user list: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+	var details struct {
+		Members []struct {
+			Bot     bool `json:"is_bot"`
+			Deleted bool `json:"deleted"`
+			Profile struct {
+				FirstName string `json:"first_name"`
+			} `json:"profile"`
+		} `json:"members"`
+	}
+	d := json.NewDecoder(resp.Body)
+	if err := d.Decode(&details); err != nil {
+		log.Printf("Error unmarshaling user list: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	rval := []string{}
+	for _, m := range details.Members {
+		if m.Bot {
+			continue
+		}
+		if m.Deleted {
+			continue
+		}
+		rval = append(rval, m.Profile.FirstName)
+	}
+	e := json.NewEncoder(w)
+	e.Encode(rval)
+}
+
 func exoticStats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var rval interface{}
@@ -124,6 +162,7 @@ func main() {
 	}
 	log.Println("Starting up...")
 	r := mux.NewRouter()
+	r.HandleFunc("/users.json", userList)
 	r.HandleFunc("/destiny/members/exotic-kill-stats.json", exoticStats)
 	r.HandleFunc("/destiny/members/get/{member}.json", memberDoc)
 	r.HandleFunc("/destiny/members/get/{member}/{part}.json", memberSubDoc)
