@@ -3,10 +3,14 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
+	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var mgoHost = "127.0.0.1"
@@ -72,6 +76,40 @@ func exoticStats(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func memberDoc(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	member := vars["member"]
+	w.Header().Set("Content-Type", "application/json")
+	e := json.NewEncoder(w)
+	var result interface{}
+	if err := mdb.DB("fof").C("memberDestinyStats").Find(bson.M{"member": member}).One(&result); err != nil {
+		log.Printf("Error fetching member doc for %s: %s", member, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	e.Encode(result)
+}
+
+func memberSubDoc(w http.ResponseWriter, r *http.Request) {
+	filter := regexp.MustCompile("[^0-9a-zA-Z-_]")
+	vars := mux.Vars(r)
+	member := filter.ReplaceAllString(vars["member"], "")
+	part := vars["part"]
+	w.Header().Set("Content-Type", "application/json")
+	e := json.NewEncoder(w)
+	var result interface{}
+	err := mdb.DB("fof").C(
+		"memberDestinyStats").Find(
+		bson.M{"member": member}).Select(
+		bson.M{fmt.Sprintf("data.%s", part): 1}).One(&result)
+	if err != nil {
+		log.Printf("Error fetching member doc.%s for %s: %s", part, member, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	e.Encode(result)
+}
+
 func init() {
 	flag.StringVar(&mgoHost, "mgo", mgoHost, "MongoDB Address")
 	flag.StringVar(&listenOn, "listen", listenOn, "HTTP Server")
@@ -85,6 +123,9 @@ func main() {
 		mdb = session
 	}
 	log.Println("Starting up...")
-	http.HandleFunc("/destiny/members/exotic-kill-stats.json", exoticStats)
-	log.Fatal(http.ListenAndServe(listenOn, nil))
+	r := mux.NewRouter()
+	r.HandleFunc("/destiny/members/exotic-kill-stats.json", exoticStats)
+	r.HandleFunc("/destiny/members/get/{member}.json", memberDoc)
+	r.HandleFunc("/destiny/members/get/{member}/{part}.json", memberSubDoc)
+	log.Fatal(http.ListenAndServe(listenOn, r))
 }
