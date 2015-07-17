@@ -74,6 +74,7 @@ func main() {
 		}
 	}()
 	http.HandleFunc("/users.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(udb.jsonOut)
 	})
 	http.ListenAndServe(address, nil)
