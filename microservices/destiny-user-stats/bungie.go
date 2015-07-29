@@ -58,8 +58,8 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 }
 
 func platformURL(suffix string) string {
-	// var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
-	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s", suffix)
+	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
+	// var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s", suffix)
 	log.Println(url)
 	return url
 }
