@@ -47,8 +47,6 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 					// Super Naive
 					log.Println("Asked to throttle for", rval.ThrottleSeconds, "seconds")
 					time.Sleep(time.Duration(rval.ThrottleSeconds) * time.Second)
-				} else {
-					time.Sleep(100 * time.Millisecond)
 				}
 				if rval.Message != "Ok" {
 					return nil, fmt.Errorf("%s (%d) -- %s", rval.Message, rval.ErrorCode, rval.ErrorStatus)
@@ -60,7 +58,8 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 }
 
 func platformURL(suffix string) string {
-	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
+	// var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
+	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s", suffix)
 	log.Println(url)
 	return url
 }
