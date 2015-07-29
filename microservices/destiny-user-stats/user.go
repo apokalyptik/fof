@@ -101,6 +101,11 @@ func (u *user) set(what string, info interface{}, err error) {
 	u.data[what].when = time.Now()
 }
 
+func (u *user) cUpsert(collection string, query, data interface{}) error {
+	_, err := mgoDB.DB("fof").C(collection).Upsert(query, data)
+	return err
+}
+
 func (u *user) pull() error {
 	defer func() {
 		var doc = map[string]interface{}{}
@@ -180,11 +185,22 @@ func (u *user) pull() error {
 		}
 	}
 
-	grim, err := client.get(grimoireURL(u.platform, u.account))
-	u.set("grimoire", grim, err)
-
 	astats, err := client.get(accountStatsURL(u.platform, u.account))
 	u.set("accountStats", astats, err)
+	if err == nil {
+		if astatsDocs, err := pullAllTimeStatsDocs(u.name, u.account, astats); err != nil {
+			log.Printf("Error pulling all time stats: %s", err.Error())
+		} else {
+			for _, v := range astatsDocs {
+				if err := u.cUpsert("accountStats", bson.M{"account": u.account, "section": v.Section, "stat": v.Stat}, v); err != nil {
+					log.Printf("Error inserting into accountStats: %s", err.Error())
+				}
+			}
+		}
+	}
+
+	grim, err := client.get(grimoireURL(u.platform, u.account))
+	u.set("grimoire", grim, err)
 
 	t, err := client.get(triumphsURL(u.platform, u.account))
 	u.set("triumphs", t, err)
