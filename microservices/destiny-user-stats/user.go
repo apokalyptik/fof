@@ -265,7 +265,18 @@ func (u *user) pull() error {
 		}
 		characterDoc[c.CharacterBase.CharacterId] = cdoc
 	}
+	exoticStatsDocs, err := pullExoticStatsDocs(u.name, u.account, characterDoc)
+	if err != nil {
+		log.Printf("Error pulling exotic stats for %s: %s", u.name, err.Error())
+	} else {
+		for _, v := range exoticStatsDocs {
+			if err := u.cUpsert("accountStats", bson.M{"account": u.account, "section": v.Section, "stat": v.Stat}, v); err != nil {
+				log.Printf("Error inserting into accountStats: %s", err.Error())
+			}
+		}
+	}
 	u.set("characters", characterDoc, nil)
+
 	// Merge into single document
 	return nil
 }
