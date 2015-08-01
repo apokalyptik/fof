@@ -19,6 +19,14 @@ func init() {
 	flag.StringVar(&listenOn, "listen", listenOn, "HTTP Server")
 }
 
+func setJSON(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+}
+
+func setCORS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func main() {
 	flag.Parse()
 	if session, err := mgo.Dial(mgoHost); err != nil {
@@ -32,6 +40,8 @@ func main() {
 	r.HandleFunc("/destiny/raw/{member}.json", memberDoc)
 	r.HandleFunc("/destiny/raw/{member}/keys.json", memberSubDocKeys)
 	r.HandleFunc("/destiny/raw/{member}/{key}.json", memberSubDoc)
+	r.HandleFunc("/destiny/stats/alltime/keys.json", allTimeStatKeys)
+	r.HandleFunc("/destiny/stats/alltime/{section}/{stat}.json", allTimeStats)
 	r.HandleFunc("/destiny/pva/exotic-kills.json", exoticStats)
 	r.HandleFunc("/destiny/pvp/allTime/aggregate.json", pvpTotals)
 	r.HandleFunc("/destiny/pvp/allTime/aggregate/keys.json", pvpTotalsKeys)
