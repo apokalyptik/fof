@@ -1,5 +1,6 @@
 React = require('react/addons');
 Dispatcher = require('../lib/dispatcher.jsx');
+DateTimePicker = require('react-widgets/lib/DateTimePicker');
 
 module.exports = React.createClass({
 	getInitialState: function() {
@@ -18,7 +19,13 @@ module.exports = React.createClass({
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please enter an event name"});
 			return;
 		}
-		jQuery.post("/rest/raid/host", {channel: this.state.channel, raid: this.state.raid})
+		jQuery.post("/rest/raid/host", {
+			channel: 	this.state.channel,
+			raid: 		this.state.raid,
+			raidName: 	this.state.raidName,
+			time: 		this.state.raidTimeSeconds,
+			dateString: this.state.raidDateTimeString
+		})
 			.done(function(data) {
 				Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 				this.props.cancel(e)
@@ -31,10 +38,38 @@ module.exports = React.createClass({
 			}.bind(this));
 	},
 	handleRaid: function(event) { 
-		this.setState({ "raid": event.target.value })
+		this.setState({ "raidName": event.target.value })
+		this.setState({ "raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
 	},
 	handleChannel: function(event) {
 		this.setState({ "channel": event.target.value })
+	},
+	handleDateTime: function(value) {
+
+		var date = new Date(value*1);
+
+		// client based timezone. Good idea, bad idea?
+		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
+
+		var month = (date.getMonth() +1);
+
+		var day = date.getDate()*1;
+
+		var ampm = "am";
+		var hours = date.getHours()*1;
+
+		minutes = date.getMinutes()*1;
+
+		if (minutes < 10) { 
+			minutes = "0" + minutes;
+		}
+
+		var dateString = month + "/" + day + " " 
+			+ hours + ":" +  minutes + ampm + " " + timeZone;
+
+		this.setState({"raidDateTimeString": dateString});
+		this.setState({"raidTimeSeconds": value});
+
 	},
 	render: function() {
 		var channels = [
@@ -66,15 +101,16 @@ module.exports = React.createClass({
 					</select>
 				</div>
 				<div className="form-group">
+					<label htmlFor="DateTimePicker">Date and Time:</label>
+					<em> (timezone will be selected by your browser)</em>
+					<DateTimePicker onChange={this.handleDateTime}/>
+				</div>
+				<div className="form-group">
 					<label htmlFor="name">Name of your Event</label>
+					
 					<input 
 						onChange={this.handleRaid}
 						type="text" className="form-control" id="name" placeholder="Event Name"/>
-					<div className="row">
-						<div className="col-md-8 col-md-offset-2">
-							<em>Be sure to include the date, time, and time zone for your event</em>
-						</div>
-					</div>
 				</div>
 				{errMsg}
 				<button
