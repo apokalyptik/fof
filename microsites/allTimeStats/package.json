@@ -1,0 +1,26 @@
+{
+  "name": "alltime",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "watchify -v -t reactify -t babelify --debug jsx/alltime.jsx -o ./alltime.dev.js",
+    "build": "browserify -t reactify jsx/alltime.jsx -t babelify -t uglifyify -o ./alltime.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babelify": "^6.1.3",
+    "browserify": "^11.0.1",
+    "flux": "^2.0.3",
+    "jsxify": "^0.3.4",
+    "react": "^0.13.3",
+    "react-bootstrap": "^0.24.3",
+    "react-mini-router": "^1.1.7",
+    "reactify": "^1.1.1",
+    "uglify": "^0.1.5",
+    "uglifyify": "^3.0.1",
+    "watchify": "^3.3.1"
+  }
+}
