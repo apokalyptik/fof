@@ -117,6 +117,13 @@ var LFGApp = React.createClass({
 				{ name: "Ether Chest" }
 			],
 		},
+		{
+			name: "Exploration",
+			options: [
+				{ name: "Gold Chest Hunting" },
+				{ name: "Ghost Collecting" },
+			]
+		},
 	],
 	isInMyOptions: function(option) {
 		if ( typeof this.props.state.my[option] == "undefined" ) {
