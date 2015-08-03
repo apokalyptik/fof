@@ -16,17 +16,15 @@ var App = React.createClass({
 	componentDidMount: function() {
 		jQuery.getJSON("/rest/login/check")
 			.done(function(data) {
+				Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
 				if ( typeof data.username == "string" && data.username != "" ) {
 					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
-					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 					Dispatcher.dispatch({actionType: "set", key: "username", value: data.username});
 					Dispatcher.dispatch({actionType: "username", value: data.username});
 					Dispatcher.dispatch({actionType: "set", key: "authenticated", value: true});
-				} else {
-					Dispatcher.dispatch({actionType: "set", key: "cmd", value: data.cmd});
-					Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 				}
 				Datastore.subscribe(this.acceptData)
+				Dispatcher.dispatch({actionType: "set", key: "checked", value: true});
 				this.updateData();
 			}.bind(this));
 	},
