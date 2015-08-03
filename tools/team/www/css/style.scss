@@ -1,0 +1,193 @@
+// http://designpieces.com/palette/xbox-one-colour-palette-hex-rgb/
+$lg:  #c2c2c2; // Light gray
+$mg:  #6b6b6b; // Medium gray
+$dg:  #3a3a3a; // Dark Gray
+$bl:  #000000; // Black
+$gr:  #107c10; // Green
+$wh:  #f1f1f1; // White
+$wg:  #e1e1e1; // White Gray
+$lgr: #5dc21e; // Light Green
+
+$default_rounded_amount: .25em;
+
+@mixin round-corners($amount: $default_rounded_amount) {
+	border-radius: $amount;
+	-moz-border-radius: $amount;
+	-webkit-border-radius: $amount;
+}
+
+@mixin box-shadow($top, $left, $blur, $color, $inset:"") {
+	-webkit-box-shadow:$top $left $blur $color #{$inset};
+	-moz-box-shadow:$top $left $blur $color #{$inset};
+	box-shadow:$top $left $blur $color #{$inset};
+}
+
+@mixin breadcrumbs($color) {
+	padding-left: 0.2em;
+	display: block;
+	.box {
+		position: relative;
+		display: inline-block;
+		height: 2em;
+		line-height: 1.6em;
+		border: 0.15em solid $lgr;
+		background-color: $lgr;
+		* {
+			position: relative;
+			display: inline-block;
+			height: 1.6em;
+			line-height: 1.6em;
+		}
+	}
+	.rt {
+		position: relative;
+		display: inline-block;
+		padding: 0;
+		width: 0;
+		height: 0;
+		top: .75em;
+		border-top: 1em solid transparent;
+		border-left: 1em solid $lgr;
+		border-bottom: 1em solid transparent;
+	}
+}
+
+.texthalf {
+	font-size: 0.5em;
+}
+
+.floatright {
+	float: right;
+}
+
+.nomargin {
+	margin: 0;
+}
+
+.raidChannel, .raid, .member {
+	// @include box-shadow( 1px, 1px, 1px, $mg);
+	// @include round-corners(3px);
+	// border: 0 1px 1px 1px solid $lgr;
+	padding: .15em;
+	margin-bottom: .15em;
+	background: $wg;
+}
+
+h4.alternate, .member.alternate > span {
+	opacity: 0.50;
+}
+
+.nopadding {
+	padding: 0px;
+}
+
+span.me {
+	font-weight: bold;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.textright { text-align: right; }
+.center { text-align: center; }
+
+body {
+	background-color: $wh;
+}
+
+h2.dark {
+	background-color: $wh;
+	color: $gr;
+}
+
+h2 {
+	font-size: 26px;
+	background-color: $lgr;
+	padding: 0.15em;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+h4, h5 {
+	background-color: $lgr;
+	padding: 0.15em;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+.raid.active, .raidChannel.active {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+.loginout {
+	text-align: right;
+	margin: 0;
+}
+
+.greentext {
+	color: $gr;
+}
+
+#crumb-bar {
+	// stackoverflow.com/questions/6483425/prevent-iphone-from-zooming-in-on-select-in-web-app
+	font-size: 16px;
+	line-height: 3.5em;
+	background-color: $gr;
+	@include box-shadow( 1px, 1px, 1px, $mg);
+}
+
+ul.lfgselect {
+	list-style-type: none;
+	padding-left: 0;
+	li {
+		font-weight: bold;
+		ul {
+			list-style-type: none;
+			li {
+				font-weight: normal;
+			}
+		}
+	}
+}
+
+.lfg.peers {
+	padding-left: 0;
+	list-style-type: none;
+	li {
+		margin-bottom: 0.75em;
+	}
+}
+
+ul.breadcrumbs-lgr {
+	@include breadcrumbs($lgr);
+}
+
+.lfg.count {
+	float: right;
+}
+
+.progress-bar {
+	background-color: $lgr;
+	height: 1.8em;
+	width: 100%;
+	border: 1px solid $gr;
+	span {
+		background-color: $gr;
+		display: inline-block;
+		height: 100%;
+		transition: width .4s ease-in-out;    
+	}
+}
+
+.notices {
+	position: absolute;
+	top: 1em;
+	width: 90%;
+	text-align: center;
+	.error {
+		background-color: $lg;
+	}
+	.success {
+		background-color: $lgr;
+	}
+}

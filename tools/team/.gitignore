@@ -1,0 +1,12 @@
+*.yaml
+*.json
+*.swp
+raidbot
+*.pid
+**.sass-cache
+**.module-cache
+bindata.go
+node_modules
+www/js/production.js
+www/js/development.js
+*.DS_Store

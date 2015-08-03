@@ -1,0 +1,20 @@
+database:
+    raids: "_raids.json"
+    users: "_users.json"
+    lfg: "_lfg.json"
+listen: "0.0.0.0:8878"
+pidfile: "_bot.pid"
+maxAge: "72h"
+security:
+	cookie:
+	  auth: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	  key:  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	hmac_key: "cccccccccccccccccccccccccccccccc"
+slack:
+	apiKey: "xxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxx"
+    admins:
+        - "sladkuser1"
+    slashKey:
+        raids: "some-integration-key"
+    slashCommand:
+        raids: "/raid"

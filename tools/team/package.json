@@ -1,0 +1,30 @@
+{
+  "name": "raidbot",
+  "version": "1.0.0",
+  "description": "DasRaidBot",
+  "main": "app.js",
+  "dependencies": {
+    "browserify": "^10.2.0",
+    "flux": "^2.0.3",
+    "react": "^0.13.3",
+    "react-notify-mixin": "^0.1.0",
+    "react-widgets": "^2.7.4",
+    "reactify": "^1.1.1",
+    "uglifyify": "^3.0.1",
+    "watchify": "^3.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apokalyptik/raidbot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/apokalyptik/raidbot/issues"
+  },
+  "homepage": "https://github.com/apokalyptik/raidbot#readme"
+}
