@@ -15,10 +15,16 @@ module.exports = React.createClass({
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
 			return;
 		}
-		if ( this.state.raid == "" ) {
+		if ( this.state.raidName == "" ) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please enter an event name"});
 			return;
 		}
+
+		if ( this.state.raidDateTimeString == null ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a date and time"});
+			return;
+		} 
+
 		jQuery.post("/rest/raid/host", {
 			channel: 	this.state.channel,
 			raid: 		this.state.raid,
@@ -57,6 +63,11 @@ module.exports = React.createClass({
 
 		var ampm = "am";
 		var hours = date.getHours()*1;
+		if (hours == 0) {
+			hours = 12;
+		} else if (hours > 12) {
+			hours = hours - 12;
+		}
 
 		minutes = date.getMinutes()*1;
 
@@ -69,6 +80,7 @@ module.exports = React.createClass({
 
 		this.setState({"raidDateTimeString": dateString});
 		this.setState({"raidTimeSeconds": value});
+		this.setState({"raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
 
 	},
 	render: function() {
@@ -103,7 +115,7 @@ module.exports = React.createClass({
 				<div className="form-group">
 					<label htmlFor="DateTimePicker">Date and Time:</label>
 					<em> (timezone will be selected by your browser)</em>
-					<DateTimePicker onChange={this.handleDateTime}/>
+					<DateTimePicker onChange={this.handleDateTime} isRtl={true}/>
 				</div>
 				<div className="form-group">
 					<label htmlFor="name">Name of your Event</label>
