@@ -56,11 +56,8 @@ module.exports = React.createClass({
 
 		// client based timezone. Good idea, bad idea?
 		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
-
 		var month = (date.getMonth() +1);
-
 		var day = date.getDate()*1;
-
 		var ampm = "am";
 		var hours = date.getHours()*1;
 		if (hours == 0) {
@@ -82,6 +79,15 @@ module.exports = React.createClass({
 		this.setState({"raidTimeSeconds": value});
 		this.setState({"raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
 
+	},
+	handleDateTimeClick: function(event){
+		if ($(event.target).hasClass("rw-input")){
+			$("button.rw-btn-calendar").click();
+		}
+	},
+	componentDidMount: function(){
+		//make date/time input field readOnly
+		$("input[type=text].rw-input").prop("readonly",true);
 	},
 	render: function() {
 		var channels = [
@@ -114,8 +120,8 @@ module.exports = React.createClass({
 				</div>
 				<div className="form-group">
 					<label htmlFor="DateTimePicker">Date and Time:</label>
-					<em> (timezone will be selected by your browser)</em>
-					<DateTimePicker onChange={this.handleDateTime} isRtl={true}/>
+					<DateTimePicker onChange={this.handleDateTime} onClick={this.handleDateTimeClick} />
+					<small>Click the calendar to select a date, and the clock to select a time. Timezone will be selected by your browser.</small>
 				</div>
 				<div className="form-group">
 					<label htmlFor="name">Name of your Event</label>
