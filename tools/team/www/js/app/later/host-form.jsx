@@ -109,6 +109,9 @@ module.exports = React.createClass({
 		if ( this.state.error != "" ) {
 			errMsg = ( <p className="bg-danger">{this.state.error}</p> );
 		}
+
+		var currentDate = new Date();
+		var sevenDays = new Date(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000) )
 		return (
 			<div className="col-md-6 col-md-offset-3">
 			<h4>Host an Event</h4>
@@ -120,7 +123,7 @@ module.exports = React.createClass({
 				</div>
 				<div className="form-group">
 					<label htmlFor="DateTimePicker">Date and Time:</label>
-					<DateTimePicker onChange={this.handleDateTime} onClick={this.handleDateTimeClick} />
+					<DateTimePicker onChange={this.handleDateTime} onClick={this.handleDateTimeClick} min={currentDate} max={sevenDays}/>
 					<small>Click the calendar to select a date, and the clock to select a time. Timezone will be selected by your browser.</small>
 				</div>
 				<div className="form-group">
