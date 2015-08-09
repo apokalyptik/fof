@@ -36,9 +36,11 @@ func (u *userDB) update() {
 	defer resp.Body.Close()
 	var data struct {
 		Members []struct {
-			Deleted bool `json:"deleted"`
-			Bot     bool `json:"is_bot"`
-			Profile struct {
+			UserName string `json:"name"`
+			UserID   string `json:"id"`
+			Deleted  bool   `json:"deleted"`
+			Bot      bool   `json:"is_bot"`
+			Profile  struct {
 				Gamertag string `json:"first_name"`
 			} `json:"profile"`
 		} `json:"members"`
@@ -49,7 +51,7 @@ func (u *userDB) update() {
 		return
 	}
 	found := map[string]bool{}
-	re := regexp.MustCompile("[^0-9a-z-]")
+	re := regexp.MustCompile("[^0-9a-z- ]")
 	for _, m := range data.Members {
 		if m.Deleted {
 			continue
@@ -62,8 +64,10 @@ func (u *userDB) update() {
 		found[key] = true
 		if _, ok := u.list[key]; !ok {
 			u.list[key] = &user{
-				name: name,
-				data: map[string]*userBit{},
+				name:     name,
+				userName: m.UserName,
+				userID:   m.UserID,
+				data:     map[string]*userBit{},
 			}
 			log.Printf("+ %s", key)
 		}
@@ -84,6 +88,8 @@ type userBit struct {
 
 type user struct {
 	name     string
+	userName string
+	userID   string
 	platform int
 	account  string
 	data     map[string]*userBit
@@ -196,10 +202,12 @@ func (u *user) pull() error {
 				"type":    "accountStats",
 			},
 			map[string]interface{}{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "accountStats",
-				"data":    astats,
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "accountStats",
+				"data":     astats,
 			},
 		)
 		if astatsDocs, err := pullAllTimeStatsDocs(u.name, u.account, astats); err != nil {
@@ -223,10 +231,12 @@ func (u *user) pull() error {
 				"type":    "grimoire",
 			},
 			map[string]interface{}{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "grimoire",
-				"data":    grim,
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "grimoire",
+				"data":     grim,
 			},
 		)
 	}
@@ -242,10 +252,12 @@ func (u *user) pull() error {
 				"type":    "triumphs",
 			},
 			map[string]interface{}{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "triumphs",
-				"data":    t,
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "triumphs",
+				"data":     t,
 			},
 		)
 	}
@@ -261,10 +273,12 @@ func (u *user) pull() error {
 				"type":    "account",
 			},
 			map[string]interface{}{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "account",
-				"data":    account,
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "account",
+				"data":     account,
 			},
 		)
 	}
@@ -333,10 +347,12 @@ func (u *user) pull() error {
 				"type":    "character-" + c.CharacterBase.CharacterId,
 			},
 			map[string]interface{}{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "character-" + c.CharacterBase.CharacterId,
-				"data":    cdoc,
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "character-" + c.CharacterBase.CharacterId,
+				"data":     cdoc,
 			},
 		)
 		characterDoc[c.CharacterBase.CharacterId] = cdoc
@@ -350,10 +366,12 @@ func (u *user) pull() error {
 			"type":    "characters",
 		},
 		map[string]interface{}{
-			"account": u.account,
-			"name":    u.name,
-			"type":    "characters",
-			"data":    characterDoc,
+			"username": u.userName,
+			"userid":   u.userID,
+			"account":  u.account,
+			"name":     u.name,
+			"type":     "characters",
+			"data":     characterDoc,
 		},
 	)
 
