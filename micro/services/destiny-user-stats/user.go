@@ -188,6 +188,20 @@ func (u *user) pull() error {
 	astats, err := client.get(accountStatsURL(u.platform, u.account))
 	u.set("accountStats", astats, err)
 	if err == nil {
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "accountStats",
+			},
+			map[string]interface{}{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "accountStats",
+				"data":    astats,
+			},
+		)
 		if astatsDocs, err := pullAllTimeStatsDocs(u.name, u.account, astats); err != nil {
 			log.Printf("Error pulling all time stats: %s", err.Error())
 		} else {
@@ -200,12 +214,60 @@ func (u *user) pull() error {
 	}
 
 	grim, err := client.get(grimoireURL(u.platform, u.account))
+	if err == nil {
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "grimoire",
+			},
+			map[string]interface{}{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "grimoire",
+				"data":    grim,
+			},
+		)
+	}
 	u.set("grimoire", grim, err)
 
 	t, err := client.get(triumphsURL(u.platform, u.account))
+	if err != nil {
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "triumphs",
+			},
+			map[string]interface{}{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "triumphs",
+				"data":    t,
+			},
+		)
+	}
 	u.set("triumphs", t, err)
 
 	account, err := client.get(accountURL(u.platform, u.account))
+	if err == nil {
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "account",
+			},
+			map[string]interface{}{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "account",
+				"data":    account,
+			},
+		)
+	}
 	u.set("account", account, err)
 
 	if err != nil {
@@ -263,8 +325,38 @@ func (u *user) pull() error {
 			// Enumerate Characters Inventiry -- maybe not important?
 			//		InventoryItem
 		}
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "character-" + c.CharacterBase.CharacterId,
+			},
+			map[string]interface{}{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "character-" + c.CharacterBase.CharacterId,
+				"data":    cdoc,
+			},
+		)
 		characterDoc[c.CharacterBase.CharacterId] = cdoc
 	}
+
+	u.cUpsert(
+		"userData",
+		bson.M{
+			"account": u.account,
+			"name":    u.name,
+			"type":    "characters",
+		},
+		map[string]interface{}{
+			"account": u.account,
+			"name":    u.name,
+			"type":    "characters",
+			"data":    characterDoc,
+		},
+	)
+
 	exoticStatsDocs, err := pullExoticStatsDocs(u.name, u.account, characterDoc)
 	if err != nil {
 		log.Printf("Error pulling exotic stats for %s: %s", u.name, err.Error())
