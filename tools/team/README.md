@@ -29,7 +29,7 @@
 
 **Config and building**
 - In terminal enter `go get github.com/apokalyptik/fof/tools/team` (*you might get an error, but ignore it for now*).
-- copy `config.yaml.example` to `config.yaml`. Add a slack API token (*free teams at [slack.com](https://slack.com/)*).
+- Copy `config.yaml.example` to `config.yaml`. Add a slack API token (*free teams at [slack.com](https://slack.com/)*).
 - `cd $GOPATH/github.com/apokalyptik/fof/tools/team`
 - run `make`
 - run `./team`
@@ -42,4 +42,4 @@
 
 Follow the above instructions. You will also need to install watchify binary (`npm install -g watchify`). Then, instead of `make` run `make && make dev`. This will recompile the react JS files as they are edited and saved. These changes can be viewed at [http://localhost:8878](http://localhost:8878). 
 
-If you run into errors when running `make` or `make && make dev`, you may also need to install browserify (`npm install -g browserify`).
+If you run into errors when running `make` or `make && make dev`, you may also need to install browserify (`npm install -g browserify`). The first time you run `make` you may need to use `sudo` (for Mac). After the initial build, you should be able to run `make` without `sudo`.
