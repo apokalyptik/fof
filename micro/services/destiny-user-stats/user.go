@@ -146,7 +146,7 @@ func (u *user) pull() error {
 			MembershipId   string `mapstructure:"membershipId"`
 		}{}
 		// Try XBL First
-		info, err := client.get(playerURL(platformXBL, u.name))
+		info, buf, err := client.get(playerURL(platformXBL, u.name))
 		if err != nil {
 			return err
 		} else {
@@ -156,7 +156,7 @@ func (u *user) pull() error {
 		}
 		if len(search) < 1 {
 			// Try PSN Second
-			info, err = client.get(playerURL(platformPSN, u.name))
+			info, buf, err = client.get(playerURL(platformPSN, u.name))
 			if err != nil {
 				return err
 			} else {
@@ -168,6 +168,23 @@ func (u *user) pull() error {
 		if len(search) < 1 {
 			return errUserNotFound
 		}
+		u.cUpsert(
+			"userData",
+			bson.M{
+				"account": u.account,
+				"name":    u.name,
+				"type":    "player",
+			},
+			map[string]interface{}{
+				"username": u.userName,
+				"userid":   u.userID,
+				"account":  u.account,
+				"name":     u.name,
+				"type":     "player",
+				"data":     info.([]interface{})[0],
+				"raw":      buf,
+			},
+		)
 		u.platform = search[0].MembershipType
 		u.account = search[0].MembershipId
 		u.data["player"] = &userBit{
@@ -191,7 +208,7 @@ func (u *user) pull() error {
 		}
 	}
 
-	astats, err := client.get(accountStatsURL(u.platform, u.account))
+	astats, buf, err := client.get(accountStatsURL(u.platform, u.account))
 	u.set("accountStats", astats, err)
 	if err == nil {
 		u.cUpsert(
@@ -208,6 +225,7 @@ func (u *user) pull() error {
 				"name":     u.name,
 				"type":     "accountStats",
 				"data":     astats,
+				"raw":      buf,
 			},
 		)
 		if astatsDocs, err := pullAllTimeStatsDocs(u.name, u.account, astats); err != nil {
@@ -221,7 +239,7 @@ func (u *user) pull() error {
 		}
 	}
 
-	grim, err := client.get(grimoireURL(u.platform, u.account))
+	grim, buf, err := client.get(grimoireURL(u.platform, u.account))
 	if err == nil {
 		u.cUpsert(
 			"userData",
@@ -237,13 +255,14 @@ func (u *user) pull() error {
 				"name":     u.name,
 				"type":     "grimoire",
 				"data":     grim,
+				"raw":      buf,
 			},
 		)
 	}
 	u.set("grimoire", grim, err)
 
-	t, err := client.get(triumphsURL(u.platform, u.account))
-	if err != nil {
+	t, buf, err := client.get(triumphsURL(u.platform, u.account))
+	if err == nil {
 		u.cUpsert(
 			"userData",
 			bson.M{
@@ -258,12 +277,13 @@ func (u *user) pull() error {
 				"name":     u.name,
 				"type":     "triumphs",
 				"data":     t,
+				"raw":      buf,
 			},
 		)
 	}
 	u.set("triumphs", t, err)
 
-	account, err := client.get(accountURL(u.platform, u.account))
+	account, buf, err := client.get(accountURL(u.platform, u.account))
 	if err == nil {
 		u.cUpsert(
 			"userData",
@@ -279,6 +299,7 @@ func (u *user) pull() error {
 				"name":     u.name,
 				"type":     "account",
 				"data":     account,
+				"raw":      buf,
 			},
 		)
 	}
@@ -316,29 +337,30 @@ func (u *user) pull() error {
 		}
 		cdoc := characterDoc[c.CharacterBase.CharacterId]
 
-		if ch, err := client.get(charActivityHistoryURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if ch, _, err := client.get(charActivityHistoryURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["activityHistory"] = ch
 		}
-		if ca, err := client.get(charActivitiesURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if ca, _, err := client.get(charActivitiesURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["activities"] = ca
 		}
-		if cp, err := client.get(charProgressionURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if cp, _, err := client.get(charProgressionURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["progression"] = cp
 		}
-		if cas, err := client.get(charActivityStatsURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if cas, _, err := client.get(charActivityStatsURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["activityStats"] = cas
 		}
-		if cs, err := client.get(charStatsURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if cs, _, err := client.get(charStatsURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["stats"] = cs
 		}
-		if cu, err := client.get(charUniqueWeaponsStateURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if cu, _, err := client.get(charUniqueWeaponsStateURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["uniqueWeapons"] = cu
 		}
-		if ci, err := client.get(charInventoryURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
+		if ci, _, err := client.get(charInventoryURL(u.platform, u.account, c.CharacterBase.CharacterId)); err == nil {
 			cdoc["inventory"] = ci
 			// Enumerate Characters Inventiry -- maybe not important?
 			//		InventoryItem
 		}
+		buf, _ := json.Marshal(cdoc)
 		u.cUpsert(
 			"userData",
 			bson.M{
@@ -353,11 +375,13 @@ func (u *user) pull() error {
 				"name":     u.name,
 				"type":     "character-" + c.CharacterBase.CharacterId,
 				"data":     cdoc,
+				"raw":      buf,
 			},
 		)
 		characterDoc[c.CharacterBase.CharacterId] = cdoc
 	}
 
+	buf, _ = json.Marshal(characterDoc)
 	u.cUpsert(
 		"userData",
 		bson.M{
@@ -372,6 +396,7 @@ func (u *user) pull() error {
 			"name":     u.name,
 			"type":     "characters",
 			"data":     characterDoc,
+			"raw":      buf,
 		},
 	)
 
