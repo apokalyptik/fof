@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -11,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var usernameFilter = regexp.MustCompile("[^0-9a-zA-Z-_ ]")
 
 func userList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -65,29 +66,28 @@ func memberDoc(w http.ResponseWriter, r *http.Request) {
 }
 
 func memberSubDoc(w http.ResponseWriter, r *http.Request) {
-	filter := regexp.MustCompile("[^0-9a-zA-Z-_]")
 	vars := mux.Vars(r)
-	member := filter.ReplaceAllString(vars["member"], "")
+	member := usernameFilter.ReplaceAllString(vars["member"], "")
 	part := vars["key"]
 	w.Header().Set("Content-Type", "application/json")
-	e := json.NewEncoder(w)
-	var result interface{}
-	err := mdb.DB("fof").C(
-		"memberDestinyStats").Find(
-		bson.M{"member": member}).Select(
-		bson.M{fmt.Sprintf("data.%s", part): 1}).One(&result)
+	var result struct {
+		Raw []byte `bson:"raw"`
+	}
+	err := mdb.DB("fof").C("userData").Find(bson.M{
+		"username": member,
+		"type":     part,
+	}).Select(bson.M{"_id": -1, "raw": 1}).One(&result)
 	if err != nil {
 		log.Printf("Error fetching member doc.%s for %s: %s", part, member, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	e.Encode(result)
+	w.Write(result.Raw)
 }
 
 func memberSubDocKeys(w http.ResponseWriter, r *http.Request) {
-	filter := regexp.MustCompile("[^0-9a-zA-Z-_]")
 	vars := mux.Vars(r)
-	member := filter.ReplaceAllString(vars["member"], "")
+	member := usernameFilter.ReplaceAllString(vars["member"], "")
 	w.Header().Set("Content-Type", "application/json")
 	e := json.NewEncoder(w)
 	var result map[string]map[string]interface{}
