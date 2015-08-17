@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -55,14 +56,28 @@ func memberDoc(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	member := vars["member"]
 	w.Header().Set("Content-Type", "application/json")
-	e := json.NewEncoder(w)
-	var result interface{}
-	if err := mdb.DB("fof").C("memberDestinyStats").Find(bson.M{"member": member}).One(&result); err != nil {
+	var result []struct {
+		Type string `bson:"type"`
+		Raw  string `bson:"raw"`
+	}
+	if err := mdb.DB("fof").C("userData").Find(bson.M{"username": member}).Select(bson.M{"_id": -1, "type": 1, "raw": 1}).All(&result); err != nil {
 		log.Printf("Error fetching member doc for %s: %s", member, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	e.Encode(result)
+	var found = 0
+	for _, v := range result {
+		if len(v.Type) > 11 && v.Type == "character-" {
+			continue
+		}
+		if found == 0 {
+			fmt.Fprintf(w, "{\"%s\":%s", v.Type, v.Raw)
+			found++
+		} else {
+			fmt.Fprintf(w, ",\"%s\":%s", v.Type, v.Raw)
+		}
+	}
+	fmt.Fprint(w, "}")
 }
 
 func memberSubDoc(w http.ResponseWriter, r *http.Request) {
@@ -90,17 +105,19 @@ func memberSubDocKeys(w http.ResponseWriter, r *http.Request) {
 	member := usernameFilter.ReplaceAllString(vars["member"], "")
 	w.Header().Set("Content-Type", "application/json")
 	e := json.NewEncoder(w)
-	var result map[string]map[string]interface{}
+	var result []struct {
+		Type string `bson:"type"`
+	}
 	err := mdb.DB("fof").C(
-		"memberDestinyStats").Find(bson.M{"member": member}).One(&result)
+		"userData").Find(bson.M{"username": member}).Select(bson.M{"type": 1}).All(&result)
 	if err != nil {
 		log.Printf("Error fetching member doc.keys for %s: %s", member, err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	var rval = []string{}
-	for k, _ := range result["data"] {
-		rval = append(rval, k)
+	for _, v := range result {
+		rval = append(rval, v.Type)
 	}
 	sort.Strings(rval)
 	e.Encode(rval)
