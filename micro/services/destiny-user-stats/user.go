@@ -126,12 +126,13 @@ func (u *user) pull() error {
 	if len(search) < 1 {
 		return errUserNotFound
 	}
+	u.platform = search[0].MembershipType
+	u.account = search[0].MembershipId
 	u.cUpsert(
 		"userData",
 		bson.M{
-			"account": u.account,
-			"name":    u.name,
-			"type":    "player",
+			"username": u.userName,
+			"type":     "player",
 		},
 		map[string]interface{}{
 			"username": u.userName,
@@ -141,23 +142,31 @@ func (u *user) pull() error {
 			"type":     "player",
 			"data":     info.([]interface{})[0],
 			"raw":      buf,
+			"when":     time.Now(),
 		},
 	)
-	u.platform = search[0].MembershipType
-	u.account = search[0].MembershipId
-	u.data["player"] = &userBit{
-		when: time.Now(),
-		data: info.([]interface{})[0],
-	}
+
+	u.cUpsert(
+		"userLookup",
+		bson.M{
+			"account": u.account,
+		},
+		map[string]interface{}{
+			"username": u.userName,
+			"userid":   u.userID,
+			"account":  u.account,
+			"name":     u.name,
+			"when":     time.Now(),
+		},
+	)
 
 	astats, buf, err := client.get(accountStatsURL(u.platform, u.account))
 	if err == nil {
 		u.cUpsert(
 			"userData",
 			bson.M{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "accountStats",
+				"username": u.userName,
+				"type":     "accountStats",
 			},
 			map[string]interface{}{
 				"username": u.userName,
@@ -185,9 +194,8 @@ func (u *user) pull() error {
 		u.cUpsert(
 			"userData",
 			bson.M{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "grimoire",
+				"username": u.userName,
+				"type":     "grimoire",
 			},
 			map[string]interface{}{
 				"username": u.userName,
@@ -206,9 +214,8 @@ func (u *user) pull() error {
 		u.cUpsert(
 			"userData",
 			bson.M{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "triumphs",
+				"username": u.userName,
+				"type":     "triumphs",
 			},
 			map[string]interface{}{
 				"username": u.userName,
@@ -227,9 +234,8 @@ func (u *user) pull() error {
 		u.cUpsert(
 			"userData",
 			bson.M{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "account",
+				"username": u.userName,
+				"type":     "account",
 			},
 			map[string]interface{}{
 				"username": u.userName,
@@ -302,9 +308,8 @@ func (u *user) pull() error {
 		u.cUpsert(
 			"userData",
 			bson.M{
-				"account": u.account,
-				"name":    u.name,
-				"type":    "character-" + c.CharacterBase.CharacterId,
+				"username": u.userName,
+				"type":     "character-" + c.CharacterBase.CharacterId,
 			},
 			map[string]interface{}{
 				"username": u.userName,
@@ -323,9 +328,8 @@ func (u *user) pull() error {
 	u.cUpsert(
 		"userData",
 		bson.M{
-			"account": u.account,
-			"name":    u.name,
-			"type":    "characters",
+			"username": u.userName,
+			"type":     "characters",
 		},
 		map[string]interface{}{
 			"username": u.userName,
