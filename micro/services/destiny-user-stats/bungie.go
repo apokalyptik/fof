@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -20,7 +21,7 @@ type destinyClient struct {
 	apiKey string
 }
 
-func (d *destinyClient) get(URL string) (interface{}, error) {
+func (d *destinyClient) get(URL string) (interface{}, []byte, error) {
 	var rval struct {
 		ErrorCode       int
 		ThrottleSeconds int
@@ -30,28 +31,31 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 		Response        interface{}
 	}
 	if req, err := http.NewRequest("GET", URL, nil); err != nil {
-		return nil, err
+		return nil, nil, err
 	} else {
 		var c = &http.Client{}
 		req.Header.Add("X-API-Key", d.apiKey)
 		req.Header.Add("User-Agent", "FederationOfFathers-StatsBot/0.1 (http://federationoffathers.com/)")
 		if resp, err := c.Do(req); err != nil {
-			return nil, err
+			return nil, nil, err
 		} else {
 			defer resp.Body.Close()
-			decoder := json.NewDecoder(resp.Body)
-			if err := decoder.Decode(&rval); err != nil {
-				return nil, err
+			if buf, err := ioutil.ReadAll(resp.Body); err != nil {
+				return nil, nil, err
 			} else {
-				if rval.ThrottleSeconds != 0 {
-					// Super Naive
-					log.Println("Asked to throttle for", rval.ThrottleSeconds, "seconds")
-					time.Sleep(time.Duration(rval.ThrottleSeconds) * time.Second)
+				if err := json.Unmarshal(buf, &rval); err != nil {
+					return nil, nil, err
+				} else {
+					if rval.ThrottleSeconds != 0 {
+						// Super Naive
+						log.Println("Asked to throttle for", rval.ThrottleSeconds, "seconds")
+						time.Sleep(time.Duration(rval.ThrottleSeconds) * time.Second)
+					}
+					if rval.Message != "Ok" {
+						return nil, nil, fmt.Errorf("%s (%d) -- %s", rval.Message, rval.ErrorCode, rval.ErrorStatus)
+					}
+					return rval.Response, buf, nil
 				}
-				if rval.Message != "Ok" {
-					return nil, fmt.Errorf("%s (%d) -- %s", rval.Message, rval.ErrorCode, rval.ErrorStatus)
-				}
-				return rval.Response, nil
 			}
 		}
 	}
@@ -60,7 +64,7 @@ func (d *destinyClient) get(URL string) (interface{}, error) {
 func platformURL(suffix string) string {
 	var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s?definitions=true", suffix)
 	// var url = fmt.Sprintf("http://www.bungie.net/Platform/Destiny/%s", suffix)
-	log.Println(url)
+	// log.Println(url)
 	return url
 }
 

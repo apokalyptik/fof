@@ -192,3 +192,23 @@ var atsCache = &cacheAllTimeStats{
 var atkCache = &cacheAllTimeKeys{
 	keyedCache: &keyedCache{},
 }
+
+func init() {
+	go func() {
+		wake := time.Tick(10 * time.Minute)
+		for {
+			<-wake
+			atsCache.lock.RLock()
+			for _, k1 := range atsCache.data {
+				for _, k2 := range k1 {
+					if time.Now().After(k2.cacheExpiry) {
+						k2.lock.Lock()
+						k2.cache = nil
+						k2.lock.Unlock()
+					}
+				}
+			}
+			atsCache.lock.RUnlock()
+		}
+	}()
+}
