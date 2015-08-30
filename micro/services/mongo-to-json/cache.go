@@ -16,6 +16,12 @@ type keyedCache struct {
 	cache       []byte
 }
 
+type timedCache struct {
+	lock        sync.RWMutex
+	cacheExpiry time.Time
+	cache       []byte
+}
+
 type cacheAllTimeStats struct {
 	lock sync.RWMutex
 	data map[string]map[string]*cacheAllTimeStat
@@ -185,12 +191,86 @@ func (c *cacheAllTimeKeys) get() ([]byte, error) {
 	return c.cache, nil
 }
 
+type cacheLeaderboardPVP struct {
+	*timedCache
+}
+
+func (c *cacheLeaderboardPVP) get() ([]byte, error) {
+	c.lock.RLock()
+	if time.Now().Before(c.cacheExpiry) {
+		if c.cache != nil {
+			c.lock.RUnlock()
+			return c.cache, nil
+		}
+	}
+	c.lock.RUnlock()
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	var data []struct {
+		Member string
+		Stat   string
+		Value  float64
+	}
+
+	err := mdb.DB("fof").C("accountStats").Find(bson.M{
+		"section": "pvp",
+		"stat": bson.M{
+			"$in": []string{
+				"activitiesEntered",
+				"secondsPlayed",
+				"activitiesWon",
+				"allParticipantsScore",
+				"assists",
+				"bestSingleGameKills",
+				"bestSingleGameScore",
+				"deaths",
+				"kills",
+				"longest KillSpree",
+				"longest SingleLife",
+				"orbsDropped",
+				"orbsGathered",
+				"precision Kills",
+				"weaponKillsGrenade",
+				"weaponKillsMelee",
+				"weaponKillsSuper",
+				"zonesCaptured",
+			},
+		},
+	}).Select(bson.M{"member": true, "stat": true, "value": true, "_id": false}).All(&data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var rval = map[string]map[string]float64{}
+	for _, v := range data {
+		if _, ok := rval[v.Stat]; !ok {
+			rval[v.Stat] = map[string]float64{}
+		}
+		rval[v.Stat][v.Member] = v.Value
+	}
+
+	if cache, err := json.Marshal(rval); err != nil {
+		return nil, err
+	} else {
+		c.cache = cache
+		c.cacheExpiry = time.Now().Add(30 * time.Minute)
+		return cache, nil
+	}
+}
+
 var atsCache = &cacheAllTimeStats{
 	data: map[string]map[string]*cacheAllTimeStat{},
 }
 
 var atkCache = &cacheAllTimeKeys{
 	keyedCache: &keyedCache{},
+}
+
+var pvpLeaderboardCache = &cacheLeaderboardPVP{
+	timedCache: &timedCache{},
 }
 
 func init() {

@@ -15,7 +15,8 @@ import (
 var usernameFilter = regexp.MustCompile("[^0-9a-zA-Z-_ ]")
 
 func userList(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	setCORS(w, r)
+	setJSON(w, r)
 	resp, err := http.Get("http://127.0.0.1:8879/users.json")
 	if err != nil {
 		log.Printf("Error fetching user list: %s", err.Error())
@@ -25,10 +26,12 @@ func userList(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 	var details struct {
 		Members []struct {
-			Bot     bool `json:"is_bot"`
-			Deleted bool `json:"deleted"`
+			Name    string `json:"name"`
+			Bot     bool   `json:"is_bot"`
+			Deleted bool   `json:"deleted"`
 			Profile struct {
 				FirstName string `json:"first_name"`
+				Avatar    string `json:"image_192"`
 			} `json:"profile"`
 		} `json:"members"`
 	}
@@ -38,7 +41,7 @@ func userList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	rval := []string{}
+	rval := []map[string]string{}
 	for _, m := range details.Members {
 		if m.Bot {
 			continue
@@ -46,7 +49,11 @@ func userList(w http.ResponseWriter, r *http.Request) {
 		if m.Deleted {
 			continue
 		}
-		rval = append(rval, m.Profile.FirstName)
+		rval = append(rval, map[string]string{
+			"gamertag": m.Profile.FirstName,
+			"username": m.Name,
+			"avatar":   m.Profile.Avatar,
+		})
 	}
 	e := json.NewEncoder(w)
 	e.Encode(rval)

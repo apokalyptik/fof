@@ -50,6 +50,7 @@ func main() {
 	r.Handle("/destiny/raw/{member}/{key}.json", middleware(memberSubDoc))
 	r.Handle("/destiny/stats/alltime/keys.json", middleware(allTimeStatKeys))
 	r.Handle("/destiny/stats/alltime/{section}/{stat}.json", middleware(allTimeStats))
+	r.Handle("/destiny/stats/leaderboard/pvp.json", middleware(leaderBoardPVP))
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	log.Fatal(http.ListenAndServe(listenOn, r))
 }
