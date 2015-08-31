@@ -3,11 +3,10 @@ var Route = require('route-parser');
 var datastore = require('./datastore.js');
 var dispatcher = require('./dispatcher.js');
 
-var MemberProfilePart = require('./member-profile.jsx');
-var MemberChooserPart = require('./member-chooser.jsx');
-var MemberGameSelect = require('./member-game-select.jsx');
-var DestinySelectPart = require('./member-destiny-section-select.jsx');
-var DestinyStats = require('./member-destiny-stats.jsx');
+var MemberPage = require('./member-page.jsx');
+var LeaderBoard = require('./leaderboard.jsx');
+
+var ComputePVP = require('./computed-pvp-stats.js');
 
 function hashDidChange() {
 	if ( window.location.hash.length < 2 ) {
@@ -15,6 +14,10 @@ function hashDidChange() {
 		return
 	}
 	var hash = window.location.hash.substring(1);
+	if ( hash.substring(hash.length - 1) == "/" ) {
+		dispatcher.dispatch({type:"go", to: hash.substring(0, hash.length - 1)});
+		return;
+	}
 	for ( var i=0; i<routes.length; i++ ) {
 		var m = routes[i].route.match(hash)
 		if ( m ) {
@@ -25,58 +28,6 @@ function hashDidChange() {
 	window.location.replace(window.location.pathname + window.location.search + "#");
 }
 
-var MemberPage = React.createClass({
-	render: function() {
-		var wantMember = this.props.state.route.data.name.toLowerCase()
-		var member = null;
-		for ( var i=0; i<this.props.state.members.length; i++ ) {
-			if ( this.props.state.members[i].username.toLowerCase() == wantMember ) {
-				member = this.props.state.members[i];
-				break;
-			}
-			if ( this.props.state.members[i].gamertag.toLowerCase() == wantMember ) {
-				member = this.props.state.members[i];
-				break;
-			}
-		}
-		if ( member == null ) {
-			window.setTimeout(function() {
-				dispatcher.dispatch({type:"go", to: ""});
-			}, 0);
-			return((<div/>));
-		}
-		
-		return(
-			<div className="container-fluid member">
-				<div className="row">
-					<div className="col-md-3">
-						<div className="container-fluid profile-summary">
-							<MemberProfilePart member={member}/>
-							<MemberChooserPart/>
-						</div>
-					</div>
-					<div className="col-md-8">
-						<div className="container-fluid">
-			
-							<MemberGameSelect/>
-							<DestinySelectPart/>
-
-							<div className="row">
-								<div className="col-md-12">
-									<h3>Details Below...</h3>
-								</div>
-							</div>
-
-							<DestinyStats state={this.props.state} member={member}/>
-
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	}
-});
-
 var App = React.createClass({
 	render: function() {
 		if ( this.state.loaded != "v1" ) {
@@ -84,6 +35,9 @@ var App = React.createClass({
 		}
 		if ( this.state.route.name == "member" ) {
 			return ( <MemberPage state={this.state}/> );
+		}
+		if ( this.state.route.name == "lboard" ) {
+			return ( <LeaderBoard state={this.state}/> );
 		}
 		return (<h1>{JSON.stringify(this.state.route)}</h1>);
 	},
@@ -107,7 +61,7 @@ var App = React.createClass({
 	getLeaderboardPVP: function() {
 		$.getJSON( "http://fofgaming.com:8880/destiny/stats/leaderboard/pvp.json" )
 			.done(function(data) {
-				dispatcher.dispatch({type: "set", key: "lb.pvp", val: data});
+				dispatcher.dispatch({type: "set", key: "lb.pvp", val: ComputePVP(data)});
 				dispatcher.dispatch({type: "set", key: "loaded", val: "v1"});
 			}.bind(this))
 			.fail(function(data) {
@@ -119,8 +73,21 @@ var App = React.createClass({
 
 var routes = [
 	{ name: "member",	route: new Route('m/:name(/:game(/:section))') },
-	{ name: "lboard",	route: new Route('s/:stat(/:statRatioBy(/:statRatioOver))') },
+	{ name: "lboard",	route: new Route('s/:type/:stat') },
 ];
+
+dispatcher.register(function(d) {
+	switch( d.type ) {
+		case "to":
+			for ( var i=0; i<routes.length; i++ ) {
+				if ( routes[i].name == d.route ) {
+					window.location.href = window.location.pathname + window.location.search + '#' + routes[i].route.reverse(d.params);
+					return
+				}
+			}
+			break;
+	}
+});
 
 $(document).ready(function() {
 	$(window).on('hashchange', hashDidChange)
