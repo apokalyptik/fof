@@ -4,7 +4,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"runtime"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 )
@@ -27,6 +29,12 @@ func setCORS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+func middleware(f func(http.ResponseWriter, *http.Request)) http.Handler {
+	return gziphandler.GzipHandler(
+		http.HandlerFunc(f),
+	)
+}
+
 func main() {
 	flag.Parse()
 	if session, err := mgo.Dial(mgoHost); err != nil {
@@ -36,15 +44,13 @@ func main() {
 	}
 	log.Println("Starting up...")
 	r := mux.NewRouter()
-	r.HandleFunc("/fof/members.json", userList)
-	r.HandleFunc("/destiny/raw/{member}.json", memberDoc)
-	r.HandleFunc("/destiny/raw/{member}/keys.json", memberSubDocKeys)
-	r.HandleFunc("/destiny/raw/{member}/{key}.json", memberSubDoc)
-	r.HandleFunc("/destiny/stats/alltime/keys.json", allTimeStatKeys)
-	r.HandleFunc("/destiny/stats/alltime/{section}/{stat}.json", allTimeStats)
-	r.HandleFunc("/destiny/pva/exotic-kills.json", exoticStats)
-	r.HandleFunc("/destiny/pvp/allTime/aggregate.json", pvpTotals)
-	r.HandleFunc("/destiny/pvp/allTime/aggregate/keys.json", pvpTotalsKeys)
-	r.HandleFunc("/destiny/pvp/allTime/aggregate/{key}.json", pvpTotal)
+	r.Handle("/fof/members.json", middleware(userList))
+	r.Handle("/destiny/raw/{member}.json", middleware(memberDoc))
+	r.Handle("/destiny/raw/{member}/keys.json", middleware(memberSubDocKeys))
+	r.Handle("/destiny/raw/{member}/{key}.json", middleware(memberSubDoc))
+	r.Handle("/destiny/stats/alltime/keys.json", middleware(allTimeStatKeys))
+	r.Handle("/destiny/stats/alltime/{section}/{stat}.json", middleware(allTimeStats))
+	r.Handle("/destiny/stats/leaderboard/pvp.json", middleware(leaderBoardPVP))
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	log.Fatal(http.ListenAndServe(listenOn, r))
 }

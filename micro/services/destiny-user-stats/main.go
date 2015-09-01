@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"log"
+	"runtime"
+	"sync"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -25,18 +27,41 @@ func init() {
 }
 
 func mindUsers() {
-	for {
-		var nextRun = time.Now().Add(12 * time.Hour)
-
-		users.update()
-
-		users.lock.RLock()
-		for username, user := range users.list {
-			log.Printf("Freshening %s", username)
-			if err := user.pull(); err != nil {
-				log.Printf(err.Error())
-			}
+	var maxWorkers = 10
+	var concurrency = make(chan struct{}, maxWorkers)
+	go func() {
+		for i := 0; i < maxWorkers; i++ {
+			concurrency <- struct{}{}
 		}
+	}()
+	for {
+		startAll := time.Now()
+		var nextRun = time.Now().Add(12 * time.Hour)
+		log.Printf("Updating Users")
+		users.update()
+		log.Printf("Users Updated")
+		users.lock.RLock()
+		n := len(users.list)
+		i := 0
+		var w sync.WaitGroup
+		log.Printf("Pulling user data")
+		for username, u := range users.list {
+			<-concurrency
+			i++
+			w.Add(1)
+			go func(u *user, username string, i int) {
+				start := time.Now()
+
+				if err := u.pull(); err != nil {
+					log.Printf("Error %s on %s %d/%d in %s", err.Error(), username, i, n, time.Now().Sub(start))
+				}
+				concurrency <- struct{}{}
+				log.Printf("Freshened %s %d/%d in %s", username, i, n, time.Now().Sub(start))
+				w.Done()
+			}(u, username, i)
+		}
+		w.Wait()
+		log.Println("finished in", time.Now().Sub(startAll))
 		users.lock.RUnlock()
 		if !time.Now().After(nextRun) {
 			log.Printf("Sleeping for %s", nextRun.Sub(time.Now()).String())
@@ -56,5 +81,6 @@ func main() {
 	} else {
 		mgoDB = session
 	}
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	mindUsers()
 }
