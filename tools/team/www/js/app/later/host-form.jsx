@@ -11,26 +11,43 @@ module.exports = React.createClass({
 		}
 	},
 	submit: function(e) {
-		if ( this.state.channel == "" ) {
+		if ( this.state.channel == null ) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
 			return;
 		}
-		if ( this.state.raidName == "" ) {
+		if ( this.state.raidName == null) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "please enter an event name"});
 			return;
 		}
 
-		if ( this.state.raidDateTimeString == null ) {
-			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a date and time"});
+		if ( this.state.dateString == null ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a date "});
 			return;
 		} 
 
+		if ( this.state.timeString == null ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a trime "});
+			return;
+		} 
+
+		var date = new Date(this.state.dateString + " " + this.state.timeString);
+
+		// client based timezone. Good idea, bad idea?
+		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
+
+		//build POST parameter values
+		var raidDateTimeString = this.state.dateString + " " + this.state.timeString + " " + timeZone;
+		var time =  date.getTime();
+		var raid = "[" + raidDateTimeString + "] " + this.state.raidName;
+
+
 		jQuery.post("/rest/raid/host", {
 			channel: 	this.state.channel,
-			raid: 		this.state.raid,
+			raid: 		raid,
 			raidName: 	this.state.raidName,
-			time: 		this.state.raidTimeSeconds,
-			dateString: this.state.raidDateTimeString
+			time: 		time,
+			timeZone:   timeZone,
+			dateString: raidDateTimeString
 		})
 			.done(function(data) {
 				Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
@@ -45,44 +62,66 @@ module.exports = React.createClass({
 	},
 	handleRaid: function(event) { 
 		this.setState({ "raidName": event.target.value })
-		this.setState({ "raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
+		// this.setState({ "raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
 	},
 	handleChannel: function(event) {
 		this.setState({ "channel": event.target.value })
 	},
-	handleDateTime: function(value) {
+	handleDate: function(value) {
 
-		var date = new Date(value*1);
+		var month = (value.getMonth() +1);
+		var day = value.getDate()*1;
+		var year = value.getFullYear()*1;
+		var dateString = month + "/" + day + "/" + year;
+		this.setState({"dateString": dateString});
 
-		// client based timezone. Good idea, bad idea?
-		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
-		var month = (date.getMonth() +1);
-		var day = date.getDate()*1;
+		var timeString = this.state.timeString ==  null ? "12:00 am" : this.state.timeString;
+		this.setState({"raidDateTimeString" : dateString + " " + timeString});
+
+	},
+	handleTime: function(value) {
+
 		var ampm = "am";
-		var hours = date.getHours()*1;
+		var hours = value.getHours()*1;
 		if (hours == 0) {
 			hours = 12;
+		} else if (hours == 12) {
+			ampm="pm";
 		} else if (hours > 12) {
 			hours = hours - 12;
+			ampm="pm"
 		}
 
-		minutes = date.getMinutes()*1;
+		minutes = value.getMinutes()*1;
 
 		if (minutes < 10) { 
 			minutes = "0" + minutes;
 		}
+		var timeString = hours + ":" + minutes + " " + ampm;
+		this.setState({"timeString":timeString});
 
-		var dateString = month + "/" + day + " " 
-			+ hours + ":" +  minutes + ampm + " " + timeZone;
+		var dateString;
+		if (this.state.dateString == null) {
+			var now = new Date();
+			var month = (now.getMonth() +1);
+			var day = now.getDate()*1;
+			var year = now.getFullYear()*1;
+			dateString = month +"/"+ day + "/" + year;
 
-		this.setState({"raidDateTimeString": dateString});
-		this.setState({"raidTimeSeconds": value});
-		this.setState({"raid": "[" + this.state.raidDateTimeString + "] " + this.state.raidName});
+		} else {
+			dateString = this.state.dateString
+		}
+		this.setState({"raidDateTimeString" : dateString + " " + timeString});
 
 	},
-	handleDateTimeClick: function(event){
+	handleDateClick: function(event){
 		if ($(event.target).hasClass("rw-input")){
-			$("button.rw-btn-calendar").click();
+			$("#datePicker button.rw-btn-calendar").click();
+		}
+	},
+	handleTimeClick: function(event){
+		if ($(event.target).hasClass("rw-input")){
+			$("#timePicker button.rw-btn-time").click();
 		}
 	},
 	componentDidMount: function(){
@@ -121,10 +160,15 @@ module.exports = React.createClass({
 						{channels}
 					</select>
 				</div>
-				<div className="form-group">
-					<label htmlFor="DateTimePicker">Date and Time:</label>
-					<DateTimePicker onChange={this.handleDateTime} onClick={this.handleDateTimeClick} min={currentDate} max={sevenDays}/>
-					<small>Click the calendar to select a date, and the clock to select a time. Timezone will be selected by your browser.</small>
+				<div id="datePicker" className="form-group">
+					<label htmlFor="DatePicker">Date:</label>
+					<DateTimePicker time={false} format={"MMM dd, yyyy"} onChange={this.handleDate} onClick={this.handleDateClick} min={currentDate} max={sevenDays}/>
+					<small>Click the calendar to select a date.</small>
+				</div>
+				<div id="timePicker" className="form-group">
+					<label htmlFor="TimePicker">Time:</label>
+					<DateTimePicker calendar={false} onChange={this.handleTime} onClick={this.handleTimeClick}/>
+					<small>Click the clock to select a time. Timezone will be selected by your browser.</small>
 				</div>
 				<div className="form-group">
 					<label htmlFor="name">Name of your Event</label>
