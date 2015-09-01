@@ -36,7 +36,9 @@ module.exports = React.createClass({
 		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
 
 		//build POST parameter values
-		var raidDateTimeString = this.state.dateString + " " + this.state.timeString + " " + timeZone;
+		var dateString = this.state.dateString;
+		dateString = dateString.substring(0,dateString.lastIndexOf("/"));
+		var raidDateTimeString = dateString + ", " + this.state.timeString + " " + timeZone;
 		var time =  date.getTime();
 		var raid = "[" + raidDateTimeString + "] " + this.state.raidName;
 
