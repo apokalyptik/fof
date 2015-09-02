@@ -39,7 +39,7 @@ var App = React.createClass({
 		if ( this.state.route.name == "lboard" ) {
 			return ( <LeaderBoard state={this.state}/> );
 		}
-		return (<h1>{JSON.stringify(this.state.route)}</h1>);
+		return (<h1>404 Not Found</h1>);
 	},
 	getInitialState: function() {
 		return datastore.data;

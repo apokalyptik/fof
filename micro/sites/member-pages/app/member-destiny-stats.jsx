@@ -32,7 +32,8 @@ var StatRow = React.createClass({
 			}
 
 			var pct = Math.round( ( place / total ) * 100 );
-
+			var widthl = (100 - pct) + "%";
+			var widthr = pct + "%";
 			return(
 				<div key={this.props.name} className="row">
 					<div className="col-md-3 col-md-offset-1 stat header">
@@ -47,6 +48,24 @@ var StatRow = React.createClass({
 						{place}
 					</div>
 					<div className="col-md-2">
+						<div style={{
+							zIndex: "-1",
+							position: "absolute",
+							left: "0px",
+							top: "5%",
+							width: widthl,
+							height: "90%",
+							background: "#ddd",
+						}}/>
+						<div style={{
+							zIndex: "-1",
+							position: "absolute",
+							left: widthl,
+							top: "5%",
+							width: widthr,
+							height: "90%",
+							background: "#eee",
+						}}/>
 						{pct}%
 					</div>
 				</div>
