@@ -1,3 +1,5 @@
+require('../../css/style.scss'); // So that webpack finds the scss file, and compiles it...
+
 var Dispatcher = require( './lib/dispatcher.jsx');
 var React = require('react/addons');
 var Datastore = require( './lib/datastore.jsx');

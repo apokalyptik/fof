@@ -9,4 +9,6 @@ bindata.go
 node_modules
 www/js/production.js
 www/js/development.js
+www/js/development.js.map
+www/css/style.css.map
 *.DS_Store
