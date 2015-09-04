@@ -11,24 +11,23 @@ module.exports = React.createClass({
 		}
 	},
 	submit: function(e) {
-		if ( this.state.channel == null ) {
-			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a channel"});
+		if ( this.state.channel == null || this.state.channel == "" ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please select a channel"});
 			return;
 		}
-		if ( this.state.raidName == null) {
-			Dispatcher.dispatch({actionType: "set", key: "error", value: "please enter an event name"});
-			return;
-		}
-
 		if ( this.state.dateString == null ) {
-			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a date "});
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please select a date"});
 			return;
 		} 
 
 		if ( this.state.timeString == null ) {
-			Dispatcher.dispatch({actionType: "set", key: "error", value: "please select a trime "});
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please select a time"});
 			return;
 		} 
+		if ( this.state.raidName == null) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please enter an event name"});
+			return;
+		}
 
 		var date = new Date(this.state.dateString + " " + this.state.timeString);
 
