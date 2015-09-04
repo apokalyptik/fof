@@ -7,6 +7,7 @@ var LFGSelectGame = require('./now/select-game.jsx');
 var LFGApp = require('./now/now-main.jsx');
 var TeamApp = require('./later/later-main.jsx');
 var MyLater = require('./later/my-raids.jsx');
+var Notification = require("react-notification");
 
 var App = React.createClass({
 	getInitialState: function() {
@@ -51,7 +52,23 @@ var App = React.createClass({
 	acceptData: function(newData) {
 		this.setState(newData);
 	},
+    getErrorNotificationStyles: function() {
 
+        return  {
+        	bar: {
+        		backgroundColor: '#ff9999'
+	        }, 
+	        active: {
+	        	left: '3rem'
+	        }, 
+	        action: {
+	        	color: '#ff9999'
+	        }
+	    };
+    },
+    handleNotificationClick: function(notification) {
+    	Dispatcher.dispatch({actionType: "set", key: notification, value: ""});
+    },
 	render: function() {
 		if ( this.state.checked == false ) {
 			return (<div/>);
@@ -97,23 +114,59 @@ var App = React.createClass({
 		var Error;
 		if ( this.state.error ) {
 			Error = (
-				<DisplayFor seconds={30} message={(<div className="error">{this.state.error}</div>)}/>
+				<Notification 
+					ref="errorNotification"
+					isActive={true} 
+					message={this.state.error} 
+					action="" 
+					style={{
+			            bar: {
+			              position: 'static',
+			              bottom: '6rem',
+			              font: '1.25rem normal Roboto, sans-serif',
+			              backgroundColor: '#ff9999',
+			              color: 'rgb(0, 0, 0)',
+			              zIndex: 9999
+			            },
+			            action: {
+			              color: 'rgb(0, 0, 0)'
+			            }
+			        }} 
+					dismissAfter={30000}
+					onDismiss={this.handleNotificationClick.bind(null,'error')}
+					onClick={this.handleNotificationClick.bind(null,'error')}/>
 			);
 		}
 
 		var Success;
 		if ( this.state.success ) {
 			Success = (
-				<DisplayFor seconds={10} message={(<div className="success">{this.state.success}</div>)}/>
+				<Notification
+					isActive={true}
+					message={this.state.success}
+					style={{
+			            bar: {
+			              position: 'static',
+			              bottom: '6rem',
+			              font: '1.25rem normal Roboto, sans-serif',
+			              backgroundColor: '#ADEBAD',
+			              color: '#2C6710',
+			              border: 'solid 1px #9CBF9C',
+			              zIndex: 9999
+			            },
+			            action: {
+			              color: 'rgb(0, 0, 0)'
+			            }
+			        }} 
+			        action=""
+					dismissAfter={10000}
+					onDismiss={this.handleNotificationClick.bind(null,'success')}
+					onClick={this.handleNotificationClick.bind(null,'success')}/>
 			);
 		}
 
 		return(
 			<div>
-				<div className="notices">
-					{Error}
-					{Success}
-				</div>
 				<div className="container-fluid nopadding">
 					<div className="row nomargin">
 						<div className="col-md-12 nomargin">
@@ -125,6 +178,10 @@ var App = React.createClass({
 									{crumbs}
 									<li className="rt"/>
 								</ul>
+							</div>
+							<div className="notices">
+								{Error}
+								{Success}
 							</div>
 						</div>
 					</div>
