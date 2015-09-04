@@ -128,9 +128,7 @@ ul.breadcrumbs-lgr {
     transition: width .4s ease-in-out; }
 
 .notices {
-  position: absolute;
   top: 1em;
-  width: 90%;
   text-align: center; }
   .notices .error {
     background-color: #c2c2c2; }
