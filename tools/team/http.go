@@ -28,11 +28,16 @@ func doHTTPPost(w http.ResponseWriter, r *http.Request) {
 
 	if text != "" {
 		firstSpace := strings.Index(text, " ")
-		cmd := text[:firstSpace] //strings.Split(text, " ")
+		cmd := text
+		if firstSpace > 0 {
+			cmd = text[:firstSpace]
+		}
 		switch cmd {
 		case "xbox":
-			if len(text[firstSpace+1:]) > 0 {
+			if len(text) > len("xbox") {
 				fmt.Fprint(w, getXboxProfileURL(text[firstSpace+1:]))
+			} else {
+				fmt.Fprint(w, "You need to specify a gamer tag")
 			}
 		}
 	} else {
