@@ -11,4 +11,5 @@ www/js/production.js
 www/js/development.js
 www/js/development.js.map
 www/css/style.css.map
+www/css/style.css
 *.DS_Store
