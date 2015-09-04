@@ -52,6 +52,7 @@ module.exports = React.createClass({
 		})
 			.done(function(data) {
 				Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
+				Dispatcher.dispatch({actionType: "set", key: "success", value: "Your event has been created!"});
 				this.props.cancel(e)
 			}.bind(this))
 			.fail(function(data) {
