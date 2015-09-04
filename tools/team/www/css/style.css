@@ -125,7 +125,7 @@ ul.breadcrumbs-lgr {
     background-color: #107c10;
     display: inline-block;
     height: 100%;
-    transition: width .4s ease-in-out; }
+    transition: width 0.4s ease-in-out; }
 
 .notices {
   top: 1em;
@@ -134,3 +134,5 @@ ul.breadcrumbs-lgr {
     background-color: #c2c2c2; }
   .notices .success {
     background-color: #5dc21e; }
+
+/*# sourceMappingURL=style.css.map*/
