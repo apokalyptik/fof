@@ -59,8 +59,10 @@ func (j *Json) set(key string, value interface{}) error {
 		return err
 	}
 	j.cache = cache
+	newCond := &sync.WaitGroup{}
+	newCond.Add(1)
 	j.cond.Done()
-	j.cond.Add(1)
+	j.cond = newCond
 	j.lock.Unlock()
 	return nil
 }
