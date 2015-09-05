@@ -190,10 +190,12 @@ var LFGApp = React.createClass({
 	submit: function() {
 		var events = this.getMyEvents();
 		if ( events.length < 1 ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please select an event"});
 			return
 		}
 		jQuery.post("/rest/lfg", { events: events, time: this.props.state.time })
 			.done(function() {
+				Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 				Dispatcher.dispatch({
 					actionType: "lfg-looking",
 					value: true
@@ -218,6 +220,9 @@ var LFGApp = React.createClass({
 			}
 		}
 		return lookers;
+	},
+	componentWillUnmount: function() {
+		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 	},
 	render: function() {
 		var myEvents = this.getMyEvents();
