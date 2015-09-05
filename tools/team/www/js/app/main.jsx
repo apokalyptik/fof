@@ -120,18 +120,19 @@ var App = React.createClass({
 					ref="errorNotification"
 					isActive={true} 
 					message={this.state.error} 
-					action="" 
+					action="&times;" 
 					style={{
 			            bar: {
-			              position: 'static',
-			              bottom: '6rem',
+			              top: '6rem',
+                          bottom: 'auto',
 			              font: '1.25rem normal Roboto, sans-serif',
-			              backgroundColor: '#ff9999',
-			              color: 'rgb(0, 0, 0)',
+			              backgroundColor: '#CC0000',
+			              color: '#FFFFFF',
 			              zIndex: 9999
 			            },
 			            action: {
-			              color: 'rgb(0, 0, 0)'
+			              color: '#FFFFFF',
+                          fontSize: '1.25rem'
 			            }
 			        }} 
 					dismissAfter={30000}
@@ -148,8 +149,8 @@ var App = React.createClass({
 					message={this.state.success}
 					style={{
 			            bar: {
-			              position: 'static',
-			              bottom: '6rem',
+			              top: '6rem',
+			              bottom: 'auto',
 			              font: '1.25rem normal Roboto, sans-serif',
 			              backgroundColor: '#ADEBAD',
 			              color: '#2C6710',
@@ -157,10 +158,11 @@ var App = React.createClass({
 			              zIndex: 9999
 			            },
 			            action: {
-			              color: 'rgb(0, 0, 0)'
+			              color: 'rgb(0, 0, 0)',
+			              fontSize: '1.25rem'
 			            }
 			        }} 
-			        action=""
+			        action="&times;"
 					dismissAfter={10000}
 					onDismiss={this.handleNotificationClick.bind(null,'success')}
 					onClick={this.handleNotificationClick.bind(null,'success')}/>

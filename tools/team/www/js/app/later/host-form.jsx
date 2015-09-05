@@ -130,6 +130,9 @@ module.exports = React.createClass({
 		//make date/time input field readOnly
 		$("input[type=text].rw-input").prop("readonly",true);
 	},
+	componentWillUnmount: function(){
+		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
+	},
 	render: function() {
 		var channels = [
 			"",
