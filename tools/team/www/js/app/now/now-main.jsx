@@ -125,6 +125,10 @@ var LFGApp = React.createClass({
 			]
 		},
 	],
+	getInitialState: function(){
+		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
+		return null;
+	},
 	isInMyOptions: function(option) {
 		if ( typeof this.props.state.my[option] == "undefined" ) {
 			return false;
@@ -220,9 +224,6 @@ var LFGApp = React.createClass({
 			}
 		}
 		return lookers;
-	},
-	componentWillUnmount: function() {
-		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 	},
 	render: function() {
 		var myEvents = this.getMyEvents();

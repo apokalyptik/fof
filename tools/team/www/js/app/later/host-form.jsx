@@ -4,6 +4,7 @@ DateTimePicker = require('react-widgets/lib/DateTimePicker');
 
 module.exports = React.createClass({
 	getInitialState: function() {
+		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 		return {
 			error: "",
 			channel: "",
@@ -129,9 +130,6 @@ module.exports = React.createClass({
 	componentDidMount: function(){
 		//make date/time input field readOnly
 		$("input[type=text].rw-input").prop("readonly",true);
-	},
-	componentWillUnmount: function(){
-		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 	},
 	render: function() {
 		var channels = [
