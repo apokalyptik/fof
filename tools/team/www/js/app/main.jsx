@@ -123,7 +123,7 @@ var App = React.createClass({
 					action="&times;" 
 					style={{
 			            bar: {
-			              top: '6rem',
+			              top: '1rem',
                           bottom: 'auto',
 			              font: '1.25rem normal Roboto, sans-serif',
 			              backgroundColor: '#CC0000',
@@ -149,7 +149,7 @@ var App = React.createClass({
 					message={this.state.success}
 					style={{
 			            bar: {
-			              top: '6rem',
+			              top: '1rem',
 			              bottom: 'auto',
 			              font: '1.25rem normal Roboto, sans-serif',
 			              backgroundColor: '#ADEBAD',
