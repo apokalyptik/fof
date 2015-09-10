@@ -32,8 +32,7 @@ module.exports = React.createClass({
 
 		var date = new Date(this.state.dateString + " " + this.state.timeString);
 
-		// client based timezone. Good idea, bad idea?
-		var timeZone = date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
+		var timeZone = this.getTimeZone(date);
 
 		//build POST parameter values
 		var dateString = this.state.dateString;
@@ -62,6 +61,96 @@ module.exports = React.createClass({
 				}
 				Dispatcher.dispatch({actionType: "set", key: "error", value: responseText});
 			}.bind(this));
+	},
+	getTimeZone: function(date) {
+		var offset = -( date.getTimezoneOffset() );
+		var isDst =  offset < this.stdTimezoneOffset();
+		var isUS = offset < 0;
+
+		if (date instanceof Date) {
+			
+			var timezone = "";
+
+			if (isUS) {
+				// convert DST to ST
+				if (isDst) {
+					offset = offset - 1;
+				}
+
+				// US times
+				switch(offset) {
+					case -10:
+						timezone = "H";
+						break;
+					case -9:
+						timezone = "AK";
+						break;
+					case -8:
+						timezone = "P";
+						break;
+					case -7:
+						timezone = "M";
+						break;
+					case -6:
+						timezone = "C";
+						break;
+					case -5:
+						timezone = "E";
+						break;
+					default:
+						return date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
+				}
+
+				if (isDst) {
+					return timezone + "DT";	// US Daylight Savings Time
+				} else if (isUS) {
+					return timezone + "ST";	// US Standard Time
+				}
+			} else {
+
+				//europe
+				switch (offset) {
+					case 0:
+						return "GMT";
+					case 1:
+						if (isDst) {
+							return "BST";
+						} else {
+							return "CET";
+						}
+					case 2:
+						if (isDst) {
+							return "CEST";
+						} else {
+							return "EET";
+						}
+					case 3:
+						if (isDst) {
+							return "EEST";
+						} else {
+							return "MSK";
+						}
+					case 4:
+						if (isDst) {
+							return "MSD";
+						} else {
+							return "SAMT";
+						}
+					default:
+						return date.toString().match(/\(([A-Za-z\s].*)\)/)[1];
+				}
+
+			}
+
+		} else {
+			return null;
+		}
+	},
+	stdTimezoneOffset: function() {
+		var now = new Date();
+		var jan = new Date(now.getFullYear(), 0, 1);
+		var jul = new Date(now.getFullYear(), 6, 1);
+		return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
 	},
 	handleRaid: function(event) { 
 		this.setState({ "raidName": event.target.value })
