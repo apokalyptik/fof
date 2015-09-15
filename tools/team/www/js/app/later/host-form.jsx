@@ -63,7 +63,7 @@ module.exports = React.createClass({
 			}.bind(this));
 	},
 	getTimeZone: function(date) {
-		var offset = -( date.getTimezoneOffset() );
+		var offset = -( date.getTimezoneOffset()/60 );
 		var isDst =  offset < this.stdTimezoneOffset();
 		var isUS = offset < 0;
 
