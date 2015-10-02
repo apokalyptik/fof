@@ -329,8 +329,14 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		username, _ := session.Values["username"].(string)
 		channel := r.Form.Get("channel")
 		raid := r.Form.Get("raid")
+
+		//Get Raid time
+		raidTime := r.Form.Get("time")
+		timeInt, _ := strconv.ParseInt(raidTime, 10, 64)
+		timeVal := time.Unix((timeInt / 1000), 0)
+
 		log.Printf("@%s on %s -- %s %s", username, channel, "host", raid)
-		msgs, err := raidHost(username, channel, raid)
+		msgs, err := raidHost(username, channel, raid, timeVal)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, msgs.stdOut())
