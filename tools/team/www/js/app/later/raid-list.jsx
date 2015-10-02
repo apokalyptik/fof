@@ -16,13 +16,10 @@ module.exports = React.createClass({
 				raids.push( this.props.data[channel][uuid] );
 			}
 			raids.sort(function(a, b) {
-				if ( a.created_at < b.created_at ) {
-					return -1;
-				}
-				if ( a.created_at > b.created_at ) {
-					return 1;
-				}
-				return 0;
+				var aDate = new Date(a["raid_time"]);
+				var bDate = new Date(b["raid_time"]);
+
+				return aDate.getTime() - bDate.getTime();
 			});
 			raidList = [];
 			for ( var i=0; i<raids.length; i++ ) {
