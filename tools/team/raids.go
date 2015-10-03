@@ -359,7 +359,7 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 			for _, raidentry := range raidlist {
 				switch raidentry.Type {
 				case "event":
-					if time.Now().Add(0 - maxAge).After(raidentry.CreatedAt) {
+					if time.Now().After(raidentry.RaidTime) {
 						go r.finish(channel, raidentry.Name, raidentry.Members[0])
 						log.Printf("Expiring %s on #%s", raidentry.Name, channel)
 					}
