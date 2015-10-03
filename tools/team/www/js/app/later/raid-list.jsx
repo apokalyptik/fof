@@ -36,9 +36,11 @@ module.exports = React.createClass({
 				raidList = ( <span>This channel has no raids</span> );
 			}
 		}
+
+		var helpStyle={color: '#000000'};
 		return(
 			<div className="col-md-6">
-				<h4>Events</h4>
+				<h4>Events <small style={helpStyle}>(times are shown in your current timezone)</small></h4>
 				{raidList}
 			</div>
 		);
