@@ -40,10 +40,12 @@ module.exports = React.createClass({
 		}
 		*/
 
+		var display = 'inline-block';
 		this.raidTitle = this.props.data.raid_title;
 		if (this.raidTitle == "") {
 			this.raidTitle = this.props.data.name;
 			this.dateString = "";
+			display = 'none';
 		} else {
 			var month = then.getMonth()*1 +1;
 			var date = then.getDate();
@@ -64,14 +66,20 @@ module.exports = React.createClass({
 			this.dateString = month + "/" + date + " " + hours + ":" + minutes + ampm;
 		}
 
+		var dateLabelStyle = {
+			width: '8.095238095238095em',
+			display: display,
+			textAlign: 'left'
+		}
+
 		return (
 			<div className={className}>
 				<div className="row">
 					<div className="col-md-12">
 						<a onClick={this.click} className="btn btn-small btn-default btn-block pull-left" href="#">
 							<span className="pull-left">
-								<span className="label label-primary">{this.dateString}</span>&nbsp;
-								{this.raidTitle} &nbsp;
+								<span className="label label-primary" style={dateLabelStyle}>{this.dateString}</span>&nbsp;
+								<strong>{this.raidTitle}</strong> &nbsp;
 								<span className={'badge'}>{this.props.number}</span>
 							</span>
 						</a>
