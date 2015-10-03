@@ -52,6 +52,7 @@ type raid struct {
 	Secret    string    `json:"secret"`
 	Type      string    `json:"type"`
 	RaidTime  time.Time `json:"raid_time"`
+	RaidTitle string    `json:"raid_title"`
 }
 
 func (r *raid) hmacForUser(username string) string {
@@ -275,7 +276,7 @@ func (r *raids) finish(channel, name, user string) error {
 		channel)
 }
 
-func (r *raids) register(channel, name, user string, raidTime time.Time) error {
+func (r *raids) register(channel, name, user string, raidTime time.Time, raidTitle string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	defer r.save()
@@ -294,6 +295,7 @@ func (r *raids) register(channel, name, user string, raidTime time.Time) error {
 		UUID:      uuid.New(),
 		Secret:    uuid.New(),
 		RaidTime:  raidTime,
+		RaidTitle: raidTitle,
 	})
 	return nil
 }
@@ -323,6 +325,7 @@ func (r *raids) cache() {
 				"alts":       raid.Alts,
 				"created_at": raid.CreatedAt,
 				"raid_time":  raid.RaidTime,
+				"raid_title": raid.RaidTitle,
 			}
 		}
 	}
@@ -402,8 +405,8 @@ func (r *raids) load(filename string) error {
 	return nil
 }
 
-func raidHost(username, channel, raid string, raidTime time.Time) (raidCommandResponses, error) {
-	if err := raidDb.register(channel, raid, username, raidTime); err != nil {
+func raidHost(username, channel, raid string, raidTime time.Time, raidTitle string) (raidCommandResponses, error) {
+	if err := raidDb.register(channel, raid, username, raidTime, raidTitle); err != nil {
 		return raidCommandResponses{
 			"@" + username: err.Error(),
 			"-":            err.Error(),
