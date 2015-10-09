@@ -20,7 +20,7 @@ module.exports = {
 }
 
 if ( production ) {
-	module.exports.plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true}));
+	module.exports.plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true, compress: { warnings: false } }));
 	module.exports.output.filename = "./www/js/production.js";
 }
 
