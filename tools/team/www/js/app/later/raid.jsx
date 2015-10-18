@@ -14,31 +14,6 @@ module.exports = React.createClass({
 		var now = new Date();
 		var then = new Date(this.props.data.raid_time);
 		
-		/* this code no longer used, but leaving it here just in case
-		var agoString = "";
-		var seconds = Math.round( (then.getTime()/1000) - (now.getTime()/1000) );
-		
-		if (seconds < 0) {
-			agoString = "";
-		} else if (seconds < 60) {
-			agoString = seconds + "s ";
-		} else {
-			var minutes = (seconds / 60).toFixed(1);
-
-			if (minutes < 60) {
-				agoString = minutes + "m ";
-			} else {
-				var hours = (minutes / 60).toFixed(1);
-
-				if (hours < 24) {
-					agoString = hours + "h ";
-				} else {
-					var days = (hours / 24).toFixed(1);
-					agoString = days + "d ";
-				}
-			}
-		}
-		*/
 
 		var display = 'inline-block';
 		this.raidTitle = this.props.data.raid_title;
@@ -57,6 +32,8 @@ module.exports = React.createClass({
 			} else if (hours > 12) {
 				hours = (hours - 12);
 				ampm = "pm";	
+			} else if (hours == 12) {
+				ampm = "pm"
 			}
 			var minutes = then.getMinutes();
 			if (minutes < 10) {
