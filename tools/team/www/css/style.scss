@@ -73,6 +73,31 @@ $default_rounded_amount: .25em;
 	background: $wg;
 }
 
+.raid {
+	.timeTitle {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: left;
+	}
+
+	.members {
+		padding-left: 0;
+		.badge {
+			background-color: #666666;
+		}
+	}
+	
+	&.active {
+		.timeTitle {
+			white-space: normal;
+			overflow: auto;	
+		}
+	}
+}
+
+
+
 h4.alternate, .member.alternate > span {
 	opacity: 0.50;
 }

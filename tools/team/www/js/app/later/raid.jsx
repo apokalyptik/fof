@@ -52,13 +52,17 @@ module.exports = React.createClass({
 		return (
 			<div className={className}>
 				<div className="row">
-					<div className="col-md-12">
+					<div className="col-xs-12">
 						<a onClick={this.click} className="btn btn-small btn-default btn-block pull-left" href="#">
-							<span className="pull-left">
-								<span className="label label-primary" style={dateLabelStyle}>{this.dateString}</span>&nbsp;
-								<strong>{this.raidTitle}</strong> &nbsp;
-								<span className={'badge'}>{this.props.number}</span>
-							</span>
+							<div className="row">
+								<div className="timeTitle col-xs-11">
+									<span className="raidTime label label-primary" style={dateLabelStyle}>{this.dateString}</span>&nbsp;
+									<span className="raidTitle">{this.raidTitle}&nbsp;</span>
+								</div>
+								<div className="members col-xs-1">
+									<span className={'badge'}>{this.props.number}</span>	
+								</div>
+							</div>	
 						</a>
 						
 					</div>
