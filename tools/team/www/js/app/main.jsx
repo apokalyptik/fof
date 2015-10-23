@@ -95,9 +95,9 @@ var App = React.createClass({
 		}
 
 		var crumbs = [
-			( <li key="appselect" className="box">
+			( <div key="appselect" className="box col-xs-2 nopadding">
 				  <SelectAnApp key="selectanapp" viewing={this.state.viewing}/>
-			  </li> )
+			  </div> )
 		];
 
 		crumbs.push((<MyLater key="mylater" state={this.state}/>));
@@ -109,7 +109,7 @@ var App = React.createClass({
 				break;
 			case "lfg":
 				WorkSpace = ( <LFGApp state={this.state.lfg}/> );
-				crumbs.push( ( <li key="crumb-lfg" className="box"><LFGSelectGame/></li> ) );
+				crumbs.push( ( <span key="crumb-lfg" className="box col-xs-1"><LFGSelectGame/></span> ) );
 				break;
 		}
 
@@ -178,10 +178,10 @@ var App = React.createClass({
 								FoF @{this.state.username}
 							</h2>
 							<div id="crumb-bar">
-								<ul className="breadcrumbs-lgr">
+								<div className="breadcrumbs-lgr row nomargin">
 									{crumbs}
-									<li className="rt"/>
-								</ul>
+									<div className="rt col-xs-1 nopadding"/>
+								</div>
 							</div>
 							<div className="notices">
 								{Error}
