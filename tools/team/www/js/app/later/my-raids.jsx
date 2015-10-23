@@ -72,11 +72,11 @@ module.exports = React.createClass({
 			);
 		})
 		return (
-			<li className="box">
-				<select value={this.props.state.raid} onChange={this.select}>
+			<div className="box col-xs-8 nopadding">
+				<select className="form-control" value={this.props.state.raid} onChange={this.select}>
 					{raidlist}
 				</select>
-			</li>
+			</div>
 		);
 	}
 });
