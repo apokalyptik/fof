@@ -51,6 +51,8 @@ type raid struct {
 	UUID      string    `json:"uuid"`
 	Secret    string    `json:"secret"`
 	Type      string    `json:"type"`
+	RaidTime  time.Time `json:"raid_time"`
+	RaidTitle string    `json:"raid_title"`
 }
 
 func (r *raid) hmacForUser(username string) string {
@@ -274,7 +276,7 @@ func (r *raids) finish(channel, name, user string) error {
 		channel)
 }
 
-func (r *raids) register(channel, name, user string) error {
+func (r *raids) register(channel, name, user string, raidTime time.Time, raidTitle string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	defer r.save()
@@ -292,6 +294,8 @@ func (r *raids) register(channel, name, user string) error {
 		Members:   []string{user},
 		UUID:      uuid.New(),
 		Secret:    uuid.New(),
+		RaidTime:  raidTime,
+		RaidTitle: raidTitle,
 	})
 	return nil
 }
@@ -320,6 +324,8 @@ func (r *raids) cache() {
 				"members":    raid.Members,
 				"alts":       raid.Alts,
 				"created_at": raid.CreatedAt,
+				"raid_time":  raid.RaidTime,
+				"raid_title": raid.RaidTitle,
 			}
 		}
 	}
@@ -332,6 +338,7 @@ func (r *raids) save() error {
 	}
 	fp, err := os.Create(r.filename)
 	if err != nil {
+		log.Printf("Error saving:", err.Error())
 		return err
 	}
 	defer r.cache()
@@ -350,9 +357,15 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 		r.lock.RLock()
 		for channel, raidlist := range r.data {
 			for _, raidentry := range raidlist {
+
 				switch raidentry.Type {
 				case "event":
-					if time.Now().Add(0 - maxAge).After(raidentry.CreatedAt) {
+					// if the raid time is empty, the value is -62135596800. This means we need to use maxAge/created date for expiration
+					var hasEmptyRaidTime = (raidentry.RaidTime.Unix() == -62135596800)
+					raidMaxLength, _ := time.ParseDuration("6h") // expire 6h past raid time
+					var isPastRaidTime = time.Now().After(raidentry.RaidTime.Add(raidMaxLength))
+					var isPastMaxAge = time.Now().After(raidentry.CreatedAt.Add(maxAge))
+					if (!hasEmptyRaidTime && isPastRaidTime) || isPastMaxAge {
 						go r.finish(channel, raidentry.Name, raidentry.Members[0])
 						log.Printf("Expiring %s on #%s", raidentry.Name, channel)
 					}
@@ -398,8 +411,8 @@ func (r *raids) load(filename string) error {
 	return nil
 }
 
-func raidHost(username, channel, raid string) (raidCommandResponses, error) {
-	if err := raidDb.register(channel, raid, username); err != nil {
+func raidHost(username, channel, raid string, raidTime time.Time, raidTitle string) (raidCommandResponses, error) {
+	if err := raidDb.register(channel, raid, username, raidTime, raidTitle); err != nil {
 		return raidCommandResponses{
 			"@" + username: err.Error(),
 			"-":            err.Error(),

@@ -16,13 +16,10 @@ module.exports = React.createClass({
 				raids.push( this.props.data[channel][uuid] );
 			}
 			raids.sort(function(a, b) {
-				if ( a.created_at < b.created_at ) {
-					return -1;
-				}
-				if ( a.created_at > b.created_at ) {
-					return 1;
-				}
-				return 0;
+				var aDate = new Date(a["raid_time"]);
+				var bDate = new Date(b["raid_time"]);
+
+				return aDate.getTime() - bDate.getTime();
 			});
 			raidList = [];
 			for ( var i=0; i<raids.length; i++ ) {
@@ -39,9 +36,11 @@ module.exports = React.createClass({
 				raidList = ( <span>This channel has no raids</span> );
 			}
 		}
+
+		var helpStyle={color: '#000000'};
 		return(
 			<div className="col-md-6">
-				<h4>Events</h4>
+				<h4>Events <small style={helpStyle}>(times are shown in your current timezone)</small></h4>
 				{raidList}
 			</div>
 		);

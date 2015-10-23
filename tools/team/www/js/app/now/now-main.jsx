@@ -126,7 +126,6 @@ var LFGApp = React.createClass({
 		},
 	],
 	getInitialState: function(){
-		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
 		return null;
 	},
 	isInMyOptions: function(option) {
