@@ -7,6 +7,7 @@ $gr:  #107c10; // Green
 $wh:  #f1f1f1; // White
 $wg:  #e1e1e1; // White Gray
 $lgr: #5dc21e; // Light Green
+$xlgr: #D4F5C0; //Xtra Light Green
 
 $default_rounded_amount: .25em;
 
@@ -78,6 +79,9 @@ $default_rounded_amount: .25em;
 	}
 
 	&.active {
+		a.btn {
+			background-color: $xlgr;
+		}
 		.timeTitle {
 			white-space: normal;
 			overflow: auto;	
