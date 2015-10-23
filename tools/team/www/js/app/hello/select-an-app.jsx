@@ -10,7 +10,7 @@ module.exports = SelectAnApp = React.createClass({
 		return (
 			<div className="btn-group selectApp">
 				<button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					<span className="glyphicon glyphicon-th-list" aria-hidden="true"></span><span className="hidden-xs">&nbsp;{buttonText}</span>
+					<span className="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span><span className="hidden-xs">&nbsp;{buttonText}</span>
 				</button>
 				<ul className="dropdown-menu">
 					<li><a href="#" data-value="events">{lfgLater}</a></li>
