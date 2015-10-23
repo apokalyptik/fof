@@ -23,21 +23,11 @@ $default_rounded_amount: .25em;
 }
 
 @mixin breadcrumbs($color) {
-	padding-left: 0.2em;
-	display: block;
+	padding-left: 0.4em;
 	.box {
-		position: relative;
-		display: inline-block;
-		height: 2em;
-		line-height: 1.6em;
+		height: 3.8rem;
 		border: 0.15em solid $lgr;
 		background-color: $lgr;
-		* {
-			position: relative;
-			display: inline-block;
-			height: 1.6em;
-			line-height: 1.6em;
-		}
 	}
 	.rt {
 		position: relative;
@@ -45,10 +35,9 @@ $default_rounded_amount: .25em;
 		padding: 0;
 		width: 0;
 		height: 0;
-		top: .75em;
-		border-top: 1em solid transparent;
+		border-top: 1.4em solid transparent;
 		border-left: 1em solid $lgr;
-		border-bottom: 1em solid transparent;
+		border-bottom: 1.4em solid transparent;
 	}
 }
 
@@ -87,7 +76,7 @@ $default_rounded_amount: .25em;
 			background-color: #666666;
 		}
 	}
-	
+
 	&.active {
 		.timeTitle {
 			white-space: normal;
@@ -155,8 +144,7 @@ h4, h5 {
 
 #crumb-bar {
 	// stackoverflow.com/questions/6483425/prevent-iphone-from-zooming-in-on-select-in-web-app
-	font-size: 16px;
-	line-height: 3.5em;
+	padding: 10px 0px 10px 0px;
 	background-color: $gr;
 	@include box-shadow( 1px, 1px, 1px, $mg);
 }
@@ -183,7 +171,7 @@ ul.lfgselect {
 	}
 }
 
-ul.breadcrumbs-lgr {
+div.breadcrumbs-lgr {
 	@include breadcrumbs($lgr);
 }
 
