@@ -11,6 +11,9 @@ module.exports = React.createClass({
 			raid: "",
 		}
 	},
+	componentDidMount: function() {
+		this.handleNewDateTimePicker();
+	},
 	submit: function(e) {
 		if ( this.state.channel == null || this.state.channel == "" ) {
 			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please select a channel"});
