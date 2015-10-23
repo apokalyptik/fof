@@ -39,6 +39,7 @@ module.exports = React.createClass({
 			action = {
 				actionType: "mset", 
 				what: [
+					{ key: "viewing", value: "events" },
 					{ key: "raid", value: "" },
 					{ key: "channel", value: "" }
 				]
@@ -48,6 +49,7 @@ module.exports = React.createClass({
 			action = {
 				actionType: "mset", 
 				what: [
+					{ key: "viewing", value: "events" },
 					{ key: "raid", value: option.dataset.uuid },
 					{ key: "channel", value: option.dataset.channel }
 				]
