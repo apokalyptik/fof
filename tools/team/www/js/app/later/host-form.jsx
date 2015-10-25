@@ -47,7 +47,7 @@ module.exports = React.createClass({
 				if ( data.status == 403 ) {
 					location.reload(true);
 				}
-				Dispatcher.dispatch({actionType: "set", key: "error", value: responseText});
+				Dispatcher.dispatch({actionType: "set", key: "error", value: data.responseText});
 			}.bind(this));
 	},
 	handleRaid: function(event) { 
