@@ -38,7 +38,7 @@ module.exports = React.createClass({
             date: initDate.getTime(),
             defaultHour: defaultHour,
             dateString: this.getDateValueString(initDate),
-            hourString: hours + "",
+            hourString: defaultHour + "",
             minuteString: minutes + "",
             ampmString: ampm,
             timeZoneString: timeZone,
