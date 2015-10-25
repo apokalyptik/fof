@@ -29,14 +29,19 @@ module.exports = React.createClass({
             defaultHour = defaultHour - 12;
         }
 
+        var ampm = (now.getHours() > 11 ? "PM" : "AM");
+        var timeZone = -(now.getTimezoneOffset()/60) + "00";
+        var dateTimeString = (now.getMonth() + 1) +  "/" + (now.getDate()) + "/" + now.getFullYear() + " " + hours + ":" + minutes  + " " + timeZone;
+        var initDate = new Date(dateTimeString);
+
         return {
-            date: now.getTime(),
+            date: initDate.getTime(),
             defaultHour: defaultHour,
-            dateString: this.getDateValueString(now),
+            dateString: this.getDateValueString(initDate),
             hourString: hours + "",
             minuteString: minutes + "",
-            ampmString: (now.getHours() > 11 ? "PM" : "AM"),
-            timeZoneString: -(now.getTimezoneOffset()/60) + "00",
+            ampmString: ampm,
+            timeZoneString: timeZone,
             timeZoneText: ""
         }
     },
