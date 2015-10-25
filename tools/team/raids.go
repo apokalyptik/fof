@@ -296,6 +296,7 @@ func (r *raids) register(channel, name, user string, raidTime time.Time, raidTit
 		Secret:    uuid.New(),
 		RaidTime:  raidTime,
 		RaidTitle: raidTitle,
+		Type:      "event",
 	})
 	return nil
 }
@@ -354,10 +355,9 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 	ticker := time.Tick(10 * time.Minute)
 	for {
 		<-ticker
-		r.lock.RLock()
+		r.lock.Lock()
 		for channel, raidlist := range r.data {
 			for _, raidentry := range raidlist {
-
 				switch raidentry.Type {
 				case "event":
 					// if the raid time is empty, the value is -62135596800. This means we need to use maxAge/created date for expiration
@@ -372,7 +372,7 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 				}
 			}
 		}
-		r.lock.RUnlock()
+		r.lock.Unlock()
 	}
 }
 

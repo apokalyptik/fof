@@ -158,18 +158,19 @@ module.exports = React.createClass({
 
         var minuteStyle = {
             paddingLeft: '0px',
-            paddingRight: '0px',
+            paddingRight: '8px',
             width: '20%'
         }
 
         var ampmStyle = {
             paddingLeft: '0px',
+			paddingRight: '7px',
             // width: '7rem'
         }
 
         var timezoneStyle = {
-            // paddingLeft: '0px',
-            
+             paddingLeft: '0px',
+			 float: 'right',
         }
 
         var colonStyle = {
