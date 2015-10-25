@@ -7,14 +7,14 @@ module.exports = React.createClass({
         var hours = now.getHours();
 
         var minutes = now.getMinutes();
-        if (minutes > 0 && minutes < 15) {
+        if (minutes >= 0 && minutes < 15) {
             minutes = 15;
-        } else if (minutes > 15 && minutes < 30) {
+        } else if (minutes >= 15 && minutes < 30) {
             minutes = 30;
-        } else if (minutes > 30 && minutes < 45) {
+        } else if (minutes >= 30 && minutes < 45) {
             minutes = 45;
-        } else if (minutes > 45 && minutes < 60) {
-            minutes = 0;
+        } else if (minutes >= 45 && minutes < 60) {
+            minutes = "00";
             if (hours == 23) {
                 hours = 0;
             } else {
