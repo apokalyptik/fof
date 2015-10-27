@@ -7,14 +7,14 @@ module.exports = React.createClass({
         var hours = now.getHours();
 
         var minutes = now.getMinutes();
-        if (minutes > 0 && minutes < 15) {
+        if (minutes >= 0 && minutes < 15) {
             minutes = 15;
-        } else if (minutes > 15 && minutes < 30) {
+        } else if (minutes >= 15 && minutes < 30) {
             minutes = 30;
-        } else if (minutes > 30 && minutes < 45) {
+        } else if (minutes >= 30 && minutes < 45) {
             minutes = 45;
-        } else if (minutes > 45 && minutes < 60) {
-            minutes = 0;
+        } else if (minutes >= 45 && minutes < 60) {
+            minutes = "00";
             if (hours == 23) {
                 hours = 0;
             } else {
@@ -29,15 +29,21 @@ module.exports = React.createClass({
             defaultHour = defaultHour - 12;
         }
 
+        var ampm = (now.getHours() > 11 ? "PM" : "AM");
+        var timeZone = -(now.getTimezoneOffset()/60) + "00";
+        var dateTimeString = (now.getMonth() + 1) +  "/" + (now.getDate()) + "/" + now.getFullYear() + " " + hours + ":" + minutes  + " " + timeZone;
+        var initDate = new Date(dateTimeString);
+
         return {
-            date: now.getTime(),
+            date: initDate.getTime(),
             defaultHour: defaultHour,
-            dateString: this.getDateValueString(now),
-            hourString: hours + "",
+            dateString: this.getDateValueString(initDate),
+            hourString: defaultHour + "",
             minuteString: minutes + "",
-            ampmString: (now.getHours() > 11 ? "PM" : "AM"),
-            timeZoneString: -(now.getTimezoneOffset()/60) + "00",
-            timeZoneText: ""
+            ampmString: ampm,
+            timeZoneString: timeZone,
+            timeZoneText: "",
+            isDst: this.checkIfDST(now)
         }
     },
     updateDate: function(){
@@ -53,7 +59,8 @@ module.exports = React.createClass({
         this.setState(
             {
                 date: newDate.getTime(),
-                timeZoneText: timeZoneText
+                timeZoneText: timeZoneText,
+                isDst: this.checkIfDST(newDate)
             },
             this.props.onChange);
     },
@@ -86,6 +93,9 @@ module.exports = React.createClass({
 
         return dateList;
     },
+    checkIfDST: function(date) {
+        return date.getTimezoneOffset() < this.stdTimezoneOffset();
+    },
     getTimeZones: function(){
         var timeZones = new Array();
         var standardUSZones = ["SAMT","MSK","EET","CET","GMT","AST","EST","CST","MST","PST","AKST","HAST"];
@@ -93,10 +103,7 @@ module.exports = React.createClass({
         var daylightUSZones = ["MSD","EEST","CEST","BST","GMT","ADT","EDT","CDT","MDT","PDT","AKDT","HADT"];
         var daylightUSOffsets = ["400","300","200","100","000","-300","-400","-500","-600","-700","-800","-900"];;
 
-        
-        var now = new Date();
-        var isDst =  now.getTimezoneOffset() < this.stdTimezoneOffset();
-        
+        var isDst = this.state.isDst; 
 
         for (i=0;i<standardUSZones.length;i++){
 

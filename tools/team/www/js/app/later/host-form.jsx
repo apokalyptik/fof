@@ -47,7 +47,7 @@ module.exports = React.createClass({
 				if ( data.status == 403 ) {
 					location.reload(true);
 				}
-				Dispatcher.dispatch({actionType: "set", key: "error", value: responseText});
+				Dispatcher.dispatch({actionType: "set", key: "error", value: data.responseText});
 			}.bind(this));
 	},
 	handleRaid: function(event) { 
@@ -65,9 +65,6 @@ module.exports = React.createClass({
 		var dateString = dateTimePicker.state.dateString;
 		var hour = dateTimePicker.state.hourString*1;
 		var minute = dateTimePicker.state.minuteString;
-		if (minute*1 < 10) {
-			minute = "0" + minute;
-		}
 		var timeString = hour + ":" + minute + dateTimePicker.state.ampmString.toLowerCase();
 		var timezoneString = dateTimePicker.state.timeZoneText;
 		this.setState({
