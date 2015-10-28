@@ -57,11 +57,19 @@ var LFGApp = React.createClass({
 			]
 		},
 		{
+			name: "King's Fall",
+			options: [
+				{ name: "Normal Mode" },
+				{ name: "Hard Mode" }
+			],
+		},
+		{
 			name: "Strikes",
 			options: [
-				{ name: "Weekly Nightfall" },
-				{ name: "Weekly Heroic" },
-				{ name: "Playlist"}
+				{ name: "Nightfall" },
+				{ name: "Legacy" },
+				{ name: "Vanguard" },
+				{ name: "Heroic" },
 			],
 		},
 		{
@@ -74,17 +82,18 @@ var LFGApp = React.createClass({
 				{ name: "Skirmish" },
 				{ name: "Clash" },
 				{ name: "Rumble" },
-				{ name: "Salvage" }
+				{ name: "Salvage" },
+				{ name: "Rift" },
+				{ name: "Mayhem" },
+				{ name: "Zone Control" },
 			],
 		},
 		{
 			name: "Bounties",
 			options: [
-				{ name: "Queen" },
-				{ name: "Eris" },
 				{ name: "Daily Bounties" },
 				{ name: "PvP Bounties" },
-				{ name: "Exotic Bounty" }
+				{ name: "Other" }
 			],
 		},
 		{
@@ -93,10 +102,12 @@ var LFGApp = React.createClass({
 			{ name: "Daily Mission" },
 			{ name: "House of Wolves" },
 			{ name: "The Dark Below" },
+			{ name: "The Taken King" },
 			{ name: "Earth" },
 			{ name: "Moon" },
 			{ name: "Venus" },
 			{ name: "Mars" },
+			{ name: "Dreadnaught" }
 			],
 		},
 		{
@@ -106,7 +117,8 @@ var LFGApp = React.createClass({
 				{ name: "Earth" },
 				{ name: "Moon" },
 				{ name: "Venus" },
-				{ name: "Mars" }
+				{ name: "Mars" },
+				{ name: "Dreadnaught" }
 			],
 		},
 		{
@@ -114,7 +126,13 @@ var LFGApp = React.createClass({
 			options: [
 				{ name: "Glimmer" },
 				{ name: "Patrol Missions" },
-				{ name: "Ether Chest" }
+				{ name: "Spinmetal" },
+				{ name: "Helium Filaments" },
+				{ name: "Spirit Bloom" },
+				{ name: "Relic Iron" },
+				{ name: "Wormspore" },
+				{ name: "Hadium Flakes" },
+				{ name: "Court of Oryx" }
 			],
 		},
 		{
@@ -122,6 +140,7 @@ var LFGApp = React.createClass({
 			options: [
 				{ name: "Gold Chest Hunting" },
 				{ name: "Ghost Collecting" },
+				{ name: "Fragment Hunting" }
 			]
 		},
 	],
