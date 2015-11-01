@@ -20,5 +20,6 @@ func main() {
 	}
 	slackClient = slack.New(slackCFG.Key)
 	flag.Parse()
+	go mindYoutube()
 	mindTwitch()
 }
