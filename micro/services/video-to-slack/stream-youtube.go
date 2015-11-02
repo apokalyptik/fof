@@ -17,13 +17,26 @@ var (
 	youtubeAPIKey              = ""
 	youtubeBaseURL             = "https://www.googleapis.com/youtube/v3"
 	youtubeLiveStreamSearchURL = "%s/search?part=snippet&eventType=live&type=video&channelId=%s&key=%s"
+	youtubeChannelDetailsURL   = "%s/channels?part=snippet&id=%s&key=%s"
 	youtubeLinkURL             = "https://gaming.youtube.com/watch?v=%s"
 	youtubeStreams             = make(map[string][]string)
+	youtubeStreamDetails       = make(map[string]youtubeChannelDetails)
 )
 
 type youtubeConfig struct {
 	Key      string   `json:"api_key"`
 	Channels []string `json:"channels"`
+}
+
+type youtubeChannelDetails struct {
+	Snippet struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	} `json:"snippet"`
+}
+
+type youtubeChannelDetailsResponse struct {
+	Items []youtubeChannelDetails `json:"items"`
 }
 
 type youtubeChannelsResponse struct {
@@ -37,6 +50,7 @@ type youtubeLiveStreamsResponseItem struct {
 		VideoId string `json:"videoId"`
 	} `json:"id"`
 	Snippet struct {
+		ChannelID            string `json:"channelId"`
 		Title                string `json:"title"`
 		Description          string `json:"description"`
 		ChannelTitle         string `json:"channelTitle"`
@@ -66,6 +80,9 @@ func doYoutubeMessage(liveStreamItem youtubeLiveStreamsResponseItem) {
 	messageParams.UnfurlLinks = true
 	messageParams.EscapeText = false
 	var channelTitle = liveStreamItem.Snippet.ChannelTitle
+	if channelTitle == "" {
+		channelTitle = youtubeStreamDetails[liveStreamItem.Snippet.ChannelID].Snippet.Title
+	}
 	if channelTitle == "" {
 		channelTitle = "Someone Forgot To Set A Channel Title"
 	}
@@ -102,6 +119,24 @@ func mindYoutube() {
 		}
 	}
 
+	for _, channel := range youtubeCFG.Channels {
+		var info youtubeChannelDetailsResponse
+		url := fmt.Sprintf(youtubeChannelDetailsURL, youtubeBaseURL, channel, youtubeCFG.Key)
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Fatalf("Error fetching channel details for %s: %s", channel, err.Error())
+		}
+		dec := json.NewDecoder(resp.Body)
+		if err := dec.Decode(&info); err != nil {
+			log.Fatalf("Error decoding channel details response for %s: %s", channel, err.Error())
+		}
+		if len(info.Items) < 1 {
+			log.Fatal("No details returned for the channel: %s", channel)
+		}
+		log.Printf("Channel %s has title %s", channel, info.Items[0].Snippet.Title)
+		youtubeStreamDetails[channel] = info.Items[0]
+	}
+
 	ticker := time.Tick(5 * time.Minute)
 	for {
 		for _, channel := range youtubeCFG.Channels {
@@ -131,6 +166,7 @@ func mindYoutube() {
 				if found == true {
 					continue
 				}
+				log.Printf("Found new live stream %s on channel %s", liveStreamItem.Snippet.Title, liveStreamItem.Snippet.ChannelID)
 				doYoutubeMessage(liveStreamItem)
 			}
 			youtubeStreams[channel] = newLiveStreams
