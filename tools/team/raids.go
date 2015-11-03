@@ -426,7 +426,7 @@ func raidHost(username, channel, raid string, raidTime time.Time, raidTitle stri
 			"*%s* has been hosted on *#%s*. You will be notified when members join you",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			"*@%s* is hosting a new event *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to sign up",
+			":arrow_forward: *@%s* is hosting a new event *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to sign up",
 			username, raid),
 	}, nil
 }
@@ -441,7 +441,7 @@ func raidPing(username, channel, raid string) (raidCommandResponses, error) {
 	}
 	return raidCommandResponses{
 		"#" + channel: fmt.Sprintf(
-			"pinging @%s about *%s*",
+			":arrow_forward: pinging @%s about *%s*",
 			strings.Join(list, ", @"), raid),
 	}, nil
 }
@@ -458,7 +458,7 @@ func raidFinish(username, channel, raid string) (raidCommandResponses, error) {
 			"*%s* has been removed from #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			"*@%s* has removed *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to host/join a new event",
+			":arrow_forward: *@%s* has removed *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to host/join a new event",
 			username, raid),
 	}, nil
 }
@@ -480,9 +480,6 @@ func raidLeave(username, channel, raid string) (raidCommandResponses, error) {
 		"@" + username: fmt.Sprintf(
 			"You have removed yourself from *%s* on #%s",
 			raid, channel),
-		"#" + channel: fmt.Sprintf(
-			"*@%s* has removed themselves from *%s*. Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to take their place",
-			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"@%s has removed themselves from *%s* on #%s",
 			username, raid, channel),
@@ -501,9 +498,6 @@ func raidAltLeave(username, channel, raid string) (raidCommandResponses, error) 
 		"@" + username: fmt.Sprintf(
 			"You have removed yourself from *%s* on #%s",
 			raid, channel),
-		"#" + channel: fmt.Sprintf(
-			"*@%s* has removed themselves as an alternate from *%s*. Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to take their place",
-			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"*@%s* is no longer signed up as an alternate for *%s* on #%s",
 			username, raid, channel),
@@ -523,7 +517,7 @@ func raidJoin(username, channel, raid string) (raidCommandResponses, error) {
 			"You have signed up for *%s* on #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			"*@%s* has signed for *%s* Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to join them",
+			":arrow_forward: *@%s* has signed for *%s* Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to join them",
 			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"*@%s* has signed up to join you in *%s* on #%s",
@@ -544,7 +538,7 @@ func raidAltJoin(username, channel, raid string) (raidCommandResponses, error) {
 			"You have signed up to be an alternate in *%s* on #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			"*@%s* has signed for *%s* as an alternate. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to join them",
+			":arrow_forward: *@%s* has signed for *%s* as an alternate. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to join them",
 			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"*@%s* has signed up to be an alternate in *%s* on #%s",
