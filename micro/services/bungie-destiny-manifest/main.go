@@ -16,14 +16,27 @@ var manifestBaseURL = "http://www.bungie.net%s"
 var dataPath = "/tmp/bungie-desiny-manifest-db"
 var dataTempPath = "/tmp/bungie-desiny-manifest-db.tmp"
 var lang = "en"
+var apiKey = "..."
 
 var listen = "0.0.0.0:8883"
 
 func init() {
+	flag.StringVar(&apiKey, "apikey", apiKey, "Bungie Platform API Key ( https://www.bungie.net/en/User/API )")
 	flag.StringVar(&listen, "listen", listen, "address and port number to listen on")
 	flag.StringVar(&dataPath, "data", dataPath, "path to store the manifest DB in")
 	flag.StringVar(&dataTempPath, "tmp", dataTempPath, "path to temporarily store the new database when updating")
 	flag.StringVar(&lang, "lang", lang, "language")
+}
+
+func bungieGet(URL string) (*http.Response, error) {
+	if req, err := http.NewRequest("GET", URL, nil); err != nil {
+		return nil, err
+	} else {
+		var c = &http.Client{}
+		req.Header.Add("X-API-Key", apiKey)
+		req.Header.Add("User-Agent", "FederationOfFathers-ManifestBot/0.1 (http://fofgaming.com/)")
+		return c.Do(req)
+	}
 }
 
 func main() {

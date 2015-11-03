@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"sync"
 
@@ -77,7 +76,7 @@ func (d *db) update() error {
 			MobileWorldContentPaths map[string]string `json:"mobileWorldContentPaths"`
 		}
 	}{}
-	resp, err := http.Get(findManifestURL)
+	resp, err := bungieGet(findManifestURL)
 	if err != nil {
 		return err
 	}
@@ -95,7 +94,12 @@ func (d *db) update() error {
 		return nil
 	}
 
-	zr, err := httpzip.ReadURL(fmt.Sprintf(manifestBaseURL, manifestListResponse.Response.MobileWorldContentPaths[lang]))
+	resp2, err := bungieGet(fmt.Sprintf(manifestBaseURL, manifestListResponse.Response.MobileWorldContentPaths[lang]))
+	if err != nil {
+		return err
+	}
+	defer resp2.Body.Close()
+	zr, err := httpzip.Read(resp2)
 	if err != nil {
 		return err
 	}
