@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Println("Starting up...")
+	log.Println("[m] Starting up...")
 	if buf, err := ioutil.ReadFile(slackConfigFile); err != nil {
 		log.Fatal(err)
 	} else {

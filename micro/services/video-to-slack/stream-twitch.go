@@ -27,6 +27,7 @@ func init() {
 }
 
 func mindTwitch() {
+	log.Println("[tw] Starting up")
 	if buf, err := ioutil.ReadFile(twitchConfigFile); err != nil {
 		log.Fatal(err)
 	} else {
@@ -59,20 +60,20 @@ func mindTwitch() {
 						if oid != sid {
 							found = true
 							log.Printf(
-								"Found changed stream for %s id: %d -> %d\n%s",
+								"[tw] Found changed stream for %s id: %d -> %d\n%s",
 								c, oid, *s.ID, detailsString,
 							)
 						} else {
 							lastActive[c] = time.Now()
 							log.Printf(
-								"Continued twitch stream for %s id: %d\n",
+								"[tw] Continued twitch stream for %s id: %d\n",
 								c, *s.ID,
 							)
 						}
 					} else {
 						found = true
 						log.Printf(
-							"Found twitch stream for %s id: %d\n%s",
+							"[tw] Found twitch stream for %s id: %d\n%s",
 							c, *s.ID, detailsString,
 						)
 					}
@@ -84,7 +85,11 @@ func mindTwitch() {
 						}
 						lastActive[c] = time.Now()
 						if time.Now().Sub(lastSeen) < (15 * time.Minute) {
-							log.Printf("Skipping twitch %s because of recent activity %s ago", c, time.Now().Sub(lastSeen).String())
+							log.Printf(
+								"[tw] Skipping twitch %s because of recent activity %s ago",
+								c,
+								time.Now().Sub(lastSeen).String(),
+							)
 							continue
 						}
 						displayName := c
@@ -113,25 +118,25 @@ func mindTwitch() {
 							messageParams,
 						)
 						if err != nil {
-							log.Printf("Error sending slack message: %s", err.Error())
+							log.Printf("[tw] Error sending slack message: %s", err.Error())
 						}
 					}
 				} else {
-					log.Printf("Found no twitch stream for %s", c)
+					log.Printf("[tw] Found no twitch stream for %s", c)
 				}
 			} else {
-				log.Printf("Error checking twitch stream: %s", err.Error())
+				log.Printf("[tw] Error checking twitch stream: %s", err.Error())
 			}
 		}
 		for k := range active {
 			if _, ok := streamers[k]; !ok {
-				log.Printf("Removing twitch stream: %s", k)
+				log.Printf("[tw] Removing twitch stream: %s", k)
 				delete(active, k)
 			}
 		}
 		for k := range lastActive {
 			if time.Now().Sub(lastActive[k]) > (30 * time.Minute) {
-				log.Printf("Removing last activity marker for twitch stream: %s", k)
+				log.Printf("[tw] Removing last activity marker for twitch stream: %s", k)
 				delete(lastActive, k)
 			}
 		}

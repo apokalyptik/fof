@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/nlopes/slack"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/nlopes/slack"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 	youtubeCFG                 = youtubeConfig{}
 	youtubeAPIKey              = ""
 	youtubeBaseURL             = "https://www.googleapis.com/youtube/v3"
-	youtubeLiveStreamSearchURL = "%s/search?part=snippet&eventType=live&type=video&channelId=%s&key=%s"
+	youtubeLiveStreamSearchURL = "%s/search?part=snippet&eventType=live&type=video&channelId=%s&key=%s&publishedAfter=%s"
 	youtubeChannelDetailsURL   = "%s/channels?part=snippet&id=%s&key=%s"
 	youtubeLinkURL             = "https://gaming.youtube.com/watch?v=%s"
 	youtubeStreams             = make(map[string][]string)
@@ -106,11 +107,12 @@ func doYoutubeMessage(liveStreamItem youtubeLiveStreamsResponseItem) {
 		messageParams,
 	)
 	if err != nil {
-		log.Printf("error sending message to channel: %s", err.Error())
+		log.Printf("[yt] error sending message to channel: %s", err.Error())
 	}
 }
 
 func mindYoutube() {
+	log.Println("[yt] Starting up")
 	if buf, err := ioutil.ReadFile(youtubeConfigFile); err != nil {
 		log.Fatal(err)
 	} else {
@@ -124,35 +126,42 @@ func mindYoutube() {
 		url := fmt.Sprintf(youtubeChannelDetailsURL, youtubeBaseURL, channel, youtubeCFG.Key)
 		resp, err := http.Get(url)
 		if err != nil {
-			log.Fatalf("Error fetching channel details for %s: %s", channel, err.Error())
+			log.Fatalf("[yt] Error fetching channel details for %s: %s", channel, err.Error())
 		}
 		dec := json.NewDecoder(resp.Body)
 		if err := dec.Decode(&info); err != nil {
-			log.Fatalf("Error decoding channel details response for %s: %s", channel, err.Error())
+			log.Fatalf("[yt] Error decoding channel details response for %s: %s", channel, err.Error())
 		}
 		if len(info.Items) < 1 {
-			log.Fatal("No details returned for the channel: %s", channel)
+			log.Fatal("[yt] No details returned for the channel: %s", channel)
 		}
-		log.Printf("Channel %s has title %s", channel, info.Items[0].Snippet.Title)
+		log.Printf("[yt] Channel %s has title %s", channel, info.Items[0].Snippet.Title)
 		youtubeStreamDetails[channel] = info.Items[0]
 	}
 
-	ticker := time.Tick(5 * time.Minute)
+	loopTime := 5 * time.Minute
+	ticker := time.Tick(loopTime)
+	lastTime := time.Now().Add(0 - loopTime).Format(time.RFC3339)
+	nextLastTime := lastTime
 	for {
+		lastTime = nextLastTime
+		nextLastTime = time.Now().Format(time.RFC3339)
 		for _, channel := range youtubeCFG.Channels {
 			var liveStreams youtubeLiveStreamsResponse
-			url := fmt.Sprintf(youtubeLiveStreamSearchURL, youtubeBaseURL, channel, youtubeCFG.Key)
+			log.Println("[yt] Checking for streams on", youtubeStreamDetails[channel].Snippet.Title, "since", lastTime)
+			url := fmt.Sprintf(youtubeLiveStreamSearchURL, youtubeBaseURL, channel, youtubeCFG.Key, lastTime)
 			resp, err := http.Get(url)
 			if err != nil {
-				log.Printf("Error fetching channel information for %s: %s", channel, err.Error())
+				log.Printf("[yt] Error fetching channel information for %s: %s", channel, err.Error())
 				continue
 			}
 			dec := json.NewDecoder(resp.Body)
 			if err := dec.Decode(&liveStreams); err != nil {
 				resp.Body.Close()
-				log.Printf("Error parsing channel information for %s: %s", channel, err.Error())
+				log.Printf("[yt] Error parsing channel information for %s: %s", channel, err.Error())
 				continue
 			}
+			resp.Body.Close()
 			var newLiveStreams = []string{}
 			for _, liveStreamItem := range liveStreams.Items {
 				newLiveStreams = append(newLiveStreams, liveStreamItem.ID.VideoId)
@@ -166,7 +175,7 @@ func mindYoutube() {
 				if found == true {
 					continue
 				}
-				log.Printf("Found new live stream %s on channel %s", liveStreamItem.Snippet.Title, liveStreamItem.Snippet.ChannelID)
+				log.Printf("[yt] Found new live stream %s on channel %s", liveStreamItem.Snippet.Title, liveStreamItem.Snippet.ChannelID)
 				doYoutubeMessage(liveStreamItem)
 			}
 			youtubeStreams[channel] = newLiveStreams
