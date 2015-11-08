@@ -426,7 +426,7 @@ func raidHost(username, channel, raid string, raidTime time.Time, raidTitle stri
 			"*%s* has been hosted on *#%s*. You will be notified when members join you",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			":arrow_forward: *@%s* is hosting a new event *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to sign up",
+			":arrow_forward: *@%s* is hosting a new event *%s*. Use the <http://fofgaming.com/team|team tool> ('/team’) to sign up",
 			username, raid),
 	}, nil
 }
@@ -441,7 +441,7 @@ func raidPing(username, channel, raid string) (raidCommandResponses, error) {
 	}
 	return raidCommandResponses{
 		"#" + channel: fmt.Sprintf(
-			":arrow_forward: pinging @%s about *%s*",
+			":exclamation: pinging @%s about *%s*",
 			strings.Join(list, ", @"), raid),
 	}, nil
 }
@@ -458,7 +458,7 @@ func raidFinish(username, channel, raid string) (raidCommandResponses, error) {
 			"*%s* has been removed from #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			":arrow_forward: *@%s* has removed *%s*. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to host/join a new event",
+			":x: *@%s* has removed *%s*. Use the <http://fofgaming.com/team|team tool> (‘/team’) to host/join a new event",
 			username, raid),
 	}, nil
 }
@@ -517,7 +517,7 @@ func raidJoin(username, channel, raid string) (raidCommandResponses, error) {
 			"You have signed up for *%s* on #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			":arrow_forward: *@%s* has signed for *%s* Use the <http://fofgaming.com/team/|team tool> or type ‘/team’ to join them",
+			":heavy_plus_sign: *@%s* has joined *%s* Use the <http://fofgaming.com/team/|team tool> (‘/team’) to join them",
 			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"*@%s* has signed up to join you in *%s* on #%s",
@@ -538,7 +538,7 @@ func raidAltJoin(username, channel, raid string) (raidCommandResponses, error) {
 			"You have signed up to be an alternate in *%s* on #%s",
 			raid, channel),
 		"#" + channel: fmt.Sprintf(
-			":arrow_forward: *@%s* has signed for *%s* as an alternate. Use the <http://fofgaming.com/team|team tool> or type ‘/team’ to join them",
+			":heavy_plus_sign: *@%s* has joined *%s* as an alternate. Use the <http://fofgaming.com/team|team tool> (‘/team’) to join them",
 			username, raid),
 		"@" + owner: fmt.Sprintf(
 			"*@%s* has signed up to be an alternate in *%s* on #%s",
