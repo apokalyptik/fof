@@ -30,7 +30,7 @@
 **Config and building**
 - In terminal enter `go get github.com/apokalyptik/fof/tools/team` (*you might get an error, but ignore it for now*).
 - Copy `config.yaml.example` to `config.yaml`. Add a slack API token (*free teams at [slack.com](https://slack.com/)*).
-- `cd $GOPATH/github.com/apokalyptik/fof/tools/team`
+- `cd $GOPATH/src/github.com/apokalyptik/fof/tools/team`
 - run `make`
 - run `./team`
 
