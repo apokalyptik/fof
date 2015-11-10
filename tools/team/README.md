@@ -40,6 +40,6 @@
 
 ## Developing
 
-Follow the above instructions. You will also need to install watchify binary (`npm install -g watchify`). Then, instead of `make` run `make && make dev`. This will recompile the react JS files as they are edited and saved. These changes can be viewed at [http://localhost:8878](http://localhost:8878). 
+Follow the above instructions. You will also need to install watchify binary (`npm install -g watchify`). Then, instead of `make` run `make && make dev`. This will recompile the react JS files as they are edited and saved. These changes can be viewed at [http://localhost:8878/dev](http://localhost:8878/dev). 
 
 If you run into errors when running `make` or `make && make dev`, you may also need to install browserify (`npm install -g browserify`). The first time you run `make` you may need to use `sudo` (for Mac). After the initial build, you should be able to run `make` without `sudo`.
