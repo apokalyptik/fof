@@ -138,6 +138,11 @@ module.exports = React.createClass({
 			}.bind(this.props.data[this.props.channel][this.props.raid])}>📅</a></span>)
 		}
 
+		// Disable for now (doesn't work on mobile safari, maybe others...)
+		// I think the parent JS needs to be edited to use a data uri
+		// -- https://en.wikipedia.org/wiki/Data_URI_scheme
+		ics = null;
+
 		return(
 			<div className="col-md-3">
 			<h4>Members{ics}</h4>
