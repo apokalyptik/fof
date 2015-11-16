@@ -121,9 +121,26 @@ module.exports = React.createClass({
 				}
 			}
 		}
+		
+		var ics = null;
+		if ( this.props.raid !== "" ) {
+			ics = (<span style={{"float":"right"}}><a href="#" onClick={function(e) {
+				var start = new Date(this.raid_time);
+				var stop = new Date(new Date(this.raid_time).getTime() + 1800000);
+				var cal = window.ics();
+				cal.addEvent(this.raid_title, this.raid_title, "Federation of Fathers", start, stop);
+				console.log(start);
+				console.log(stop);
+				console.log(cal);
+				cal.download(this.raid_title)
+				e.stopPropagation()
+				e.preventDefault()
+			}.bind(this.props.data[this.props.channel][this.props.raid])}>📅</a></span>)
+		}
+
 		return(
 			<div className="col-md-3">
-				<h4>Members</h4>
+			<h4>Members{ics}</h4>
 				{myMemberList}
 				{myAltList}
 				<div style={{padding: "0.15em"}}>
