@@ -129,19 +129,21 @@ module.exports = React.createClass({
 				var stop = new Date(new Date(this.raid_time).getTime() + 1800000);
 				var cal = window.ics();
 				cal.addEvent(this.raid_title, this.raid_title, "Federation of Fathers", start, stop);
-				console.log(start);
-				console.log(stop);
-				console.log(cal);
-				cal.download(this.raid_title)
-				e.stopPropagation()
-				e.preventDefault()
+				var uri = '/ics?data=' + encodeURIComponent( cal.calendar() ) + "&title=" + encodeURIComponent( this.raid_title );
+				var link = document.createElement("a"); 
+
+				link.href = uri;
+				link.style = "visibility:hidden";
+				link.download = this.raid_title + ".ics";
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+
+				e.stopPropagation();
+				e.preventDefault();
+				window.location = uri;
 			}.bind(this.props.data[this.props.channel][this.props.raid])}>📅</a></span>)
 		}
-
-		// Disable for now (doesn't work on mobile safari, maybe others...)
-		// I think the parent JS needs to be edited to use a data uri
-		// -- https://en.wikipedia.org/wiki/Data_URI_scheme
-		ics = null;
 
 		return(
 			<div className="col-md-3">
