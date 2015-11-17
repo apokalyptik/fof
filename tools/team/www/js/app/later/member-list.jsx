@@ -129,8 +129,8 @@ module.exports = React.createClass({
 				var stop = new Date(new Date(this.raid_time).getTime() + 1800000);
 				var cal = window.ics();
 				cal.addEvent(this.raid_title, this.raid_title, "Federation of Fathers", start, stop);
-				var uri = '/ics?data=' + encodeURIComponent( cal.calendar() ) + "&title=" + encodeURIComponent( this.raid_title );
-				var link = document.createElement("a"); 
+				var calString = cal.calendar().replace(/DT(END|START);VALUE=DATE:/g, "DT$1:");
+				var uri = '/ics?data=' + encodeURIComponent( calString ) + "&title=" + encodeURIComponent( this.raid_title );
 				e.stopPropagation();
 				e.preventDefault();
 				window.location = uri;
