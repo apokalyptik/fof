@@ -131,14 +131,6 @@ module.exports = React.createClass({
 				cal.addEvent(this.raid_title, this.raid_title, "Federation of Fathers", start, stop);
 				var uri = '/ics?data=' + encodeURIComponent( cal.calendar() ) + "&title=" + encodeURIComponent( this.raid_title );
 				var link = document.createElement("a"); 
-
-				link.href = uri;
-				link.style = "visibility:hidden";
-				link.download = this.raid_title + ".ics";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-
 				e.stopPropagation();
 				e.preventDefault();
 				window.location = uri;
