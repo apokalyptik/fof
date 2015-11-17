@@ -3,9 +3,12 @@ package main
 import (
 	"crypto/rand"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"regexp"
 	"runtime"
 	"time"
 
@@ -17,6 +20,7 @@ import (
 
 var configFile string
 var admins []string
+var cleanFromFilename = regexp.MustCompile(`[^0-9a-zA-Z _-]$`)
 
 func init() {
 	flag.StringVar(&configFile, "config", "./config.yaml", "Path to YAML configuration")
@@ -134,6 +138,30 @@ func main() {
 		}
 		http.HandleFunc("/api", doHTTPPost)
 		http.HandleFunc("/rest/", doRESTRouter)
+		http.HandleFunc("/ics", func(w http.ResponseWriter, r *http.Request) {
+			session, _ := store.Get(r, "raidbot")
+			session.Options.MaxAge = 604800
+			uri, _ := url.ParseRequestURI(r.RequestURI)
+			if v, err := url.ParseQuery(uri.RawQuery); err != nil {
+				log.Println(err.Error())
+				doHTTPStatus(w, http.StatusInternalServerError)
+				return
+			} else {
+				if err := requireAPIKey(session, w); err != nil {
+					log.Println(err.Error())
+					doHTTPStatus(w, http.StatusInternalServerError)
+					return
+				}
+				if name, ok := session.Values["username"]; ok {
+					w.Header().Set("Content-Type", "text/Calendar")
+					w.Header().Set("Content-Disposition", "inline; filename="+cleanFromFilename.ReplaceAllString(v.Get("title"), "-")+".ics")
+					fmt.Fprintf(w, v.Get("data"))
+					log.Printf("@%s -- ics: %s", name.(string), v.Get("title"))
+				} else {
+					doHTTPStatus(w, http.StatusForbidden)
+				}
+			}
+		})
 
 		go mindChannelList()
 
