@@ -68,7 +68,7 @@ func main() {
 						"skipping",
 						humanize.Bytes(file.Size),
 						file.MimeType,
-						time.Now().Sub(time.Unix(file.Timestamp, 0)).String(),
+						humanize.Time(time.Unix(file.Timestamp, 0)),
 						fmt.Sprintf("'%s'", file.Name))
 					continue
 				}
@@ -78,7 +78,7 @@ func main() {
 						"delete failure",
 						humanize.Bytes(file.Size),
 						file.MimeType,
-						time.Now().Sub(time.Unix(file.Timestamp, 0)).String(),
+						humanize.Time(time.Unix(file.Timestamp, 0)),
 						fmt.Sprintf("'%s'", file.Name),
 						fmt.Sprintf("'%s'", err.Error()),
 					)
@@ -88,7 +88,7 @@ func main() {
 						"delete success",
 						humanize.Bytes(file.Size),
 						file.MimeType,
-						time.Now().Sub(time.Unix(file.Timestamp, 0)).String(),
+						humanize.Time(time.Unix(file.Timestamp, 0)),
 						fmt.Sprintf("'%s'", file.Name))
 					d.Body.Close()
 				}
