@@ -16,6 +16,9 @@ import (
 type seenMap map[string]time.Time
 
 func (s seenMap) saw(userID string) {
+	if userID == "" {
+		return
+	}
 	now := time.Now()
 	if last, ok := s[userID]; ok {
 		if now.Sub(last) < time.Minute {
@@ -69,6 +72,9 @@ func main() {
 			var id string
 			var when string
 			rows.Scan(&id, &when)
+			if id == "" {
+				continue
+			}
 			seen[id], err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", when)
 			if err != nil {
 				log.Println("failed parsing time", when, "for", id)
@@ -95,14 +101,39 @@ func main() {
 		msg := <-rtm.IncomingEvents
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
+			if ev.User == "" {
+				// Known not to have user data sometimes...
+				if ev.SubType == "message_changed" {
+					break
+				}
+				// Something new not having user data...
+				log.Printf("*slack.MessageEvent missing user data: %#v", *ev)
+				break
+			}
 			seen.saw(ev.User)
 		case *slack.PresenceChangeEvent:
+			if ev.User == "" {
+				log.Printf("*slack.PresenceChangeEvent missing user data: %#v", *ev)
+				break
+			}
 			seen.saw(ev.User)
 		case *slack.UserTypingEvent:
+			if ev.User == "" {
+				log.Printf("*slack.UserTypingEvent missing user data: %#v", *ev)
+				break
+			}
 			seen.saw(ev.User)
 		case *slack.UserChangeEvent:
+			if ev.User.ID == "" {
+				log.Printf("*slack.UserChangeEvent missing user data: %#v", *ev)
+				break
+			}
 			seen.saw(ev.User.ID)
 		case *slack.TeamJoinEvent:
+			if ev.User.ID == "" {
+				log.Printf("*slack.TeamJoinEvent missing user data: %#v", *ev)
+				break
+			}
 			seen.saw(ev.User.ID)
 		case *slack.RTMError:
 			log.Printf(ev.Error())
