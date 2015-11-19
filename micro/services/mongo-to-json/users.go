@@ -26,6 +26,7 @@ func userList(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 	var details struct {
 		Members []struct {
+			ID      string `json:"id"`
 			Name    string `json:"name"`
 			Bot     bool   `json:"is_bot"`
 			Deleted bool   `json:"deleted"`
@@ -41,6 +42,17 @@ func userList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	var destinyLookup = []struct {
+		UserID         string `bson:"userid"`
+		DestinyAccount string `bson:"account"`
+	}{}
+	if err := mdb.DB("fof").C("userLookup").Find(nil).Select(bson.M{"_id": -1, "userid": 1, "account": 1}).All(&destinyLookup); err != nil {
+		log.Printf("Error fetching destiny lookup docs for: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	rval := []map[string]string{}
 	for _, m := range details.Members {
 		if m.Bot {
@@ -49,12 +61,20 @@ func userList(w http.ResponseWriter, r *http.Request) {
 		if m.Deleted {
 			continue
 		}
+		var destiny = ""
+		for _, dUser := range destinyLookup {
+			if dUser.UserID == m.ID {
+				destiny = dUser.DestinyAccount
+			}
+		}
 		rval = append(rval, map[string]string{
 			"gamertag": m.Profile.FirstName,
 			"username": m.Name,
 			"avatar":   m.Profile.Avatar,
+			"destiny":  destiny,
 		})
 	}
+
 	e := json.NewEncoder(w)
 	e.Encode(rval)
 }
