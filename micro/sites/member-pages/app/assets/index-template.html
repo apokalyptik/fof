@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html{% if(o.htmlWebpackPlugin.files.manifest) { %} manifest="{%= o.htmlWebpackPlugin.files.manifest %}"{% } %}>
+	<head>
+		<meta charset="UTF-8">
+		<title>{%=o.htmlWebpackPlugin.options.title || 'Webpack App'%}</title>
+		<link href="/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="root"></div>
+		<script src="/bootstrap.min.js"></script>
+		<script src="/jquery.min.js"></script>
+	</body>
+</html>
