@@ -33,10 +33,10 @@ window.React = React;
 // to edit that directly
 var routing = require('aviator');
 var State = require('./state.js');
-routing.pushStateEnabled = false;
 routing.setRoutes({
 	target: {
 		onChange: function( req ) {
+			console.log( req.params );
 			State.set( { routing: req.params } );
 		},
 	},
