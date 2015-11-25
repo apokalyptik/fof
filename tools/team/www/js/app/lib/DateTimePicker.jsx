@@ -30,7 +30,7 @@ module.exports = React.createClass({
         }
 
         var ampm = (now.getHours() > 11 ? "PM" : "AM");
-        var timeZone = -(now.getTimezoneOffset()/60) + "00";
+        var timeZone = "-" + (now.getTimezoneOffset()/60) + "00";
         var dateTimeString = (now.getMonth() + 1) +  "/" + (now.getDate()) + "/" + now.getFullYear() + " " + hours + ":" + minutes  + " " + timeZone;
         var initDate = new Date(dateTimeString);
 
