@@ -10,6 +10,7 @@ var LFGApp = require('./now/now-main.jsx');
 var TeamApp = require('./later/later-main.jsx');
 var MyLater = require('./later/my-raids.jsx');
 var Notification = require("react-notification");
+var Report = require('./report-a-friend/main.jsx');
 
 var App = React.createClass({
 	getInitialState: function() {
@@ -110,6 +111,9 @@ var App = React.createClass({
 			case "lfg":
 				WorkSpace = ( <LFGApp state={this.state.lfg}/> );
 				crumbs.push( ( <span key="crumb-lfg" className="box col-xs-1"><LFGSelectGame/></span> ) );
+				break;
+			case "report":
+				WorkSpace = ( <Report state={this.state.report}/> );
 				break;
 		}
 

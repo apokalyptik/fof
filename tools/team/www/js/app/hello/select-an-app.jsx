@@ -6,7 +6,19 @@ module.exports = SelectAnApp = React.createClass({
 		var viewing = this.props.viewing;
 		var lfgNow = "LFG Now";
 		var lfgLater = "LFG Later";
-		var buttonText = viewing == "events" ? lfgLater : lfgNow;
+		var lfgReport = "Report a Member";
+		var buttonText = "";
+		switch ( viewing ) {
+			case "events":
+				buttonText = lfgLater;
+				break;
+			case "lfg":
+				buttonText = lfgNow;
+				break;
+			case "report":
+				buttonText = lfgReport;
+				break;
+		}
 		return (
 			<div className="btn-group selectApp">
 				<button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -15,6 +27,7 @@ module.exports = SelectAnApp = React.createClass({
 				<ul className="dropdown-menu">
 					<li><a href="#" data-value="events">{lfgLater}</a></li>
 					<li><a href="#" data-value="lfg">{lfgNow}</a></li>
+					<li><a href="#" data-value="report">{lfgReport}</a></li>
 				</ul>
 			</div>
 		);
