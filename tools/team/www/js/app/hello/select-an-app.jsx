@@ -6,7 +6,7 @@ module.exports = SelectAnApp = React.createClass({
 		var viewing = this.props.viewing;
 		var lfgNow = "LFG Now";
 		var lfgLater = "LFG Later";
-		var lfgReport = "Report a Member";
+		var lfgReport = "Report Bad Behavior";
 		var buttonText = "";
 		switch ( viewing ) {
 			case "events":

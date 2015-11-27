@@ -1,3 +1,4 @@
+Dispatcher = require('../lib/dispatcher.jsx');
 React = require('react');
 
 module.exports = React.createClass({
@@ -15,20 +16,31 @@ module.exports = React.createClass({
 	},
 	submit: function() {
 		if ( this.state.about == "" ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please choose a member"});
 			return;
 		}
 		if ( this.state.message == "" ) {
+			Dispatcher.dispatch({actionType: "set", key: "error", value: "Please supply a message"});
 			return;
 		}
+		Dispatcher.dispatch({actionType: "set", key: "error", value: ""});
+		Dispatcher.dispatch({actionType: "set", key: "success", value: "Submitting your report now..."});
 		this.setState({enabled: false});
 		jQuery.post("/rest/report", {
 			about:   this.state.about,
 			message: this.state.message
 		})
 		.done(function() {
+			Dispatcher.dispatch({actionType: "set", key: "success", value: "Report submitted!"});
 			this.setState({ about: "", message: "", enabled: true });
 		}.bind(this))
 		.fail(function() {
+			Dispatcher.dispatch({actionType: "set", key: "success", value: ""});
+			Dispatcher.dispatch({
+				actionType: "set", 
+				key: "error", 
+				value: "There was an error sending your report. Please try again in a few minutes"
+			});
 			this.setState({enabled: true});
 		}.bind(this))
 	},
@@ -38,7 +50,7 @@ module.exports = React.createClass({
 			disabled = false;
 		}
 		var members = [
-			(<option value="" key="-1">Who do you wish to Report?</option>),
+			(<option value="" key="-1">Who is behaving badly?</option>),
 		];
 		for ( var i=0; i<this.state.members.length; i++ ) {
 			members.push((
@@ -49,7 +61,7 @@ module.exports = React.createClass({
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-md-6 col-md-offset-3">
-						<h4>Report a Member</h4>
+						<h4>Report Bad Behavior</h4>
 						<div className="form-group">
 							<select className="form-control" id="about" name="about" value={this.state.about}
 								placeholder="required"

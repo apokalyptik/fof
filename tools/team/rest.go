@@ -390,7 +390,12 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		message := r.Form.Get("message")
 		log.Printf("@%s -- report @%s -- %s", username, about, message)
 
-		slackMessage := fmt.Sprintf("`report-a-member: @%s`\n> %s", about, strings.Replace(message, "\n", "\n> ", -1))
+		slackMessage := fmt.Sprintf(
+			"`report-a-member: @%s reported by @%s`\n> %s",
+			about,
+			username,
+			strings.Replace(message, "\n", "\n> ", -1),
+		)
 		for _, admin := range admins {
 			slack.msg().to("@" + admin).send(fmt.Sprintf(slackMessage))
 		}
