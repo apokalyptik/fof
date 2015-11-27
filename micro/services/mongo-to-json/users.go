@@ -89,7 +89,7 @@ func getUserlist() []byte {
 		if m.Deleted {
 			continue
 		}
-		if recentErr != nil {
+		if recentErr == nil {
 			if _, ok := recent[m.ID]; !ok {
 				continue
 			}
