@@ -378,5 +378,26 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		slack.msg().to("@" + to).send(fmt.Sprintf(
 			"@%s is also looking to play *%s*", username, about,
 		))
+	case "/rest/report":
+		if err := requireMethod("POST", w, r); err != nil {
+			return
+		}
+		if err := requireAPIKey(session, w); err != nil {
+			return
+		}
+		about := r.Form.Get("about")
+		username, _ := session.Values["username"].(string)
+		message := r.Form.Get("message")
+		log.Printf("@%s -- report @%s -- %s", username, about, message)
+
+		slackMessage := fmt.Sprintf(
+			"`report-a-member: @%s reported by @%s`\n> %s",
+			about,
+			username,
+			strings.Replace(message, "\n", "\n> ", -1),
+		)
+		for _, admin := range admins {
+			slack.msg().to("@" + admin).send(fmt.Sprintf(slackMessage))
+		}
 	}
 }
