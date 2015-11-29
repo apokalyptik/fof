@@ -39,16 +39,19 @@ module.exports = React.createClass({
 			<div className="container-fluid">
 				<div className="row">
 					<ChannelList
+						routing={this.props.routing}
 						data={this.props.state.raids}
-						selected={this.props.state.channel}
+						selected={this.props.routing.params.b}
 						host={hostButton}/>
 					<RaidList data={this.props.state.raids}
-						channel={this.props.state.channel}
-						selected={this.props.state.raid}/>
+						routing={this.props.routing}
+						channel={this.props.routing.params.b}
+						selected={this.props.routing.params.c}/>
 					<MemberList
+						routing={this.props.routing}
 						username={this.props.state.username}
-						channel={this.props.state.channel}
-						raid={this.props.state.raid}
+						channel={this.props.routing.params.b}
+						raid={this.props.routing.params.c}
 						data={this.props.state.raids}
 						admins={this.props.state.admins}/>
 				</div>

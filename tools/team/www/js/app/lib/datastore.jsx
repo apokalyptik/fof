@@ -1,8 +1,6 @@
 module.exports = {
 	callbacks: [],
 	data: {
-		raid: "", // Selected Raid UUID
-		channel: "", // Selected Raid Channel
 		authenticated: false,
 		checkedUsername: false,
 		username: "",
@@ -11,7 +9,6 @@ module.exports = {
 		updated_at: "",
 		hosting: false,
 		channels: [],
-		viewing: "hello",
 		lfg: {
 			username: "",
 			my: {},
@@ -22,6 +19,12 @@ module.exports = {
 		},
 		error: null,
 		success: null,
+	},
+	set: function(obj) {
+		for( var i in obj ) {
+			this.data[i] = obj[i];
+		}
+		this.emitChange();
 	},
 	setThings: function(what) {
 		for( var i=0; i<what.length; i++ ) {

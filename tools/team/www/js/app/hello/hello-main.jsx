@@ -1,22 +1,12 @@
 var React = require('react/addons');
 var Dispatcher = require('../lib/dispatcher.jsx');
 var Datastore = require('../lib/datastore.jsx');
-
-Dispatcher.register(function(payload) {
-	var doReRender = false;
-	switch ( payload.actionType ) {
-		case "hello-choose":
-			Datastore.setThing( "viewing", payload.value );
-			break;
-	}
-});
+var Routing = require('aviator');
 
 var Hello = React.createClass({
 	dispatch: function(event) {
-		Dispatcher.dispatch({
-			actionType: "hello-choose",
-			value: event.target.value}
-		);
+		Routing.navigate("/:section", { namedParams: { section: event.target.value } });
+		event.preventDefault();
 	},
 	render: function() {
 		return(
@@ -32,10 +22,10 @@ var Hello = React.createClass({
 
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
-						<button value="lfg" onClick={this.dispatch}
+						<button value="now" onClick={this.dispatch}
 							className="btn btn-block btn-default">Looking for Game Now</button>
 						or
-						<button value="events" onClick={this.dispatch}
+						<button value="later" onClick={this.dispatch}
 							className="btn btn-block btn-default">Looking for Game Later</button>
 					</div>
 				</div>

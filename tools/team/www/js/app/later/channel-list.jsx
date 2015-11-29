@@ -27,7 +27,7 @@ module.exports = React.createClass({
 					key={channels[i]}
 					number={channelRaids[i]}
 					name={channels[i]}
-					selected={this.props.selected}/> );
+					selected={this.props.routing.params.b}/> );
 			}
 			channelList = channels
 		}

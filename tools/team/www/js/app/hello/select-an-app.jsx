@@ -1,19 +1,19 @@
 React = require('react/addons');
 Dispatcher = require('../lib/dispatcher.jsx');
 Config = require('../config.js');
+Routing = require('aviator');
 
 module.exports = SelectAnApp = React.createClass({
 	render: function() {
-		var viewing = this.props.viewing;
 		var lfgNow = "LFG Now";
 		var lfgLater = "LFG Later";
 		var lfgReport = "Report Bad Behavior";
 		var buttonText = "";
-		switch ( viewing ) {
-			case "events":
+		switch ( this.props.routing.params.a ) {
+			case "later":
 				buttonText = lfgLater;
 				break;
-			case "lfg":
+			case "now":
 				buttonText = lfgNow;
 				break;
 			case "report":
@@ -21,8 +21,8 @@ module.exports = SelectAnApp = React.createClass({
 				break;
 		}
 		var items = [
-				( <li><a href="#" data-value="events">{lfgLater}</a></li> ),
-				( <li><a href="#" data-value="lfg">{lfgNow}</a></li> ),
+				( <li><a href="#" data-value="later">{lfgLater}</a></li> ),
+				( <li><a href="#" data-value="now">{lfgNow}</a></li> ),
 		];
 		if ( Config.features.report ) {
 			items.push( ( <li><a href="#" data-value="report">{lfgReport}</a></li> ) );
@@ -37,13 +37,11 @@ module.exports = SelectAnApp = React.createClass({
 		);
 	},
 	componentDidMount: function() {
-		var viewing = this.props.viewing;
 		$(".selectApp ul li a").bind("click tap",function(e){
 			e.preventDefault();
 			appName = $(e.target).data("value");
 			Dispatcher.dispatch({ actionType: "set", key: "error", value: "" });
-			Dispatcher.dispatch({ actionType: "set", key: "viewing", value: appName });
-
+			Routing.navigate('/:section', { namedParams: { section: appName } } );
 		});
 		
 	}
