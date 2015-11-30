@@ -7,7 +7,7 @@ module.exports = SelectAnApp = React.createClass({
 	render: function() {
 		var lfgNow = "LFG Now";
 		var lfgLater = "LFG Later";
-		var lfgReport = "Report Bad Behavior";
+		var lfgReport = "Submit a CoC Claim";
 		var buttonText = "";
 		switch ( this.props.routing.params.a ) {
 			case "later":
@@ -22,8 +22,10 @@ module.exports = SelectAnApp = React.createClass({
 		}
 		var items = [
 				( <li><a href="#" data-value="later">{lfgLater}</a></li> ),
-				( <li><a href="#" data-value="now">{lfgNow}</a></li> ),
 		];
+		if ( Config.features.now ) {
+			items.push(( <li><a href="#" data-value="now">{lfgNow}</a></li> ));
+		}
 		if ( Config.features.report ) {
 			items.push( ( <li><a href="#" data-value="report">{lfgReport}</a></li> ) );
 		}

@@ -1,5 +1,6 @@
 module.exports = {
 	features: {
-		report: false,
+		now: true,
+		report: true,
 	},
 }
