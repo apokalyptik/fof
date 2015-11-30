@@ -204,14 +204,14 @@ var App = React.createClass({
 								<div className="breadcrumbs-lgr row nomargin">
 									{crumbs}
 									<div className="rt col-xs-1 nopadding"/>
-									<button className="btn btn-default pull-right" style={{
+									<button className="hidden-xs btn btn-default pull-right" style={{
 										border: "0.15em solid #107c10", 
 										marginTop: "0.1em",
 										marginRight: "0.4em"
 									}} onClick={function(e){
 										e.preventDefault();
 										Routing.navigate("/report");
-									}}>Submit a CoC Claim</button>
+									}}>Report a Claim</button>
 								</div>
 							</div>
 							<div className="notices">

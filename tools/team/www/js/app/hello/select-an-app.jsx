@@ -7,7 +7,7 @@ module.exports = SelectAnApp = React.createClass({
 	render: function() {
 		var lfgNow = "LFG Now";
 		var lfgLater = "LFG Later";
-		var lfgReport = "Submit a CoC Claim";
+		var lfgReport = "Report a Claim";
 		var buttonText = "";
 		switch ( this.props.routing.params.a ) {
 			case "later":

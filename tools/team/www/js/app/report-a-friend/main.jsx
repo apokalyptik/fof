@@ -50,7 +50,7 @@ module.exports = React.createClass({
 			disabled = false;
 		}
 		var members = [
-			(<option value="" key="-1">Who is behaving badly?</option>),
+			(<option value="" key="-1">Choose a Member</option>),
 		];
 		for ( var i=0; i<this.state.members.length; i++ ) {
 			members.push((
@@ -61,17 +61,16 @@ module.exports = React.createClass({
 			<div className="container-fluid">
 				<div className="row">
 					<div className="col-md-6 col-md-offset-3">
-						<h4>Report Bad Behavior</h4>
+						<h4>Who are you reporting?</h4>
 						<div className="form-group">
 							<select className="form-control" id="about" name="about" value={this.state.about}
-								placeholder="required"
 								onChange={function(e) { this.setState({about: e.target.value}); }.bind(this)}>
 									{members}
 							</select>
 						</div>
 						
+						<h4>What do you report?</h4>
 						<div className="form-group">
-						<label htmlFor="message">What do you want to report about them?</label>
 							<textarea className="form-control" name="message" id="message" rows="3"
 								placeholder="required"
 								onChange={function(e) { this.setState({message: e.target.value}); }.bind(this)}

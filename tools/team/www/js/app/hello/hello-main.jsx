@@ -13,11 +13,11 @@ var Hello = React.createClass({
 		var sections = [];
 		if ( Config.features.now ) {
 			sections.push((<button value="now" onClick={this.dispatch}
-				className="btn btn-block btn-default">Looking for Game Now</button>));
+				className="btn btn-block btn-default btn-success">Looking for Game Now</button>));
 			sections.push(<span> or </span>);
 		}
 		sections.push((<button value="later" onClick={this.dispatch}
-			className="btn btn-block btn-default">Looking for Game Later</button>));
+			className="btn btn-block btn-default btn-success">Looking for Game Later</button>));
 
 		return(
 			<div className="container fluid">
@@ -34,7 +34,7 @@ var Hello = React.createClass({
 				
 				<div className="row">
 					<div className="col-md-4 col-md-offset-4 center">
-						<img style={{width:"100%"}} src="/logo.png"/>
+						<img style={{width:"75%"}} src="/logo.png"/>
 					</div>
 				</div>
 				
