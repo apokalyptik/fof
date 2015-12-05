@@ -205,7 +205,7 @@ var App = React.createClass({
 									{crumbs}
 									<div className="rt col-xs-1 nopadding"/>
 									<button className="hidden-xs btn btn-default pull-right" style={{
-										border: "0.15em solid #107c10", 
+										border: "0.15em solid #1b1c52", 
 										marginTop: "0.1em",
 										marginRight: "0.4em"
 									}} onClick={function(e){

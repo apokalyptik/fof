@@ -3,13 +3,23 @@ $lg:  #c2c2c2; // Light gray
 $mg:  #6b6b6b; // Medium gray
 $dg:  #3a3a3a; // Dark Gray
 $bl:  #000000; // Black
-$gr:  #107c10; // Green
+$gr:  #1b1c52; // Green
 $wh:  #f1f1f1; // White
 $wg:  #e1e1e1; // White Gray
-$lgr: #5dc21e; // Light Green
+$lgr: #26aae2; // Light Green
 $xlgr: #D4F5C0; //Xtra Light Green
 
 $default_rounded_amount: .25em;
+
+.btn-success {
+	background-color: #227bb3;
+	border-color: #227bb3;
+}
+
+.btn-success:hover, .btn-success:active, .btn-success:active:focus, .btn-success:focus {
+	border-color: $gr;
+	background-color: $gr;
+}
 
 @mixin round-corners($amount: $default_rounded_amount) {
 	border-radius: $amount;
