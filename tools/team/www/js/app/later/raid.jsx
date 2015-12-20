@@ -1,9 +1,17 @@
 React = require('react/addons');
 Dispatcher = require('../lib/dispatcher.jsx');
+Routing = require('aviator');
 
 module.exports = React.createClass({
 	click: function(e) {
-		Dispatcher.dispatch({actionType: "set", key: "raid", value: this.props.data.uuid});
+		Routing.navigate(
+			"/:section/:channel/:raid", 
+			{ namedParams: {
+				section: this.props.routing.params.a,
+				channel: this.props.routing.params.b,
+				raid: this.props.data.uuid,
+			} }
+		);
 		e.preventDefault();
 	},
 	render: function() {

@@ -151,7 +151,7 @@ module.exports = React.createClass({
         var dateList = this.getDates();
         var timeZones = this.getTimeZones();
         var now = new Date();
-        var currentOffset = -(now.getTimezoneOffset()/60) + "00";
+        var currentOffset = "-" + (now.getTimezoneOffset()/60) + "00";
 
         var hourStyle = {
             paddingRight: '0px',

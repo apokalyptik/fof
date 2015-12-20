@@ -10,6 +10,30 @@ var LFGApp = require('./now/now-main.jsx');
 var TeamApp = require('./later/later-main.jsx');
 var MyLater = require('./later/my-raids.jsx');
 var Notification = require("react-notification");
+var Report = require('./report-a-friend/main.jsx');
+var Routing = require('aviator');
+
+Routing.pushStateEnabled = false;
+Routing.setRoutes({
+	target: {
+		onChange: function( req, opts ) {
+			var defaults = { a:"", b:"", c:"" };
+			for ( var i in defaults ) {
+				if ( "undefined" === typeof req.params[i] ) {
+					req.params[i] = defaults[i]
+				}
+			}
+			Datastore.set({routing: { params: req.params, opts: opts } });
+		},
+	},
+	"/:a": {
+		"/:b": {
+			"/:c": {}
+		},
+	},
+	"/*": "onChange",
+});
+Routing.dispatch();
 
 var App = React.createClass({
 	getInitialState: function() {
@@ -90,27 +114,26 @@ var App = React.createClass({
 			);
 		}
 
-		if ( this.state.viewing == "hello" ) {
-			return ( <Hello/> );
-		}
-
 		var crumbs = [
 			( <div key="appselect" className="box col-xs-2 nopadding">
-				  <SelectAnApp key="selectanapp" viewing={this.state.viewing}/>
+				  <SelectAnApp key="selectanapp" routing={this.state.routing}/>
 			  </div> )
 		];
 
-		crumbs.push((<MyLater key="mylater" state={this.state}/>));
-
 		var WorkSpace;
-		switch ( this.state.viewing ) {
-			case "events":
-				WorkSpace = ( <TeamApp state={this.state}/> );
+		switch ( this.state.routing.params.a ) {
+			case "later":
+				crumbs.push((<MyLater key="mylater" state={this.state} routing={this.state.routing}/>));
+				WorkSpace = ( <TeamApp state={this.state} routing={this.state.routing}/> );
 				break;
-			case "lfg":
-				WorkSpace = ( <LFGApp state={this.state.lfg}/> );
-				crumbs.push( ( <span key="crumb-lfg" className="box col-xs-1"><LFGSelectGame/></span> ) );
+			case "now":
+				WorkSpace = ( <LFGApp state={this.state.lfg} routing={this.state.routing}/> );
 				break;
+			case "report":
+				WorkSpace = ( <Report state={this.state.report} routing={this.state.routing}/> );
+				break;
+			default:
+				return ( <Hello routing={this.state.routing}/> );
 		}
 
 		var Error;
@@ -181,6 +204,14 @@ var App = React.createClass({
 								<div className="breadcrumbs-lgr row nomargin">
 									{crumbs}
 									<div className="rt col-xs-1 nopadding"/>
+									<button className="hidden-xs btn btn-default pull-right" style={{
+										border: "0.15em solid #1b1c52", 
+										marginTop: "0.1em",
+										marginRight: "0.4em"
+									}} onClick={function(e){
+										e.preventDefault();
+										Routing.navigate("/report");
+									}}>Report a Claim</button>
 								</div>
 							</div>
 							<div className="notices">

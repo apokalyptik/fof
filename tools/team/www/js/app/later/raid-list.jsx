@@ -25,6 +25,7 @@ module.exports = React.createClass({
 			for ( var i=0; i<raids.length; i++ ) {
 				var raid = raids[i];
 				raidList.push( (<Raid
+					routing={this.props.routing}
 					key={raid.uuid}
 					leader={raids[i].members[0]}
 					select={this.props.select}

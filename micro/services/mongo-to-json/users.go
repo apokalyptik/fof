@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"sort"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
@@ -14,16 +15,45 @@ import (
 
 var usernameFilter = regexp.MustCompile("[^0-9a-zA-Z-_ ]")
 
-func userList(w http.ResponseWriter, r *http.Request) {
-	setCORS(w, r)
-	setJSON(w, r)
+var userListCache []byte
+var userListCacheAge time.Time
+
+func seenList() (map[string]time.Time, error) {
+	var recent = map[string]time.Time{}
+	if resp, err := http.Get("http://fofgaming.com:8890/seen.json"); err != nil {
+		log.Println("error fetching seen.json:", err.Error())
+		return recent, err
+	} else {
+		defer resp.Body.Close()
+		var data = map[string]time.Time{}
+		dec := json.NewDecoder(resp.Body)
+		if err := dec.Decode(&data); err != nil {
+			log.Println("error decoding seen.json:", err.Error())
+			return recent, err
+		}
+		maxAge := time.Now().Add(0 - (30 * 24 * time.Hour))
+		for id, t := range data {
+			if t.After(maxAge) {
+				recent[id] = t
+			}
+		}
+	}
+	return recent, nil
+}
+
+func getUserlist() []byte {
+	if userListCacheAge.After(time.Now().Add(0 - time.Hour)) {
+		return userListCache
+	}
 	resp, err := http.Get("http://127.0.0.1:8879/users.json")
 	if err != nil {
 		log.Printf("Error fetching user list: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return userListCache
 	}
 	defer resp.Body.Close()
+
+	recent, recentErr := seenList()
+
 	var details struct {
 		Members []struct {
 			ID      string `json:"id"`
@@ -39,8 +69,7 @@ func userList(w http.ResponseWriter, r *http.Request) {
 	d := json.NewDecoder(resp.Body)
 	if err := d.Decode(&details); err != nil {
 		log.Printf("Error unmarshaling user list: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return userListCache
 	}
 
 	var destinyLookup = []struct {
@@ -49,8 +78,7 @@ func userList(w http.ResponseWriter, r *http.Request) {
 	}{}
 	if err := mdb.DB("fof").C("userLookup").Find(nil).Select(bson.M{"_id": -1, "userid": 1, "account": 1}).All(&destinyLookup); err != nil {
 		log.Printf("Error fetching destiny lookup docs for: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return userListCache
 	}
 
 	rval := []map[string]string{}
@@ -60,6 +88,11 @@ func userList(w http.ResponseWriter, r *http.Request) {
 		}
 		if m.Deleted {
 			continue
+		}
+		if recentErr == nil {
+			if _, ok := recent[m.ID]; !ok {
+				continue
+			}
 		}
 		var destiny = ""
 		for _, dUser := range destinyLookup {
@@ -74,9 +107,19 @@ func userList(w http.ResponseWriter, r *http.Request) {
 			"destiny":  destiny,
 		})
 	}
+	if encoded, err := json.Marshal(rval); err != nil {
+		return userListCache
+	} else {
+		userListCache = encoded
+		userListCacheAge = time.Now()
+		return encoded
+	}
+}
 
-	e := json.NewEncoder(w)
-	e.Encode(rval)
+func userList(w http.ResponseWriter, r *http.Request) {
+	setCORS(w, r)
+	setJSON(w, r)
+	w.Write(getUserlist())
 }
 
 func memberDoc(w http.ResponseWriter, r *http.Request) {

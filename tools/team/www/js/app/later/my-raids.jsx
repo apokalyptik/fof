@@ -1,5 +1,6 @@
 React = require('react/addons');
 Dispatcher = require('../lib/dispatcher.jsx');
+Routing = require('aviator');
 
 module.exports = React.createClass({
 	isMember: function(raid) {
@@ -34,28 +35,22 @@ module.exports = React.createClass({
 		return myRaids;
 	},
 	select: function(e) {
-		var action;
+		e.preventDefault();
 		if ( e.target.value == "My Events" ) {
-			action = {
-				actionType: "mset", 
-				what: [
-					{ key: "viewing", value: "events" },
-					{ key: "raid", value: "" },
-					{ key: "channel", value: "" }
-				]
-			}
+			Routing.navigate("/:section", { namedParams: { section: "later" } } );
 		} else {
 			var option = $(e.target).find('[value="'+e.target.value+'"]')[0];
-			action = {
-				actionType: "mset", 
-				what: [
-					{ key: "viewing", value: "events" },
-					{ key: "raid", value: option.dataset.uuid },
-					{ key: "channel", value: option.dataset.channel }
-				]
-			}
+			Routing.navigate(
+				"/:section/:channel/:raid",
+				{ namedParams:
+					{ 
+						section: "later",
+						channel: option.dataset.channel,
+						raid: option.dataset.uuid,
+					}
+				}
+			);
 		}
-		Dispatcher.dispatch(action);
 	},
 	render: function() {
 		var raids = this.raids();
@@ -75,7 +70,7 @@ module.exports = React.createClass({
 		})
 		return (
 			<div className="box col-xs-8 nopadding">
-				<select className="form-control" value={this.props.state.raid} onChange={this.select}>
+				<select className="form-control" value={this.props.routing.params.c} onChange={this.select}>
 					{raidlist}
 				</select>
 			</div>
