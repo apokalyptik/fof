@@ -364,8 +364,7 @@ func (r *raids) mindExpiration(maxAge time.Duration) {
 					var hasEmptyRaidTime = (raidentry.RaidTime.Unix() == -62135596800)
 					raidMaxLength, _ := time.ParseDuration("6h") // expire 6h past raid time
 					var isPastRaidTime = time.Now().After(raidentry.RaidTime.Add(raidMaxLength))
-					var isPastMaxAge = time.Now().After(raidentry.CreatedAt.Add(maxAge))
-					if (!hasEmptyRaidTime && isPastRaidTime) || isPastMaxAge {
+					if !hasEmptyRaidTime && isPastRaidTime {
 						go r.finish(channel, raidentry.Name, raidentry.Members[0])
 						log.Printf("Expiring %s on #%s", raidentry.Name, channel)
 					}
