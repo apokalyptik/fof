@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -40,13 +41,28 @@ type Client struct {
 	lock      sync.Mutex
 }
 
-// AccountSummary returns data from the /{membershipType}/Account/{destinyMembershipId}/Summary/
-// endpoint
-func (c *Client) AccountSummary(platform int, id string, into interface{}) error {
-	if err := c.get(fmt.Sprintf("/%d/Account/%s/Summary/", platform, id), into); err != nil {
-		return err
-	}
-	return nil
+type Request struct {
+	*url.URL
+	url.Values
+	c *Client
+}
+
+func (r *Request) ToURL() string {
+	return fmt.Sprintf("%s%s?%s", r.c.baseURL, r.URL.String()[1:], r.Values.Encode())
+}
+
+func (r *Request) Into(into interface{}) error {
+	return r.c.get(r.URL.String()[1:]+"?"+r.Values.Encode(), into)
+}
+
+func (c *Client) AccountSummary(platform int, id string) (*Request, error) {
+	u, e := url.ParseRequestURI(fmt.Sprintf("/%d/Account/%s/Summary/", platform, id))
+	return &Request{URL: u, c: c, Values: url.Values{}}, e
+}
+
+func (c *Client) ActivityHistory(platform int, id string, cid string) (*Request, error) {
+	u, e := url.ParseRequestURI(fmt.Sprintf("/Stats/ActivityHistory/%d/%s/%s/", platform, id, cid))
+	return &Request{URL: u, c: c, Values: url.Values{}}, e
 }
 
 func (c *Client) get(uri string, into interface{}) error {
@@ -56,7 +72,8 @@ func (c *Client) get(uri string, into interface{}) error {
 		c.wait = nil
 	}
 	// Prepare our request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", c.baseURL, uri), nil)
+	//log.Println(fmt.Sprintf("%s%s", c.baseURL, uri))
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", c.baseURL, uri), nil)
 	c.lock.Unlock()
 	if err != nil {
 		return err
