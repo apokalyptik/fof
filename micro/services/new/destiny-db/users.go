@@ -5,19 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
 var errUserNotFound = fmt.Errorf("FOF User not found")
 
-var users = map[string]string{}       // username => gt
-var userIDs = map[string]string{}     // gt => username
-var gamertags = map[string]string{}   // username => gt and userid => gt
-var lastSeen = map[string]time.Time{} // todo: populate
-var destinyIDs = map[string]string{}  // todo: populate
-
-var usersLock sync.RWMutex
+var users = map[string]string{}       // username => gt. Only people seen < 30 days ago
+var userIDs = map[string]string{}     // gt => username. All members. Regardless of last seen time
+var gamertags = map[string]string{}   // username => gt and userid => gt. All members regardless of last seen time
+var lastSeen = map[string]time.Time{} // userID => last seen time, used for deciding whether a user gets into the users list
+var destinyIDs = map[string]string{}  // todo: populate, persist
 
 type slackUserListResponse struct {
 	OK      bool   `json:"ok"`
@@ -33,6 +30,22 @@ type slackUserListResponse struct {
 			GamerTag string `first_name`
 		} `json:"profile"`
 	} `json:"members"`
+}
+
+func updateSeenList() {
+	rsp, err := http.Get(creds["seenURL"])
+	if err != nil {
+		log.Println("error fetching seen list:", err.Error())
+		return
+	}
+	defer rsp.Body.Close()
+	var newLastSeen = map[string]time.Time{}
+	dec := json.NewDecoder(rsp.Body)
+	if err := dec.Decode(&newLastSeen); err != nil {
+		log.Println("error decoding seen data:", err.Error())
+		return
+	}
+	lastSeen = newLastSeen
 }
 
 func updateUserList() {
@@ -56,6 +69,7 @@ func updateUserList() {
 	var newUserList = map[string]string{}
 	var newUserIDs = map[string]string{}
 	var newGamertags = map[string]string{}
+	var seenCutoff = time.Now().Add(0 - (24 * 30 * time.Hour))
 	for _, v := range slackData.Members {
 		if v.Bot {
 			continue
@@ -69,7 +83,11 @@ func updateUserList() {
 		if v.UltraRestricted {
 			continue
 		}
-		newUserList[v.UserName] = v.UserID
+		if seen, ok := lastSeen[v.UserID]; ok {
+			if seen.After(seenCutoff) {
+				newUserList[v.UserName] = v.UserID
+			}
+		}
 		newUserIDs[v.UserID] = v.UserName
 		newGamertags[v.UserName] = v.Profile.GamerTag
 		newGamertags[v.UserID] = v.Profile.GamerTag
@@ -87,11 +105,10 @@ func updateUserList() {
 		}
 	}
 
-	usersLock.Lock()
+	log.Println("going from", len(users), "to", len(newUserList), "users")
 	users = newUserList
 	gamertags = newGamertags
 	userIDs = newUserIDs
-	usersLock.Unlock()
 
 	for i := range added {
 		pubUserAdded(added[i])
@@ -102,8 +119,6 @@ func updateUserList() {
 }
 
 func getUserDestinyID(username string) (string, error) {
-	usersLock.RLock()
-	defer usersLock.RUnlock()
 	if ID, ok := users[username]; ok {
 		return ID, nil
 	}
@@ -112,6 +127,7 @@ func getUserDestinyID(username string) (string, error) {
 
 func mindUserList() {
 	for {
+		updateSeenList()
 		updateUserList()
 		time.Sleep(5 * time.Minute)
 	}

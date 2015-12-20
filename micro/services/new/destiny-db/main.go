@@ -25,19 +25,21 @@ func init() {
 }
 
 func main() {
-	go func() {
-		c := subUserAdded()
-		for {
-			u := <-c
-			log.Println("added user", u)
-		}
-	}()
-	go func() {
-		c := subUserRemoved()
-		for {
-			u := <-c
-			log.Println("deleted user", u)
-		}
-	}()
+	/*
+		go func() {
+			c := subUserAdded()
+			for {
+				u := <-c
+				log.Println("added user", u)
+			}
+		}()
+		go func() {
+			c := subUserRemoved()
+			for {
+				u := <-c
+				log.Println("deleted user", u)
+			}
+		}()
+	*/
 	mindUserList()
 }
