@@ -162,7 +162,7 @@ func updateUserList() {
 				log.Printf("error deleting user %s (%s): %s", v.UserName, v.UserID, err.Error())
 			} else {
 				if n, _ := res.RowsAffected(); n > 0 {
-					pubUser("delete", v.UserID)
+					// possible deleted hooks here...
 				}
 			}
 			continue
@@ -223,9 +223,9 @@ func updateUserList() {
 			}
 		}
 		if created {
-			pubUser("new", v.UserID)
+			// Possible hooks here...
 		} else if updated {
-			pubUser("update", v.UserID)
+			// Possible hooks here...
 		}
 	}
 }
