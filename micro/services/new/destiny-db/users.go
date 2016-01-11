@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,18 +9,84 @@ import (
 	"time"
 )
 
-var errUserNotFound = fmt.Errorf("FOF User not found")
+type metaValue string
 
-var users = map[string]string{}       // username => gt. Only people seen < 30 days ago
-var userIDs = map[string]string{}     // gt => username. All members. Regardless of last seen time
-var gamertags = map[string]string{}   // username => gt and userid => gt. All members regardless of last seen time
-var lastSeen = map[string]time.Time{} // userID => last seen time, used for deciding whether a user gets into the users list
-var destinyIDs = map[string]string{}  // todo: populate, persist
+func (m metaValue) String() string {
+	return string(m)
+}
+
+func (m metaValue) Time() (time.Time, error) {
+	var v = m.String()
+	if v == "" {
+		return time.Time{}, nil
+	}
+	return time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", v)
+}
+
+type user struct {
+	ID             int
+	UserID         string
+	UserName       string
+	GamerTag       string
+	DestinyID      string
+	Seen           time.Time
+	DestinyChecked int
+}
+
+func (u *user) getMeta(key string) (metaValue, error) {
+	var value string
+	res, err := queryx("SELECT Value FROM userMeta Where UserID=? AND Key=? LIMIT 1", u.ID, key)
+	if res.Next() {
+		if err == nil {
+			err = res.Scan(&value)
+			if err == sql.ErrNoRows {
+				err = nil
+			}
+		}
+	}
+	return metaValue(value), err
+}
+
+func (u *user) getMetaTime(key string) (time.Time, error) {
+	mv, err := u.getMeta(key)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return mv.Time()
+}
+
+func (u *user) setMeta(key string, value string) error {
+	_, err := exec("INSERT OR REPLACE INTO userMeta (UserID,Key,Value) VALUES(?,?,?)", u.ID, key, value)
+	return err
+}
+
+func getUserByID(ID int) *user {
+	var u = user{}
+	if err := q["getUserByID"].Get(&u, ID); err != nil {
+		log.Printf("error getting by userID: %s", err.Error())
+	}
+	return &u
+}
+
+func getUserByUserID(userID string) *user {
+	var u = user{}
+	if err := q["getUserByUserID"].Get(&u, userID); err != nil {
+		log.Printf("error getting by userID: %s", err.Error())
+	}
+	return &u
+}
+
+var lastSeen = map[string]time.Time{}
+
+type bungieSearchResponse []struct {
+	MembershipId string `json:"membershipId"`
+}
 
 type slackUserListResponse struct {
 	OK      bool   `json:"ok"`
 	Error   string `json:"error"`
 	Members []struct {
+		ID              int    `json:"ID"`
 		UserID          string `json:"id"`
 		UserName        string `json:"name"`
 		Bot             bool   `json:"is_bot"`
@@ -27,9 +94,22 @@ type slackUserListResponse struct {
 		Restricted      bool   `json:"is_restricted"`
 		UltraRestricted bool   `json:"is_ultra_restricted"`
 		Profile         struct {
-			GamerTag string `first_name`
+			GamerTag string `json:"first_name"`
 		} `json:"profile"`
 	} `json:"members"`
+}
+
+func init() {
+	qs["deleteUser"] = "DELETE FROM users WHERE UserID = ?"
+	qs["createUser"] = "INSERT OR IGNORE INTO users (UserID,UserName) VALUES(?,?)"
+	qs["updateUserSeen"] = "UPDATE OR IGNORE users SET Seen=datetime(?, 'utc') WHERE userID = ?"
+	qs["updateUserName"] = "UPDATE OR IGNORE users SET UserName=? WHERE userID = ?"
+	qs["updateGamerTag"] = "UPDATE OR IGNORE users SET GamerTag=? WHERE userID = ?"
+	qs["updateDestinyID"] = "UPDATE OR IGNORE users SET DestinyID=? WHERE userID = ?"
+	qs["updateDestinyChecked"] = "UPDATE OR IGNORE users SET DestinyChecked=? WHERE userID = ?"
+	qs["getDestinyID"] = "SELECT destinyID,destinyChecked FROM users WHERE UserID = ? LIMIT 1"
+	qs["getUserByUserID"] = "SELECT * FROM users WHERE UserID = ? LIMIT 1"
+	qs["getUserByID"] = "SELECT * FROM users WHERE ID = ? LIMIT 1"
 }
 
 func updateSeenList() {
@@ -66,69 +146,97 @@ func updateUserList() {
 		log.Println("error in slack user list response:", slackData.Error)
 		return
 	}
-	var newUserList = map[string]string{}
-	var newUserIDs = map[string]string{}
-	var newGamertags = map[string]string{}
-	var seenCutoff = time.Now().Add(0 - (24 * 30 * time.Hour))
 	for _, v := range slackData.Members {
+		var deleted = false
 		if v.Bot {
+			deleted = true
+		} else if v.Deleted {
+			deleted = true
+		} else if v.Restricted {
+			deleted = true
+		} else if v.UltraRestricted {
+			deleted = true
+		}
+		if deleted {
+			if res, err := q["deleteUser"].Exec(v.UserID); err != nil {
+				log.Printf("error deleting user %s (%s): %s", v.UserName, v.UserID, err.Error())
+			} else {
+				if n, _ := res.RowsAffected(); n > 0 {
+					pubUser("delete", v.UserID)
+				}
+			}
 			continue
 		}
-		if v.Deleted {
-			continue
-		}
-		if v.Restricted {
-			continue
-		}
-		if v.UltraRestricted {
-			continue
-		}
-		if seen, ok := lastSeen[v.UserID]; ok {
-			if seen.After(seenCutoff) {
-				newUserList[v.UserName] = v.UserID
+		var created = false
+		if res, err := q["createUser"].Exec(v.UserID, v.UserName); err != nil {
+			log.Printf("error creating user %s (%s): %s", v.UserName, v.UserID, err.Error())
+		} else {
+			if n, _ := res.RowsAffected(); n > 0 {
+				created = true
 			}
 		}
-		newUserIDs[v.UserID] = v.UserName
-		newGamertags[v.UserName] = v.Profile.GamerTag
-		newGamertags[v.UserID] = v.Profile.GamerTag
-	}
-	var added = []string{}
-	var deleted = []string{}
-	for k := range newUserList {
-		if _, ok := users[k]; !ok {
-			added = append(added, k)
+
+		localUser := getUserByUserID(v.UserID)
+
+		// TODO: Move to user struct
+		var updated = false
+		if seen, ok := lastSeen[v.UserID]; ok {
+			if !localUser.Seen.Equal(seen) {
+				q["updateUserSeen"].Exec(seen, v.UserID)
+				localUser.Seen = seen
+				updated = true
+			}
+		}
+
+		if localUser.UserName != v.UserName {
+			q["updateUserName"].Exec(v.UserName, v.UserID)
+			localUser.UserName = v.UserName
+			updated = true
+		}
+
+		if v.Profile.GamerTag != localUser.GamerTag {
+			q["updateGamerTag"].Exec(v.Profile.GamerTag, v.UserID)
+			q["updateDestinyChecked"].Exec(0, v.UserID)
+			localUser.DestinyChecked = 0
+			localUser.GamerTag = v.Profile.GamerTag
+			updated = true
+		}
+
+		if localUser.DestinyID == "" && localUser.DestinyChecked == 0 {
+			if req, err := destinyClient.SearchDestinyPlayer(v.Profile.GamerTag); err != nil {
+				log.Printf("error generating SearchDestinyPlayer request for %s (%s): %s", v.UserID, v.UserName, err.Error())
+			} else {
+				var d bungieSearchResponse
+				if err := req.Into(&d); err != nil {
+					log.Printf("error fetching destiny id for %s (%s): %s", v.UserID, v.UserName, err.Error())
+				} else {
+					// TODO: move to user struct
+					q["updateDestinyChecked"].Exec(1, v.UserID)
+					if len(d) > 0 {
+						log.Println(v.UserID, v.UserName, d[0].MembershipId)
+						q["updateDestinyID"].Exec(d[0].MembershipId, v.UserID)
+						updated = true
+					} else {
+						log.Printf("unable to find %s -- %s -- '%s'", v.UserID, v.UserName, v.Profile.GamerTag)
+					}
+				}
+			}
+		}
+		if created {
+			pubUser("new", v.UserID)
+		} else if updated {
+			pubUser("update", v.UserID)
 		}
 	}
-	for k := range users {
-		if _, ok := newUserList[k]; !ok {
-			deleted = append(deleted, k)
-		}
-	}
-
-	log.Println("going from", len(users), "to", len(newUserList), "users")
-	users = newUserList
-	gamertags = newGamertags
-	userIDs = newUserIDs
-
-	for i := range added {
-		pubUserAdded(added[i])
-	}
-	for i := range deleted {
-		pubUserRemoved(deleted[i])
-	}
-}
-
-func getUserDestinyID(username string) (string, error) {
-	if ID, ok := users[username]; ok {
-		return ID, nil
-	}
-	return "", errUserNotFound
 }
 
 func mindUserList() {
 	for {
+		log.Println("mindUserList: Updating last seen list")
 		updateSeenList()
+		log.Println("mindUserList: Updating user list")
 		updateUserList()
+		log.Println("mindUserList: Sleeping")
 		time.Sleep(5 * time.Minute)
 	}
 }

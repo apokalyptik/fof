@@ -2,45 +2,29 @@ package main
 
 import "sync"
 
-var subs = map[string][]chan string{
-	"userAdded":   []chan string{},
-	"userRemoved": []chan string{},
-}
+var userSubs = map[string][]chan string{}
+var userSubsLock sync.RWMutex
 
-var subsLock sync.RWMutex
-
-func pubUserAdded(username string) {
-	subsLock.RLock()
-	defer subsLock.RUnlock()
-	for _, v := range subs["userAdded"] {
-		go func(v chan string, u string) {
-			v <- u
-		}(v, username)
+func subUser(kind string) <-chan string {
+	userSubsLock.Lock()
+	defer userSubsLock.Unlock()
+	if _, ok := userSubs[kind]; !ok {
+		userSubs[kind] = []chan string{}
 	}
-}
-
-func subUserAdded() <-chan string {
-	subsLock.Lock()
-	defer subsLock.Unlock()
 	c := make(chan string)
-	subs["userAdded"] = append(subs["userAdded"], c)
+	userSubs[kind] = append(userSubs[kind], c)
 	return c
 }
 
-func pubUserRemoved(username string) {
-	subsLock.RLock()
-	defer subsLock.RUnlock()
-	for _, v := range subs["userRemoved"] {
+func pubUser(kind, userID string) {
+	userSubsLock.RLock()
+	defer userSubsLock.RUnlock()
+	if _, ok := userSubs[kind]; !ok {
+		return
+	}
+	for _, v := range userSubs[kind] {
 		go func(v chan string, u string) {
 			v <- u
-		}(v, username)
+		}(v, userID)
 	}
-}
-
-func subUserRemoved() <-chan string {
-	subsLock.Lock()
-	defer subsLock.Unlock()
-	c := make(chan string)
-	subs["userRemoved"] = append(subs["userRemoved"], c)
-	return c
 }
