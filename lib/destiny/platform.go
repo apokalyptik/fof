@@ -37,6 +37,14 @@ func (p *Platform) CharacterProgression(id string, cid string) (*Request, error)
 	return p.c.CharacterProgression(p.id, id, cid)
 }
 
+func (p *Platform) AggregateActivityStats(id string, cid string) (*Request, error) {
+	return p.c.AggregateActivityStats(p.id, id, cid)
+}
+
+func (p *Platform) UniqueWeapons(id string, cid string) (*Request, error) {
+	return p.c.UniqueWeapons(p.id, id, cid)
+}
+
 func (p *Platform) Account(id string) *Account {
 	return &Account{
 		id: id,

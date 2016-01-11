@@ -24,3 +24,11 @@ func (c *Character) CharacterInventory() (*Request, error) {
 func (c *Character) CharacterProgression() (*Request, error) {
 	return c.a.CharacterProgression(c.id)
 }
+
+func (c *Character) AggregateActivityStats() (*Request, error) {
+	return c.a.AggregateActivityStats(c.id)
+}
+
+func (c *Character) UniqueWeapons() (*Request, error) {
+	return c.a.UniqueWeapons(c.id)
+}

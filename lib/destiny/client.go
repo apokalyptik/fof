@@ -173,6 +173,20 @@ func (c *Client) CharacterProgression(platform int, id string, cid string) (*Req
 	return c.CustomURL(fmt.Sprintf("/%d/Account/%s/Character/%s/Progression/", platform, id, cid))
 }
 
+// AggregateActivityStats Returns all activities the character has participated in together with aggregate statistics for those activities.
+// see: https://www.bungie.net/platform/destiny/help/HelpDetail/GET?uri=Stats%2fAggregateActivityStats%2f%7bmembershipType%7d%2f%7bdestinyMembershipId%7d%2f%7bcharacterId%7d%2f
+// see: http://bungienetplatform.wikia.com/wiki/GetDestinyAggregateActivityStats
+func (c *Client) AggregateActivityStats(platform int, id string, cid string) (*Request, error) {
+	return c.CustomURL(fmt.Sprintf("/Stats/AggregateActivityStats/%d/%s/%s/", platform, id, cid))
+}
+
+// UniqueWeapons Returns details about unique weapon usage, including all exotic weapons.
+// see: https://www.bungie.net/platform/destiny/help/HelpDetail/GET?uri=Stats%2fUniqueWeapons%2f%7bmembershipType%7d%2f%7bdestinyMembershipId%7d%2f%7bcharacterId%7d%2f
+// see: http://bungienetplatform.wikia.com/wiki/GetUniqueWeaponHistory
+func (c *Client) UniqueWeapons(platform int, id string, cid string) (*Request, error) {
+	return c.CustomURL(fmt.Sprintf("/Stats/UniqueWeapons/%d/%s/%s/", platform, id, cid))
+}
+
 // Platform returns a platform client which will obviate the need to provide
 // platform distinctions for helper methods (convenient when you're only going
 // to be working against one platform)

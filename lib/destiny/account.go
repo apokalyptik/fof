@@ -33,6 +33,14 @@ func (a *Account) CharacterProgression(cid string) (*Request, error) {
 	return a.p.CharacterProgression(a.id, cid)
 }
 
+func (a *Account) AggregateActivityStats(cid string) (*Request, error) {
+	return a.p.AggregateActivityStats(a.id, cid)
+}
+
+func (a *Account) UniqueWeapons(cid string) (*Request, error) {
+	return a.p.UniqueWeapons(a.id, cid)
+}
+
 func (a *Account) Character(id string) *Character {
 	return &Character{
 		a:  a,
