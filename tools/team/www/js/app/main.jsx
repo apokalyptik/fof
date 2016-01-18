@@ -106,7 +106,7 @@ var App = React.createClass({
 					<div className="row">
 						<div className="col-md-6 col-md-offset-3 center">
 							<h2 className="dark">
-							please use the slack command &ldquo;<strong>/team</strong>&rdquo; to log in
+							Please use the slack command &ldquo;<strong>/team</strong>&rdquo; to log in
 							</h2>
 						</div>
 					</div>

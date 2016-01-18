@@ -14,6 +14,9 @@ $default_rounded_amount: .25em;
 .btn-success {
 	background-color: #227bb3;
 	border-color: #227bb3;
+
+	background-color: $lgr;
+	border-color: $lgr;
 }
 
 .btn-success:hover, .btn-success:active, .btn-success:active:focus, .btn-success:focus {
