@@ -14,7 +14,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 )
 
 var errDisbanded = errors.New("Since you were the last member of \"%s\" on #%s the raid has been disbanded")
