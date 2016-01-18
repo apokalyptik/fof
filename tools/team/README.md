@@ -15,7 +15,7 @@
 **Setting up Go Environment**
 - Run `mkdir -p $HOME/workspace/go`
 - Set `$GOROOT` and `$GOPATH` in your `~/.bash_profile`
-  - `export GOPATH=/Users/username/go` (change `username` to your username)
+  - `export GOPATH=/Users/username/workspace/go` (change `username` to your username)
 - Add $GOROOT/bin and $GOPATH/bin to $PATH
   - `export PATH=$PATH:$GOROOT/bin:$GOPATH/bin`
  
