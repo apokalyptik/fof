@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/influxdata/influxdb/client/v2"
 )
 
 var infxMessage = make(chan slackmsg, 1024)
-var infxAddr = os.Getenv("INFLUXDB_ADDRESS")
 
 func mindInfluxDB() {
 	c, err := client.NewHTTPClient(client.HTTPConfig{

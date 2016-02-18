@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -32,9 +31,6 @@ func (s slackmsg) time() time.Time {
 		return time.Unix(int64(f), 0)
 	}
 }
-
-var SQSURL = os.Getenv("AWS_SQS_URL")
-var SQSRegion = os.Getenv("AWS_SQS_REGION")
 
 func mindSQS() {
 	for {
