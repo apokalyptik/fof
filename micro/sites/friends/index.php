@@ -1,42 +1,30 @@
 <?php
 
 define( SLACK_TOKEN, 'xoxp-...' );
-define( CACHE_KEY, "fof-friend-wall-" . filemtime( realpath( __FILE__ ) ) );
 
-ob_start();
-header( 'Expires: '.gmdate('D, d M Y H:i:s', time()+3600).'GMT');
-if ( empty( $_GET['debug'] ) ) {
-	$mc = new Memcached;
-	$mc->addServer("127.0.0.1", 11211);
-	if ( $cache = unserialize( $mc->get( CACHE_KEY ) ) ) {
-		header( 'X-Cached: true' );
-		header( 'X-Cache-Key: ' . filemtime( realpath( __FILE__ ) ) );
-		header( 'Etag: ' . md5( $cache->out ));
-		header( 'Last-Modified: '.gmdate( 'D, d M Y H:i:s', $out->when ) );
-		echo $cache->out;
-		return;
-	}
-}
+ob_start(); 
 ?><html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>FoF Friends List Helper</title>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<style>
 	img.picon {
-		vertical-align: text-top;
+		vertical-align: text-middle;
 		float: left;
 		margin-right: 5px;
+		height: 2em;
+		-moz-border-radius: 10px;
+		-webkit-border-radius: 10px;
+		border-radius: 10px; /* future proofing */
+		-khtml-border-radius: 10px; /* for old Konqueror browsers */
 	}
 	div.pcontainer {
 		/* clear: both; */
 		/*height: 55px;*/
-		height: 48px;
 		padding: 5px;
 		margin: 5px;
 		background: #f7f7f7;
-		width: 24em;
+		width: 18em;
 		-moz-border-radius: 10px;
 		-webkit-border-radius: 10px;
 		border-radius: 10px; /* future proofing */
@@ -44,9 +32,9 @@ if ( empty( $_GET['debug'] ) ) {
 		float: left;
 	}
 	div.pname {
-		text-overflow: ellipsis;
 		font-weight: bold;
 		font-size: 1.25em;
+		padding-top: 4px;
 	}
 	div.pcontainer.done {
 		background: #DDD;
@@ -54,6 +42,7 @@ if ( empty( $_GET['debug'] ) ) {
 	}
 	a {
 		font-weight: bold;
+		text-transform: capitalize;
 		background-color: #107c10;
 		color: white;
 		text-decoration: none;
@@ -85,7 +74,7 @@ if ( empty( $_GET['debug'] ) ) {
 			return false;
 		}
 	}
-function didClick(id) {
+	function didClick(id) {
 		if ( !supports_html5_storage() ) {
 			return false;
 		}
@@ -99,6 +88,9 @@ function didClick(id) {
 	}
 	$(window).ready(function() {
 		var inputs = $('input.did');
+		$('a').click(function() {
+			$(this).parent().find('input').click(); // .prop('checked', true);
+		});
 		$.each(inputs, function(i, v) {
 			if ( !supports_html5_storage() ) {
 				$(v).delete();
@@ -120,24 +112,22 @@ function didClick(id) {
 <body>
 <?php
 
+$cache_key = "fof-friend-wall-" . $_SERVER['HTTP_HOST'];
 
-$ch = curl_init();
-curl_setopt( $ch, CURLOPT_URL, 'http://127.0.0.1:8890/seen.json' );
-curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-$res = curl_exec( $ch );
-$status = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-$seen = null;
-if ( $status == 200 ) {
-	$seen = json_decode( $res );
-	if ( !$seen )
-		$seen = null;
+if ( empty( $_GET['debug'] ) ) {
+	$mc = new Memcached;
+	$mc->addServer("127.0.0.1", 11211);
+	if ( false || $out = $mc->get( $cache_key ) ) {
+	header('X-Cached: true');
+		die( $out );
+	}
 }
 
 $ch = curl_init(); 
 curl_setopt( $ch, CURLOPT_URL, 'https://slack.com/api/users.list' );
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 curl_setopt( $ch, CURLOPT_POST, true );
-curl_setopt( $ch, CURLOPT_POSTFIELDS, array( 'token' => SLACK_TOKEN ));
+curl_setopt( $ch, CURLOPT_POSTFIELDS, array( 'token' => SLACK_TOKEN ) );
 $res = curl_exec( $ch );
 $status = curl_getinfo( $ch, CURLINFO_HTTP_CODE ); 
 
@@ -157,43 +147,34 @@ if ( !empty( $_GET['debug'] ) ) {
 }
 
 foreach( $data->members as $idx => $member ) {
-	if ( $seen && is_object( $seen ) ) {
-	   if ( !property_exists( $seen, $member->id ) )
-		   continue;
-	   $seen->{$member->id}[10] = ' ';
-	   $seen->{$member->id} = strtotime( substr( $seen->{$member->id}, 0, 19 ) );
-	   if ( ( time() - ( 31 * 86400 ) ) > $seen->{$member->id} )
-		   continue;
-	}
 	if ( !empty( $member->is_bot ) )
 		continue;
 	if ( !empty( $member->deleted ) )
 		continue;
+	if ( $member->id == "U053GJH59" ) // teambot
+		continue;
 	printf(
 		'<div class="pcontainer did-%s">
+		<img src="%s" class="picon">
 		<div class="pname">
-		<input disabled class="did" type="checkbox" id="did-%s" onClick="return didClick(\'%s\');"/>%s</div>
-		XBox Live link: <a onClick="$(\'#did-%s\').click();return true;" target="_blank" href="https://account.xbox.com/en-us/profile?gamerTag=%s">%s</a></div>', 
+		<input disabled class="did" type="checkbox" id="did-%s" onClick="return didClick(\'%s\');"/>
+		<!-- %s -->
+		<!-- XBox Live link: -->
+		<a target="_blank" href="https://account.xbox.com/en-us/profile?gamerTag=%s">%s</a>
+		</div></div>', 
+		$member->id,
+		$member->profile->image_48, 
 		$member->id,
 		$member->id,
-		$member->id,
-		htmlentities( 
-			strlen( $member->profile->real_name_normalized ) > 30 ? substr( $member->profile->real_name_normalized, 0,27 ) . "..." : $member->profile->real_name_normalized  ),
-		$member->id,
+		htmlentities( $member->profile->first_name ),
 		rawurlencode( $member->profile->first_name ),
 		htmlentities( $member->profile->first_name ) );
 }
 ?>
 	<div id="alldone"></div></body></html><?php
 if ( empty( $_GET['debug'] ) ) {
-	$when = time();
-	$out = ob_get_clean();
-	header( 'Last-Modified: '.gmdate( 'D, d M Y H:i:s', $when ) );
-	header( 'X-Cached: false' );
-	header( 'X-Cache-Key: ' . filemtime( realpath( __FILE__ ) ) );
-	header( 'Etag: ' . md5( $out ));
-	$mc->set( CACHE_KEY, serialize( (object)array( 'out' => $out, 'when' => $when ) ), $when + 300 );
-    header('Etag: ' . md5( $out ));
+	$out = ob_get_clean(); 
+	$mc->set( $cache_key, $out, time() + 60 );
 }
-echo $out;
+die($out);
 ?>
