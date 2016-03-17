@@ -101,6 +101,7 @@ func getUserlist() []byte {
 			}
 		}
 		rval = append(rval, map[string]string{
+			"id":       m.ID,
 			"gamertag": m.Profile.FirstName,
 			"username": m.Name,
 			"avatar":   m.Profile.Avatar,
