@@ -194,7 +194,7 @@ func main() {
 		var setupError error
 		var list users
 		if setupError == nil {
-			if time.Now().Sub(lastAuth) > time.Hour {
+			if time.Now().Sub(lastAuth) > 8*time.Hour {
 				if err := client.Authenticate(); err != nil {
 					setupError = fmt.Errorf("[uplay] Error authenticating to ubisoft: %s", err.Error())
 				} else {
@@ -233,6 +233,7 @@ func main() {
 			if !ok {
 				if profiles, err := client.UserSearch(uplay.PlatformXBL, user.GamerTag); err != nil {
 					log.Println("[uplay] aborting run: error searching for uuid:", err.Error())
+					lastAuth = time.Now().Add(0 - 24*time.Hour)
 					break
 				} else {
 					if len(profiles) > 0 {
@@ -260,6 +261,8 @@ func main() {
 			}
 			if st, err := client.DivisionStats(uplay.PlatformXBL, uuid); err != nil {
 				log.Println("[uplay] aborting run: pulling division stats for", user.GamerTag, "/", uuid, "error:", err.Error())
+				lastAuth = time.Now().Add(0 - 24*time.Hour)
+				break
 			} else {
 				statsLock.Lock()
 				statsTime[user.ID] = time.Now()
