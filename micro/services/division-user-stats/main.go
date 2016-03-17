@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/apokalyptik/fof/lib/ubisoft/uplay"
+	"github.com/gorilla/mux"
 	"github.com/koding/multiconfig"
 )
 
@@ -23,7 +24,7 @@ type singleUser struct {
 
 type users []singleUser
 
-// Uplay holds uplay configuration
+// Config holds uplay configuration
 type Config struct {
 	Username string
 	Password string
@@ -176,17 +177,57 @@ func init() {
 	m.Load(config)
 }
 
-func main() {
-	load()
-	http.HandleFunc("/v1.json", func(w http.ResponseWriter, r *http.Request) {
+func mindHTTP() {
+	r := mux.NewRouter()
+	r.HandleFunc("/v1.json", func(w http.ResponseWriter, r *http.Request) {
 		statsLock.Lock()
 		defer statsLock.Unlock()
 		enc := json.NewEncoder(w)
 		enc.Encode(stats)
 	})
-	go func() {
-		log.Fatal(http.ListenAndServe(config.Listen, nil))
-	}()
+	r.HandleFunc("/v1/gt/{gamertag}.json", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		enc := json.NewEncoder(w)
+		statsLock.Lock()
+		defer statsLock.Unlock()
+		if v, ok := stats[vars["gamertag"]]; ok {
+			enc.Encode(v)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	r.HandleFunc("/v1/slackid/{slackuid}.json", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		enc := json.NewEncoder(w)
+		statsLock.Lock()
+		defer statsLock.Unlock()
+		for _, v := range stats {
+			if v.User.ID == vars["slackuid"] {
+				enc.Encode(v)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	r.HandleFunc("/v1/username/{slackusername}.json", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		enc := json.NewEncoder(w)
+		statsLock.Lock()
+		defer statsLock.Unlock()
+		for _, v := range stats {
+			if v.User.UserName == vars["slackusername"] {
+				enc.Encode(v)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	log.Fatal(http.ListenAndServe(config.Listen, r))
+}
+
+func main() {
+	load()
+	go mindHTTP()
 	client := uplay.New(config.Username, config.Password)
 	t := time.Tick(time.Hour)
 	var lastAuth = time.Now().Add(0 - 24*time.Hour)
