@@ -221,6 +221,7 @@ func main() {
 			if t, ok := statsTime[user.ID]; ok {
 				if diff := time.Now().Sub(t); diff < time.Hour {
 					log.Println("[users] Skipping", user.GamerTag, "for recent fetch time of", diff.String())
+					continue
 				}
 			}
 			t, ok := failures[user.ID]
