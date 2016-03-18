@@ -11,8 +11,11 @@ import (
 	"time"
 
 	"github.com/apokalyptik/fof/lib/ubisoft/uplay"
+	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/koding/multiconfig"
+	"github.com/phyber/negroni-gzip/gzip"
+	"github.com/rs/cors"
 )
 
 type singleUser struct {
@@ -222,7 +225,50 @@ func mindHTTP() {
 		}
 		w.WriteHeader(http.StatusNotFound)
 	})
-	log.Fatal(http.ListenAndServe(config.Listen, r))
+	r.HandleFunc("/v1/compact.json", func(w http.ResponseWriter, r *http.Request) {
+		enc := json.NewEncoder(w)
+		var out = struct {
+			Index map[string]interface{}
+			Stats []struct {
+				User  singleUser
+				Stats map[string]string
+			}
+		}{
+			Stats: []struct {
+				User  singleUser
+				Stats map[string]string
+			}{},
+		}
+		statsLock.Lock()
+		for _, v := range stats {
+			var entry = struct {
+				User  singleUser
+				Stats map[string]string
+			}{
+				User:  v.User,
+				Stats: map[string]string{},
+			}
+			if out.Index == nil {
+				out.Index = map[string]interface{}{}
+				for _, s := range v.Stats {
+					out.Index[s.Name] = s
+				}
+			}
+			for _, s := range v.Stats {
+				entry.Stats[s.Name] = s.Value.String()
+			}
+			out.Stats = append(out.Stats, entry)
+		}
+		statsLock.Unlock()
+		enc.Encode(out)
+	})
+	n := negroni.New()
+	n.Use(cors.New(cors.Options{AllowedOrigins: []string{"*"}}))
+	n.Use(negroni.NewRecovery())
+	n.Use(negroni.NewLogger())
+	n.Use(gzip.Gzip(gzip.DefaultCompression))
+	n.UseHandler(r)
+	n.Run(config.Listen)
 }
 
 func main() {
