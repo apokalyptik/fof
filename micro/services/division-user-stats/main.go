@@ -20,7 +20,6 @@ import (
 
 type singleUser struct {
 	ID       string `json:"id"`
-	Destiny  string `json:"destiny"`
 	GamerTag string `json:"gamertag"`
 	UserName string `json:"username"`
 }
@@ -183,6 +182,7 @@ func init() {
 func mindHTTP() {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
 		statsLock.Lock()
 		defer statsLock.Unlock()
 		enc := json.NewEncoder(w)
@@ -194,6 +194,7 @@ func mindHTTP() {
 		statsLock.Lock()
 		defer statsLock.Unlock()
 		if v, ok := stats[vars["gamertag"]]; ok {
+			w.Header().Set("Content-Type", "text/json")
 			enc.Encode(v)
 		} else {
 			w.WriteHeader(http.StatusNotFound)
@@ -206,6 +207,7 @@ func mindHTTP() {
 		defer statsLock.Unlock()
 		for _, v := range stats {
 			if v.User.ID == vars["slackuid"] {
+				w.Header().Set("Content-Type", "text/json")
 				enc.Encode(v)
 				return
 			}
@@ -219,6 +221,7 @@ func mindHTTP() {
 		defer statsLock.Unlock()
 		for _, v := range stats {
 			if v.User.UserName == vars["slackusername"] {
+				w.Header().Set("Content-Type", "text/json")
 				enc.Encode(v)
 				return
 			}
@@ -260,6 +263,7 @@ func mindHTTP() {
 			out.Stats = append(out.Stats, entry)
 		}
 		statsLock.Unlock()
+		w.Header().Set("Content-Type", "text/json")
 		enc.Encode(out)
 	})
 	n := negroni.New()
