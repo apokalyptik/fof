@@ -56,6 +56,7 @@ func mindSQS() {
 					log.Printf("Recieved message: %s/%s/%s/%s", m.Team, m.Channel, m.User, m.Timestamp)
 					infxMessage <- m
 					sqlMessage <- m
+					nsqMessage <- m
 					_, err := svc.DeleteMessage(&sqs.DeleteMessageInput{
 						QueueUrl:      aws.String(SQSURL),
 						ReceiptHandle: aws.String(*message.ReceiptHandle),
