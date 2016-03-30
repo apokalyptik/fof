@@ -10,10 +10,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/apokalyptik/fof/lib/fof/stats"
 	"github.com/apokalyptik/fof/lib/ubisoft/uplay"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/koding/multiconfig"
+	"github.com/nsqio/go-nsq"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/rs/cors"
 )
@@ -275,12 +277,24 @@ func mindHTTP() {
 	n.Run(config.Listen)
 }
 
+func mustNSQ() *nsq.Producer {
+	conn, err := nsq.NewProducer("127.0.0.1:4150", nsq.NewConfig())
+	if err != nil {
+		log.Fatalf("Error conntecting to nsq: %s", err.Error())
+	}
+	if err := conn.Ping(); err != nil {
+		log.Fatalf("Error pinging nsq: %s", err.Error())
+	}
+	return conn
+}
+
 func main() {
 	load()
 	go mindHTTP()
 	client := uplay.New(config.Username, config.Password)
 	t := time.Tick(time.Hour)
 	var lastAuth = time.Now().Add(0 - 24*time.Hour)
+	var nsqConn *nsq.Producer
 	for {
 		var setupError error
 		var list users
@@ -307,6 +321,13 @@ func main() {
 			log.Println(setupError.Error())
 			<-t
 			continue
+		}
+		if nsqConn != nil {
+			if err := nsqConn.Ping(); err != nil {
+				nsqConn = mustNSQ()
+			}
+		} else {
+			nsqConn = mustNSQ()
 		}
 		for _, user := range list {
 			if t, ok := statsTime[user.ID]; ok {
@@ -356,6 +377,19 @@ func main() {
 				lastAuth = time.Now().Add(0 - 24*time.Hour)
 				break
 			} else {
+				for _, s := range st {
+					details, val := getStatDetail(&s)
+					fstat.Stat{
+						Member:   user.ID,
+						Platform: "uplay",
+						Product:  "the-division",
+						Stat:     details.name,
+						When:     time.Now(),
+						Value:    val,
+						Info:     details.info,
+						Method:   "set",
+					}.Send(nsqConn)
+				}
 				statsLock.Lock()
 				statsTime[user.ID] = time.Now()
 				stats[user.GamerTag] = userStats{
