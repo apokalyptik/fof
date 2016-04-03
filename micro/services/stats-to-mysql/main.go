@@ -3,12 +3,11 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
+	"github.com/apokalyptik/cfg"
 	"github.com/nsqio/go-nsq"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -27,6 +26,7 @@ var (
 	nsqTopic         = "fof-stats"
 	nsqChannel       = "stats-to-mysql"
 	nsqAddress       = "127.0.0.1:4150"
+	db               *sql.DB
 )
 
 type statMessage struct {
@@ -44,39 +44,22 @@ type statMessage struct {
 }
 
 func init() {
-	if val := os.Getenv("DB_USER"); val != "" {
-		databaseUser = val
-	}
-	if val := os.Getenv("DB_PASS"); val != "" {
-		databasePassword = val
-	}
-	if val := os.Getenv("DB_HOST"); val != "" {
-		databaseHost = val
-	}
-	if val := os.Getenv("DB_PORT"); val != "" {
-		databasePort = val
-	}
-	if val := os.Getenv("DB_NAME"); val != "" {
-		databaseName = val
-	}
-	if val := os.Getenv("NSQ_TOPIC"); val != "" {
-		nsqTopic = val
-	}
-	if val := os.Getenv("NSQ_CHAN"); val != "" {
-		nsqChannel = val
-	}
-	flag.StringVar(&databaseUser, "dbuser", databaseUser, "MySQL Username (env: DB_USER)")
-	flag.StringVar(&databasePassword, "dbpass", databasePassword, "MySQL Password (env: DB_PASS)")
-	flag.StringVar(&databaseHost, "dbhost", databaseHost, "MySQL TCP Hostname (env: DB_HOST)")
-	flag.StringVar(&databasePort, "dbport", databasePort, "MySQL TCP Port (env: DB_PORT)")
-	flag.StringVar(&databaseName, "dbname", databaseName, "MySQL Database Name (env: DB_NAME)")
-	flag.StringVar(&nsqTopic, "nsqtopic", nsqTopic, "NSQD Topic (env: DB_TOPIC)")
-	flag.StringVar(&nsqChannel, "nsqchan", nsqChannel, "NSQD Channel (env: NSQ_CHAN)")
-	flag.StringVar(&nsqAddress, "nsqaddr", nsqAddress, "NSQD Address (env: NSQ_ADDR)")
-	flag.Parse()
+	dbc := cfg.New("db")
+	dbc.StringVar(&databaseUser, "user", databaseUser, "MySQL Username (env: DB_USER)")
+	dbc.StringVar(&databasePassword, "pass", databasePassword, "MySQL Password (env: DB_PASS)")
+	dbc.StringVar(&databaseHost, "host", databaseHost, "MySQL TCP Hostname (env: DB_HOST)")
+	dbc.StringVar(&databasePort, "port", databasePort, "MySQL TCP Port (env: DB_PORT)")
+	dbc.StringVar(&databaseName, "name", databaseName, "MySQL Database Name (env: DB_NAME)")
+
+	nsqc := cfg.New("nsq")
+	nsqc.StringVar(&nsqTopic, "topic", nsqTopic, "NSQD Topic (env: NSQ_TOPIC)")
+	nsqc.StringVar(&nsqChannel, "chan", nsqChannel, "NSQD Channel (env: NSQ_CHAN)")
+	nsqc.StringVar(&nsqAddress, "addr", nsqAddress, "NSQD Address (env: NSQ_ADDR)")
+
+	cfg.Parse()
 }
 
-func mustPrepare(db *sql.DB, name string, query string) *sql.Stmt {
+func mustPrepare(name string, query string) *sql.Stmt {
 	s, err := db.Prepare(query)
 	if err != nil {
 		log.Fatal("Error creating %s: %s", name, err.Error())
@@ -95,15 +78,24 @@ func mustConnect() *sql.DB {
 }
 
 func main() {
-	db := mustConnect()
+	db = mustConnect()
 	defer db.Close()
-
 	stats := mustPrepare(
-		db,
 		"stats insert stmt",
 		"INSERT IGNORE INTO `stats` (platform,product,stat,sub1,sub2,sub3,info) VALUES(?,?,?,?,?,?,?)")
+	latest := mustPrepare(
+		"stats_latest update statement",
+		"INSERT INTO `stats_latest` (`member`,`stat_id`,`daily`,`hourly`)"+
+			"  SELECT ?,ID,DATE_FORMAT(?,'%Y-%m-%d %H:00:00'),DATE_FORMAT(?,'%Y-%m-%d %H:00:00')"+
+			"    FROM `stats`"+
+			"    WHERE platform=?"+
+			"      AND product=?"+
+			"      AND stat=?"+
+			"      AND sub1=?"+
+			"      AND sub2=?"+
+			"      AND sub3=?"+
+			"	  ON DUPLICATE KEY UPDATE `daily`=VALUES(`daily`),`hourly`=VALUES(`hourly`)")
 	setDaily := mustPrepare(
-		db,
 		"daily insert stmt",
 		"INSERT INTO `stats_daily` (`when`,`stat_id`,`member`,`value`)"+
 			"  SELECT ?,ID,?,?"+
@@ -116,7 +108,6 @@ func main() {
 			"      AND sub3=?"+
 			"  ON DUPLICATE KEY UPDATE `value`=?")
 	incrDaily := mustPrepare(
-		db,
 		"daily insert stmt",
 		"INSERT INTO `stats_daily` (`when`,`stat_id`,`member`,`value`)"+
 			"  SELECT ?,ID,?,?"+
@@ -129,7 +120,6 @@ func main() {
 			"      AND sub3=?"+
 			"  ON DUPLICATE KEY UPDATE `value`=`value`+?")
 	setHourly := mustPrepare(
-		db,
 		"hourly insert stmt",
 		"INSERT INTO `stats_hourly` (`when`,`stat_id`,`member`,`value`)"+
 			"  SELECT DATE_FORMAT(?,'%Y-%m-%d %H:00:00'),ID,?,?"+
@@ -142,7 +132,6 @@ func main() {
 			"      AND sub3=?"+
 			"  ON DUPLICATE KEY UPDATE `value`=?")
 	incrHourly := mustPrepare(
-		db,
 		"hourly insert stmt",
 		"INSERT INTO `stats_hourly` (`when`,`stat_id`,`member`,`value`)"+
 			"  SELECT DATE_FORMAT(?,'%Y-%m-%d %H:00:00'),ID,?,?"+
@@ -186,7 +175,8 @@ func main() {
 					stat.Value)
 			}
 			if err == nil {
-				_, err = tx.Stmt(incrHourly).Exec(stat.When.Format(dateTimeFormat),
+				_, err = tx.Stmt(incrHourly).Exec(
+					stat.When.Format(dateTimeFormat),
 					stat.Member,
 					stat.Value,
 					stat.Platform,
@@ -213,7 +203,8 @@ func main() {
 					stat.Value)
 			}
 			if err == nil {
-				_, err = tx.Stmt(setHourly).Exec(stat.When.Format(dateTimeFormat),
+				_, err = tx.Stmt(setHourly).Exec(
+					stat.When.Format(dateTimeFormat),
 					stat.Member,
 					stat.Value,
 					stat.Platform,
@@ -225,6 +216,18 @@ func main() {
 					stat.Value)
 			}
 			break
+		}
+		if err == nil {
+			_, err = tx.Stmt(latest).Exec(
+				stat.Member,
+				stat.When.Format(dateTimeFormat),
+				stat.When.Format(dateTimeFormat),
+				stat.Platform,
+				stat.Product,
+				stat.Stat,
+				stat.Sub1,
+				stat.Sub2,
+				stat.Sub3)
 		}
 		if err != nil {
 			log.Printf("Error Inserting or updating stats: %s", err.Error())
@@ -238,6 +241,5 @@ func main() {
 	if err := consumer.ConnectToNSQD(nsqAddress); err != nil {
 		log.Fatal(err)
 	}
-	var wait chan struct{}
-	<-wait
+	mindHTTP()
 }
