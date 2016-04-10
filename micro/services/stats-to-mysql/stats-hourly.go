@@ -83,6 +83,7 @@ func handleHourlyJson(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(rval)
 	case "csv":
 		enc := csv.NewWriter(w)
+		defer enc.Flush()
 		enc.Write([]string{"user_id", "stat_id", "hour", "value"})
 		for _, u := range users {
 			for _, s := range stats {
@@ -91,7 +92,9 @@ func handleHourlyJson(w http.ResponseWriter, r *http.Request) {
 					log.Println("Error in getUserHourlyStats:", err.Error())
 				}
 				for k, v := range l {
-					enc.Write([]string{u, s, k, strconv.Itoa(v)})
+					if err := enc.Write([]string{u, s, k, strconv.Itoa(v)}); err != nil {
+						log.Println("error writing csv:", err.Error())
+					}
 				}
 			}
 		}
