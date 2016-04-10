@@ -2,11 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type usersHourlyStats map[string]userHourlyStatsList
@@ -51,6 +54,7 @@ func getUserHourlyStats(user, stat string, last int) (userHourlyStats, error) {
 }
 
 func handleHourlyJson(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	users := strings.Split(r.URL.Query().Get("users"), ",")
 	if len(users) < 1 {
 		return
@@ -63,16 +67,33 @@ func handleHourlyJson(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		last = -1
 	}
-	var rval = usersHourlyStats{}
-	for _, u := range users {
-		rval[u] = userHourlyStatsList{}
-		for _, s := range stats {
-			l, err := getUserHourlyStats(u, s, last)
-			if err != nil {
-				log.Println("Error in getUserHourlyStats:", err.Error())
+	switch vars["type"] {
+	case "json":
+		var rval = usersHourlyStats{}
+		for _, u := range users {
+			rval[u] = userHourlyStatsList{}
+			for _, s := range stats {
+				l, err := getUserHourlyStats(u, s, last)
+				if err != nil {
+					log.Println("Error in getUserHourlyStats:", err.Error())
+				}
+				rval[u][s] = l
 			}
-			rval[u][s] = l
+		}
+		json.NewEncoder(w).Encode(rval)
+	case "csv":
+		enc := csv.NewWriter(w)
+		enc.Write([]string{"user_id", "stat_id", "hour", "value"})
+		for _, u := range users {
+			for _, s := range stats {
+				l, err := getUserHourlyStats(u, s, last)
+				if err != nil {
+					log.Println("Error in getUserHourlyStats:", err.Error())
+				}
+				for k, v := range l {
+					enc.Write([]string{u, s, k, strconv.Itoa(v)})
+				}
+			}
 		}
 	}
-	json.NewEncoder(w).Encode(rval)
 }

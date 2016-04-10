@@ -103,7 +103,7 @@ func mindHTTP() {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/u/{userid}.json", handleUserJSON)
 	r.HandleFunc("/v1/stats.json", handleStatsList)
-	r.HandleFunc("/v1/hourly.json", handleHourlyJson)
+	r.HandleFunc("/v1/hourly.{type}", handleHourlyJson)
 	r.HandleFunc("/v1/hourly/sum.json", handleHourlySumJson)
 	r.HandleFunc("/v1/help", handleIndex)
 	n := negroni.New()
