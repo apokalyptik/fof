@@ -8,15 +8,6 @@ import (
 	"github.com/apokalyptik/fof/lib/destiny"
 )
 
-func init() {
-	qs["getUsersNeedingSummary"] = `SELECT users.ID
-FROM users LEFT OUTER JOIN destinyAccountSummary ON users.ID = destinyAccountSummary.UserID
-WHERE users.Seen > datetime("now", "-14 days", "utc") AND DestinyID != ""
-AND destinyAccountSummary.Fetched < datetime("now", "-6 hour", "utc")
-`
-	qs["getRawSummary"] = "SELECT * FROM destinyAccountSummary WHERE UserID = ? LIMIT 1"
-}
-
 func mindSummaryUpdates() {
 	t := time.Tick(time.Minute)
 	for {

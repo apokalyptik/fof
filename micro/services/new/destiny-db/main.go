@@ -6,13 +6,32 @@ import (
 	"os"
 
 	"github.com/apokalyptik/fof/lib/destiny"
+	"github.com/boltdb/bolt"
+	"github.com/djherbis/stow"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var destinyUsers *stow.Store
+var destinyAccounts *stow.Store
+var destinyCharacters *stow.Store
+
+var state *stow.Store
+
+var boltDatabase *bolt.DB
 var creds = map[string]string{}
 var destinyClient *destiny.Platform
 
 func init() {
+	if db, err := bolt.Open("my_bolt.db", 0600, nil); err != nil {
+		log.Fatalf("Error opening bolt database: %s", err.Error())
+	} else {
+		boltDatabase = db
+		state = stow.NewJSONStore(db, []byte("state"))
+		destinyUsers = stow.NewJSONStore(db, []byte("destiny-users"))
+		destinyAccounts = stow.NewJSONStore(db, []byte("destiny-accounts"))
+		destinyCharacters = stow.NewJSONStore(db, []byte("destiny-characters"))
+	}
+
 	if fp, err := os.Open("creds.json"); err != nil {
 		log.Fatalf("Unable to open creds.json: %s", err.Error())
 	} else {
