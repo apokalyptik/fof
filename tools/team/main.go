@@ -163,6 +163,7 @@ func main() {
 			}
 		})
 
+		go mindPvtGroupList()
 		go mindChannelList()
 
 		log.Println("Starting Up!")

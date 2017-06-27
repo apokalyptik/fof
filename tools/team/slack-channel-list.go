@@ -53,10 +53,13 @@ func updateChannelList() error {
 }
 
 func mindChannelList() {
+	t := time.Tick(5 * time.Minute)
 	for {
 		if err := updateChannelList(); err != nil {
 			log.Println("error getting channel list from slack:", err.Error())
-			time.Sleep(time.Second * 30)
+			time.Sleep(30 * time.Second)
+			continue
 		}
+		<-t
 	}
 }
