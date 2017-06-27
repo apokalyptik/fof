@@ -94,30 +94,30 @@ func doRESTRouter(w http.ResponseWriter, r *http.Request) {
 		username := v.Get("username")
 		t, err := strconv.ParseInt(v.Get("t"), 10, 64)
 		if err != nil {
-			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("//%s/", r.Host), http.StatusFound)
 			return
 		}
 		s := v.Get("signature")
 		now := time.Now().Unix()
 		if t > now {
-			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("//%s/", r.Host), http.StatusFound)
 			return
 		}
 		if (now - t) > 300 {
-			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("//%s/", r.Host), http.StatusFound)
 			return
 		}
 		mac := hmac.New(sha256.New, hmacKey)
 		fmt.Fprintln(mac, username, t)
 		if s != fmt.Sprintf("%x", mac.Sum(nil)) {
-			http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("//%s/", r.Host), http.StatusFound)
 			return
 		}
 		log.Printf("@%s -- %s", username, "/rest/login")
 		session.Values["username"] = username
 		session.Values["apiKey"] = generateAPIKeyForUserTime(username, 0)
 		session.Save(r, w)
-		http.Redirect(w, r, fmt.Sprintf("http://%s/", r.Host), http.StatusFound)
+		http.Redirect(w, r, fmt.Sprintf("//%s/", r.Host), http.StatusFound)
 	case "/rest/login/logout":
 		delete(session.Values, "apiKey")
 		delete(session.Values, "username")
