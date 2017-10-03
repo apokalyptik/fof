@@ -74,9 +74,39 @@ func requireAPIKey(session *sessions.Session, w http.ResponseWriter) error {
 	return errInvalidAuth
 }
 
-func doRESTRouter(w http.ResponseWriter, r *http.Request) {
+func checkAuthorization(w http.ResponseWriter, r *http.Request) *sessions.Session {
 	session, _ := store.Get(r, "raidbot")
 	session.Options.MaxAge = 604800
+	h := r.Header.Get("Authorization")
+	if h == "" {
+		return session
+	}
+	p := strings.Split(h, " ")
+	if len(p) < 3 {
+		return session
+	}
+	if p[1] != "fof-ut" {
+		return session
+	}
+	t := strings.Split(p[2], ":")
+	var latest = ""
+	for i := 0; i < 10; i++ {
+		key := generateAPIKeyForUserTime(t[0], i)
+		if i == 0 {
+			latest = key
+		}
+		if t[1] == key {
+			session.Values["username"] = t[0]
+			session.Values["apiKey"] = latest
+			session.Save(r, w)
+			return session
+		}
+	}
+	return session
+}
+
+func doRESTRouter(w http.ResponseWriter, r *http.Request) {
+	session := checkAuthorization(w, r)
 	if err := r.ParseForm(); err != nil {
 		log.Println("Error parsing form values for", r.Method, r.RequestURI, err.Error())
 		w.WriteHeader(http.StatusBadRequest)
