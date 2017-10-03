@@ -82,25 +82,22 @@ func checkAuthorization(w http.ResponseWriter, r *http.Request) *sessions.Sessio
 		return session
 	}
 	p := strings.Split(h, " ")
-	if len(p) < 3 {
+	if len(p) < 2 {
 		return session
 	}
-	if p[1] != "fof-ut" {
+	if p[0] != "fof-ut" {
 		return session
 	}
-	t := strings.Split(p[2], ":")
-	var latest = ""
-	for i := 0; i < 10; i++ {
-		key := generateAPIKeyForUserTime(t[0], i)
-		if i == 0 {
-			latest = key
-		}
-		if t[1] == key {
-			session.Values["username"] = t[0]
-			session.Values["apiKey"] = latest
-			session.Save(r, w)
-			return session
-		}
+	t := strings.Split(p[1], ":")
+	if len(t) < 3 {
+		return session
+	}
+	mac := hmac.New(sha256.New, hmacKey)
+	fmt.Fprintln(mac, t[0], t[1])
+	key := fmt.Sprintf("%x", mac.Sum(nil))
+	if t[2] == key {
+		session.Values["username"] = t[0]
+		session.Values["apiKey"] = generateAPIKeyForUserTime(t[0], 0)
 	}
 	return session
 }
