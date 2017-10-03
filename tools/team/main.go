@@ -125,20 +125,21 @@ func main() {
 	if listen, err := cfg.String("listen"); err != nil {
 		log.Fatal(err)
 	} else {
+		mux := http.NewServeMux()
 		var devmode = false
 		if _, err := os.Stat("www/index.html"); err == nil {
 			devmode = true
 		}
 		if devmode == false {
-			http.Handle("/",
+			mux.Handle("/",
 				http.FileServer(
 					&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, Prefix: "www"}))
 		} else {
-			http.Handle("/", http.FileServer(http.Dir("www/")))
+			mux.Handle("/", http.FileServer(http.Dir("www/")))
 		}
-		http.HandleFunc("/api", doHTTPPost)
-		http.HandleFunc("/rest/", doRESTRouter)
-		http.HandleFunc("/ics", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/api", doHTTPPost)
+		mux.HandleFunc("/rest/", doRESTRouter)
+		mux.HandleFunc("/ics", func(w http.ResponseWriter, r *http.Request) {
 			session, _ := store.Get(r, "raidbot")
 			session.Options.MaxAge = 604800
 			uri, _ := url.ParseRequestURI(r.RequestURI)
@@ -167,6 +168,6 @@ func main() {
 		go mindChannelList()
 
 		log.Println("Starting Up!")
-		log.Fatal(http.ListenAndServe(listen, nil))
+		log.Fatal(http.ListenAndServe(listen, ch.Handler(mux)))
 	}
 }

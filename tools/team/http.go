@@ -6,10 +6,25 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/rs/cors"
+
 	"net/http"
 	"net/url"
 	"time"
 )
+
+var ch = cors.New(cors.Options{
+	AllowedOrigins: []string{
+		"http://team.fofgaming.com",
+		"http://dashboard.fofgaming.com",
+		"http://dev.dashboard.fofgaming.com",
+		"http://localhost:*",
+		"http://127.0.0.*",
+	},
+	AllowCredentials: true,
+	AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
+	AllowedHeaders:   []string{"*"},
+})
 
 func doHTTPStatus(w http.ResponseWriter, code int) {
 	w.WriteHeader(code)
