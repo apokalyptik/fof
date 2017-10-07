@@ -20,6 +20,8 @@ var ch = cors.New(cors.Options{
 		"http://dev.dashboard.fofgaming.com",
 		"http://localhost:*",
 		"http://127.0.0.*",
+		"http://*.fofgaming.com",
+		"https://*.fofgaming.com",
 	},
 	AllowCredentials: true,
 	AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
